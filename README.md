@@ -42,38 +42,16 @@
 
 ---
 
-## 🏗️ Kiến trúc hệ thống
-┌──────────────┐ HTTPS ┌──────────────┐ JDBC ┌──────────┐
-│ Mobile App │────────────►│ Backend API │─────────►│PostgreSQL│
-│(React Native)│◄────────────│(Spring Boot) │◄─────────│ │
-└──────────────┘ └──────┬───────┘ └──────────┘
-┌──────────────┐ │
-│ Web Admin │────────────────────┘
-│ (ReactJS) │ ┌──────────────┐
-└──────────────┘ │ Google Cloud │
-│ TTS + Maps │
-└──────────────┘
+## Mô tả hệ thống theo 3 mức General -> Specific -> Diagram 
+### General 
+### Specific 
+### Diagram 
+
+
+
+## Kiến trúc hệ thống
+
+
 
 ## Cấu trúc thư mục
-.
-├── mobile/ # React Native app
-│ ├── src/
-│ │ ├── screens/
-│ │ ├── components/
-│ │ ├── services/ # gọi API
-│ │ └── utils/
-│ └── package.json
-├── web-admin/ # ReactJS admin
-│ └── src/
-├── backend/ # Spring Boot
-│ ├── src/main/java/
-│ └── pom.xml
-├── docs/ # Tài liệu, diagram, screenshot
-│ ├── diagrams/
-│ ├── screenshots/
-│ └── architecture.md
-├── .github/workflows/ # CI/CD
-│ ├── ci-backend.yml
-│ ├── ci-mobile.yml
-│ └── deploy-web.yml
-└── README.md
+
