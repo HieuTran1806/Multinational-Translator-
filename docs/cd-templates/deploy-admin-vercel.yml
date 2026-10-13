@@ -1,0 +1,38 @@
+# TEMPLATE — NOT ACTIVE. Copy to .github/workflows/ only after the Vercel project and secrets exist.
+# Deploys ONLY commits that passed CI on main. Disable Vercel's own Git auto-deploy for production
+# (Project → Settings → Git → "Ignored Build Step" / disconnect) so only one mechanism deploys.
+# Secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID. Variable VITE_API_BASE_URL is set in Vercel.
+name: Deploy admin (Vercel)
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    defaults:
+      run:
+        working-directory: apps/admin
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "22"
+      # Pin the Vercel CLI to an exact version you have verified.
+      - run: npx --yes vercel@<PIN_EXACT_VERSION> pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - run: npx --yes vercel@<PIN_EXACT_VERSION> build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - run: npx --yes vercel@<PIN_EXACT_VERSION> deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

@@ -1,0 +1,33 @@
+# ---- Secrets (never commit) ----
+.env
+.env.*
+!.env.example
+**/*.env.local
+*.pem
+*.p12
+*.jks
+!apps/mobile/android/app/debug.keystore
+gcp-*.json
+*service-account*.json
+*-credentials.json
+google-services.json
+GoogleService-Info.plist
+
+# ---- Build output ----
+**/target/
+**/dist/
+**/build/
+**/node_modules/
+**/coverage/
+*.apk
+*.aab
+
+# ---- Local data ----
+services/backend/data/
+**/data/media/
+*.log
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml

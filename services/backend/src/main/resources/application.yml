@@ -1,0 +1,78 @@
+# Common configuration. Environment-specific values live in application-{dev,test,prod}.yml.
+# Every secret comes from an environment variable; nothing secret is committed.
+spring:
+  application:
+    name: thuyet-minh-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/thuyetminh}
+    username: ${DB_USERNAME:thuyetminh}
+    password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate   # schema is owned by Flyway
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 26MB
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+    include-message: never
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}
+  auth:
+    session-ttl: ${APP_AUTH_SESSION_TTL:8h}
+  bootstrap-admin:
+    enabled: ${APP_BOOTSTRAP_ADMIN_ENABLED:false}
+    username: ${APP_BOOTSTRAP_ADMIN_USERNAME:}
+    password: ${APP_BOOTSTRAP_ADMIN_PASSWORD:}
+  storage:
+    local-root: ${APP_STORAGE_LOCAL_ROOT:./data/media}
+  upload:
+    max-audio-bytes: ${APP_UPLOAD_MAX_AUDIO_BYTES:20971520}
+    max-image-bytes: ${APP_UPLOAD_MAX_IMAGE_BYTES:5242880}
+  tts:
+    provider: ${APP_TTS_PROVIDER:none}
+    max-input-bytes: ${APP_TTS_MAX_INPUT_BYTES:4500}
+    request-timeout: ${APP_TTS_REQUEST_TIMEOUT:30s}
+    max-attempts: ${APP_TTS_MAX_ATTEMPTS:3}
+    worker-enabled: ${APP_TTS_WORKER_ENABLED:true}
+    stale-running-after: 10m
+
+logging:
+  level:
+    root: INFO

@@ -1,0 +1,18 @@
+# Automated tests (integration tests need PostgreSQL; see README "Chạy test").
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/thuyetminh_test}
+    username: ${TEST_DB_USERNAME:thuyetminh}
+    password: ${TEST_DB_PASSWORD:thuyetminh}
+  flyway:
+    locations: classpath:db/migration
+    clean-disabled: false
+app:
+  storage:
+    local-root: ${java.io.tmpdir}/thuyetminh-test-media
+  tts:
+    provider: none          # tests register their own fake provider
+    worker-enabled: false   # tests run jobs explicitly
+    max-input-bytes: 200
+  bootstrap-admin:
+    enabled: false
