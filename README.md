@@ -1,3 +1,49 @@
+
+
+# Tính năng chính
+
+--
+--
+
+# Demo
+
+### Màn hình chính
+
+### Nghe thuyết minh
+
+---
+
+## Tech Stack
+
+| Layer | Công nghệ |
+|-------|-----------|
+| **Mobile** | React Native (Expo) + TypeScript |
+| **Web Admin** | ReactJS + Vite + TailwindCSS |
+| **Backend** | Java 17 + Spring Boot |
+| **Database** | PostgreSQL |
+| **Bản đồ** | Google Maps SDK / react-native-maps |
+| **TTS** | Google Cloud TTS + react-native-tts (offline) |
+| **CI/CD** | GitHub Actions |
+| **Deploy** | Vercel (web) + Render/VPS (BE) |
+
+---
+
+## Mô tả hệ thống theo 3 mức General -> Specific -> Diagram 
+### General 
+### Specific 
+### Diagram 
+
+
+
+## Kiến trúc hệ thống
+
+
+
+## Cấu trúc thư mục
+
+
+-----------------------------------------
+
 # Thuyết minh đa ngôn ngữ — MVP
 
 Ứng dụng hướng dẫn tham quan có thuyết minh nhiều ngôn ngữ, bối cảnh ban đầu là **Địa đạo Củ Chi**.
@@ -146,3 +192,19 @@ Những gì các test kiểm tra: [`docs/testing.md`](docs/testing.md).
 - Trạng thái TTS dùng polling (không SSE).
 
 Backlog đầy đủ: [`docs/backlog.md`](docs/backlog.md). Kiến trúc và ERD: [`docs/architecture.md`](docs/architecture.md). API: [`docs/api.md`](docs/api.md). Triển khai: [`docs/deployment.md`](docs/deployment.md). CI/CD: [`docs/ci-cd.md`](docs/ci-cd.md).
+
+# Giới thiệu
+Ứng dụng web/mobile giúp **khách du lịch** khám phá địa điểm và **nghe thuyết minh tự động** theo vị trí GPS, hỗ trợ **đa ngôn ngữ**, hoạt động cả **online và offline**. Hệ thống có trang **admin** để quản lý địa điểm và nội dung thuyết minh.
+
+# Thành viên nhóm 
+3124560031 - Trần Viết Hiếu
+- 
+- 
+
+### 🎯 Mục tiêu
+- Tự động phát thuyết minh khi khách đến gần địa điểm (geofencing)
+- Hỗ trợ nhiều ngôn ngữ qua Google Cloud TTS
+- Hoạt động offline với audio cache sẵn
+- CI/CD tự động hóa build & deploy
+
+---
