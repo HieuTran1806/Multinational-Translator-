@@ -64,7 +64,7 @@
 
 Luồng MVP: Admin đăng nhập → tạo địa điểm (POI) → nhập nội dung tiếng Việt/tiếng Anh → tải audio lên hoặc tạo bằng Google Cloud TTS → công khai → ứng dụng di động xem POI → chọn ngôn ngữ → phát thuyết minh (online, offline hoặc giọng thiết bị).
 
-> Trạng thái kiểm chứng của từng phần được ghi tại [`docs/verification-report.md`](docs/verification-report.md). Đọc file đó trước khi demo.
+> Trạng thái kiểm chứng của từng phần được ghi tại [`docs/reports/verification-report.md`](docs/reports/verification-report.md). Đọc file đó trước khi demo.
 
 ## Cấu trúc monorepo
 
@@ -88,7 +88,7 @@ Luồng MVP: Admin đăng nhập → tạo địa điểm (POI) → nhập nội
 | Android Studio; Android SDK Platform 37 (compileSdk), Build-Tools 37.0.0, NDK 27.1.12297006 — đúng theo `apps/mobile/android/build.gradle` của template RN 0.87 | — | mobile Android |
 | macOS + Xcode + CocoaPods | — | mobile iOS (**chưa kiểm chứng**) |
 
-Phiên bản chi tiết và lý do chọn: [`docs/plan-and-assumptions.md`](docs/plan-and-assumptions.md).
+Phiên bản chi tiết và lý do chọn: [`docs/planning/plan-and-assumptions.md`](docs/planning/plan-and-assumptions.md).
 
 ## Chạy nhanh (demo không cần Google Cloud)
 
@@ -143,7 +143,7 @@ npm run android                 # terminal khác, cần emulator hoặc máy th�
 - Bản debug cho phép HTTP; bản release yêu cầu HTTPS.
 - Chưa có Maps key → tab Bản đồ hiển thị "chưa cấu hình", tab Địa điểm vẫn dùng bình thường.
 
-Chi tiết: [`docs/mobile.md`](docs/mobile.md).
+Chi tiết: [`docs/development/mobile.md`](docs/development/mobile.md).
 
 ## Tạo tài khoản admin local
 
@@ -188,12 +188,12 @@ cd apps/mobile && npm run lint && npm run typecheck && npm test
 cd apps/mobile/android && ./gradlew assembleDebug
 ```
 
-Những gì các test kiểm tra: [`docs/testing.md`](docs/testing.md).
+Những gì các test kiểm tra: [`docs/development/testing.md`](docs/development/testing.md).
 
 ## Google Cloud TTS và Google Maps
 
-- TTS (chỉ backend gọi): [`docs/google-tts.md`](docs/google-tts.md)
-- Maps (Android/iOS, giới hạn key): [`docs/google-maps.md`](docs/google-maps.md)
+- TTS (chỉ backend gọi): [`docs/integrations/google-tts.md`](docs/integrations/google-tts.md)
+- Maps (Android/iOS, giới hạn key): [`docs/integrations/google-maps.md`](docs/integrations/google-maps.md)
 
 ## Giới hạn MVP
 
@@ -205,7 +205,7 @@ Những gì các test kiểm tra: [`docs/testing.md`](docs/testing.md).
 - Lưu trữ file local (volume). Production cần object storage hoặc đĩa bền vững.
 - Trạng thái TTS dùng polling (không SSE).
 
-Backlog đầy đủ: [`docs/backlog.md`](docs/backlog.md). Kiến trúc và ERD: [`docs/architecture.md`](docs/architecture.md). API: [`docs/api.md`](docs/api.md). Triển khai: [`docs/deployment.md`](docs/deployment.md). CI/CD: [`docs/ci-cd.md`](docs/ci-cd.md).
+Backlog đầy đủ: [`docs/planning/backlog.md`](docs/planning/backlog.md). Kiến trúc và ERD: [`docs/architecture/architecture.md`](docs/architecture/architecture.md). API: [`docs/architecture/api.md`](docs/architecture/api.md). Triển khai: [`docs/operations/deployment.md`](docs/operations/deployment.md). CI/CD: [`docs/operations/ci-cd.md`](docs/operations/ci-cd.md).
 
 # Giới thiệu
 Ứng dụng web/mobile giúp **khách du lịch** khám phá địa điểm và **nghe thuyết minh tự động** theo vị trí GPS, hỗ trợ **đa ngôn ngữ**, hoạt động cả **online và offline**. Hệ thống có trang **admin** để quản lý địa điểm và nội dung thuyết minh.

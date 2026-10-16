@@ -33,7 +33,7 @@ GitHub → Settings → Branches (hoặc Rules → Rulesets) → nhánh `main`:
 
 ## CD — chưa kích hoạt
 
-Mẫu nằm ở `docs/cd-templates/` (cố ý không đặt trong `.github/workflows/`):
+Mẫu nằm ở `docs/operations/cd-templates/` (cố ý không đặt trong `.github/workflows/`):
 
 - `deploy-backend-render.yml`: chạy bằng `workflow_run` **chỉ khi CI thành công** trên `main` (sự kiện push), gọi Render Deploy Hook (secret `RENDER_DEPLOY_HOOK_URL`).
 - `deploy-admin-vercel.yml`: checkout đúng commit đã qua CI, `vercel build` + `vercel deploy --prebuilt --prod`.

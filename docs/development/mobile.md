@@ -81,7 +81,7 @@ bundle exec pod install
 cd .. && npm run ios
 ```
 
-Cần macOS + Xcode. Thêm cấu hình Google Maps iOS theo `docs/google-maps.md`. `react-native-tts` và `react-native-sound` cần kiểm tra lại trên iOS (audio session `Playback`).
+Cần macOS + Xcode. Thêm cấu hình Google Maps iOS theo `docs/integrations/google-maps.md`. `react-native-tts` và `react-native-sound` cần kiểm tra lại trên iOS (audio session `Playback`).
 
 ## Kiểm thử thủ công đề xuất
 

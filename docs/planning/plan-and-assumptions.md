@@ -58,7 +58,7 @@ Nguyên tắc: bản ổn định mới nhất phát hành trước ~2 tuần; g
 3. Web admin.
 4. Mobile.
 5. CI/CD + tài liệu.
-6. Chạy kiểm tra khả dụng — xem `docs/verification-report.md`.
+6. Chạy kiểm tra khả dụng — xem `docs/reports/verification-report.md`.
 
 ## 5. Giả định đã tự quyết (chi tiết nhỏ)
 

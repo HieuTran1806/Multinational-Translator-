@@ -1,6 +1,6 @@
 # Mobile — React Native CLI 0.87 + TypeScript
 
-Hướng dẫn đầy đủ: [`../../docs/mobile.md`](../../docs/mobile.md) · Maps: [`../../docs/google-maps.md`](../../docs/google-maps.md)
+Hướng dẫn đầy đủ: [`../../docs/development/mobile.md`](../../docs/development/mobile.md) · Maps: [`../../docs/integrations/google-maps.md`](../../docs/integrations/google-maps.md)
 
 ```bash
 cp .env.example .env      # API_BASE_URL, GOOGLE_MAPS_ANDROID_API_KEY (tuỳ chọn)

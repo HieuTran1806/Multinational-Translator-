@@ -70,6 +70,6 @@ Chọn **một** trong hai, tránh deploy trùng:
 | Phương án | Cách làm |
 |---|---|
 | A. Hosting tự deploy khi push `main` | Bật auto-deploy trên Render/Vercel; **không** dùng workflow deploy. Bật branch protection để `main` chỉ nhận commit đã qua CI |
-| B. GitHub Actions kích hoạt deploy (khuyến nghị) | Tắt auto-deploy trên Render/Vercel; dùng mẫu trong `docs/cd-templates/` (chạy sau khi workflow CI thành công trên `main`) |
+| B. GitHub Actions kích hoạt deploy (khuyến nghị) | Tắt auto-deploy trên Render/Vercel; dùng mẫu trong `docs/operations/cd-templates/` (chạy sau khi workflow CI thành công trên `main`) |
 
 Mẫu CD **chưa được kích hoạt** (nằm ngoài `.github/workflows/`). CI hiện tại chỉ kiểm tra và build; CD chỉ hoạt động khi đã cấu hình hosting và secrets.

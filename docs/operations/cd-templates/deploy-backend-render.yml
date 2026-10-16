@@ -1,6 +1,6 @@
 # TEMPLATE — NOT ACTIVE. Copy to .github/workflows/ only after Render + secrets are configured.
 # Deploys ONLY a commit that already passed the "CI" workflow on main (workflow_run + conclusion check).
-# Prerequisites (see docs/deployment.md):
+# Prerequisites (see docs/operations/deployment.md):
 #   - Render Web Service (Docker) with "Auto-Deploy" set to OFF (avoid double deploys)
 #   - Repository secret RENDER_DEPLOY_HOOK_URL (Render → Settings → Deploy Hook)
 #   - GitHub Environment "production" (optional approval rule)

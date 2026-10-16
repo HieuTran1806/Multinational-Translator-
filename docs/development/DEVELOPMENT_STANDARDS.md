@@ -2,7 +2,7 @@
 
 > **Mục đích:** Thống nhất các quy tắc về code, giao diện, API, bảo mật, kiểm thử và quy trình phối hợp để cả nhóm phát triển 16 Use Case theo cùng một chuẩn.
 >
-> **Nguồn chuẩn:** Tài liệu Use Case trong `docs/Use_Case_Specification_Final_16_UC.md` xác định phạm vi và hành vi nghiệp vụ. Penpot `02 — Design System` là nguồn tham chiếu thiết kế. Khi tài liệu chưa quyết định một chi tiết kỹ thuật, nhóm phải thống nhất và ghi lại trước khi triển khai; ví dụ trong tài liệu này không tự động trở thành quyết định về framework hay cấu hình thực tế.
+> **Nguồn chuẩn:** Tài liệu Use Case trong `docs/requirements/Use_Case_Specification_Final_16_UC.md` xác định phạm vi và hành vi nghiệp vụ. Penpot `02 — Design System` là nguồn tham chiếu thiết kế. Khi tài liệu chưa quyết định một chi tiết kỹ thuật, nhóm phải thống nhất và ghi lại trước khi triển khai; ví dụ trong tài liệu này không tự động trở thành quyết định về framework hay cấu hình thực tế.
 
 ## 1. Nguyên tắc chung
 
@@ -281,23 +281,6 @@ Một thay đổi chỉ được coi là hoàn tất khi các mục phù hợp �
 - [ ] Có review từ thành viên khác theo quy trình nhóm.
 - [ ] Tài liệu, ví dụ cấu hình hoặc hướng dẫn chạy được cập nhật khi cần.
 - [ ] Thay đổi đã tích hợp và luồng liên quan được xác minh.
-
-## 10. Phân chia công việc cho 3 người
-
-Phân chia theo module để giảm việc nhiều người sửa cùng file; đây là gợi ý ban đầu và có thể điều chỉnh theo năng lực/thực trạng repo.
-
-| Người phụ trách | Phạm vi gợi ý | Use Case |
-|---|---|---|
-| Người 1 — Auth & Accounts | Đăng ký/đăng nhập/đăng xuất, chọn ngôn ngữ; quản lý User và Admin | UC01–UC04, UC12–UC13 |
-| Người 2 — Tourist Experience & Content | Bản đồ, chi tiết POI, audio; quản lý POI và giám sát audio | UC05–UC07, UC10–UC11 |
-| Người 3 — Offline, RBAC & Insights | Thuyết minh tự động, offline; Role/Permission, Analytics, Audit Log | UC08–UC09, UC14–UC16 |
-
-Quy tắc phối hợp:
-
-- Cùng thống nhất router, layout, Design System, API contract, error format và type dùng chung trước khi chia nhánh.
-- Thay đổi ở module dùng chung cần thông báo cho các thành viên liên quan.
-- Chủ sở hữu module chịu trách nhiệm test và tài liệu cho module đó; cả nhóm cùng chịu trách nhiệm tích hợp.
-- UC12 và UC13 cần phối hợp với UC14 để bảo đảm quản lý tài khoản không làm lệch mô hình phân quyền.
 
 ## 11. Các quyết định cần chốt trước khi triển khai rộng
 
