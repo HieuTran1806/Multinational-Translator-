@@ -12,21 +12,23 @@ export default function PoiListPage() {
   const page = Math.max(0, Number(params.get('page') || 0));
   const status = params.get('status') || '';
   const q = params.get('q') || '';
+  const requestedSize = Number(params.get('size') || PAGE_SIZE);
+  const size = [10, 20, 50, 100].includes(requestedSize) ? requestedSize : PAGE_SIZE;
   const [search, setSearch] = useState(q);
   const [reloadToken, setReloadToken] = useState(0);
-  const key = `${page}|${status}|${q}|${reloadToken}`;
+  const key = `${page}|${size}|${status}|${q}|${reloadToken}`;
   const [result, setResult] = useState({ key: null, data: null, error: null });
 
   useEffect(() => {
     let cancelled = false;
     poiApi
-      .list({ page, size: PAGE_SIZE, status: status || undefined, q: q || undefined })
+      .list({ page, size, status: status || undefined, q: q || undefined })
       .then((data) => !cancelled && setResult({ key, data, error: null }))
       .catch((error) => !cancelled && setResult({ key, data: null, error }));
     return () => {
       cancelled = true;
     };
-  }, [key, page, status, q]);
+  }, [key, page, size, status, q]);
 
   const state = { loading: result.key !== key, data: result.data, error: result.error };
   const load = () => setReloadToken((n) => n + 1);
@@ -74,6 +76,20 @@ export default function PoiListPage() {
             <option value="PUBLISHED">Công khai</option>
             <option value="DRAFT">Nháp</option>
           </select>
+          <label className="flex items-center gap-2 text-sm text-stone">
+            <span>Kích thước trang</span>
+            <select
+              aria-label="Kích thước trang"
+              className={`${inputClass} w-auto min-w-[5rem]`}
+              value={String(size)}
+              onChange={(e) => update({ size: e.target.value, page: 0 })}
+            >
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
           <Button type="submit" variant="secondary">
             Tìm
           </Button>

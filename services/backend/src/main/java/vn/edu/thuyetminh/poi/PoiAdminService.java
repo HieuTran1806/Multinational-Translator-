@@ -38,6 +38,7 @@ public class PoiAdminService {
 
     private final PoiRepository pois;
     private final PoiTranslationRepository translations;
+    private final PoiImageRepository images;
     private final LanguageService languages;
     private final AudioService audioService;
     private final TtsJobService ttsJobs;
@@ -45,11 +46,12 @@ public class PoiAdminService {
     private final AppProperties props;
     private final Clock clock;
 
-    public PoiAdminService(PoiRepository pois, PoiTranslationRepository translations, LanguageService languages,
-                           AudioService audioService, TtsJobService ttsJobs, MediaStorage storage,
-                           AppProperties props, Clock clock) {
+    public PoiAdminService(PoiRepository pois, PoiTranslationRepository translations, PoiImageRepository images,
+                           LanguageService languages, AudioService audioService, TtsJobService ttsJobs,
+                           MediaStorage storage, AppProperties props, Clock clock) {
         this.pois = pois;
         this.translations = translations;
+        this.images = images;
         this.languages = languages;
         this.audioService = audioService;
         this.ttsJobs = ttsJobs;
@@ -69,7 +71,7 @@ public class PoiAdminService {
         Map<Long, List<PoiTranslation>> byPoi = ts.stream()
                 .collect(Collectors.groupingBy(t -> t.getPoi().getId()));
         return PageResponse.of(result, p -> new PoiDtos.AdminPoiSummary(p.getId(), p.getCode(), p.getDefaultName(),
-                p.getLatitude(), p.getLongitude(), p.getStatus(), p.isDemo(), p.getUpdatedAt(),
+                p.getLatitude(), p.getLongitude(), p.getCategory(), p.getTriggerRadius(), p.getStatus(), p.isDemo(), p.getUpdatedAt(),
                 byPoi.getOrDefault(p.getId(), List.of()).stream()
                         .sorted((a, b) -> a.getLanguageCode().compareTo(b.getLanguageCode()))
                         .map(t -> new PoiDtos.LanguageReadiness(t.getLanguageCode(), true,
@@ -101,7 +103,9 @@ public class PoiAdminService {
         if (pois.existsByCode(req.code())) {
             throw new ApiException(ErrorCode.CONFLICT, "Mã địa điểm '" + req.code() + "' đã tồn tại");
         }
-        Poi poi = pois.save(new Poi(req.code(), req.defaultName().trim(), req.latitude(), req.longitude()));
+        Poi poi = new Poi(req.code(), req.defaultName().trim(), req.latitude(), req.longitude());
+        poi.updateAdminFields(req.category(), req.triggerRadius() == null ? 50.0 : req.triggerRadius());
+        poi = pois.save(poi);
         log.info("POI {} ({}) created", poi.getId(), poi.getCode());
         return toDetail(poi);
     }
@@ -116,17 +120,23 @@ public class PoiAdminService {
             throw new ApiException(ErrorCode.CONFLICT, "Mã địa điểm '" + req.code() + "' đã tồn tại");
         }
         poi.update(req.code(), req.defaultName().trim(), req.latitude(), req.longitude());
+        poi.updateAdminFields(req.category(), req.triggerRadius() == null ? poi.getTriggerRadius() : req.triggerRadius());
         pois.saveAndFlush(poi);
         return toDetail(poi);
     }
 
-    /** Publish gate: at least one language must have content. Audio is optional (device TTS fallback). */
+    /** UC10 strict readiness gate: English content and current, ready audio are both required. */
     @Transactional
     public PoiDtos.AdminPoiDetail publish(Long id) {
         Poi poi = require(id);
-        if (translations.findByPoiIdOrderByLanguageCodeAsc(id).isEmpty()) {
+        PoiTranslation english = translations.findByPoiIdAndLanguageCode(id, "en").orElse(null);
+        if (english == null) {
             throw new ApiException(ErrorCode.PUBLISH_NOT_READY,
-                    "Cần nhập nội dung cho ít nhất một ngôn ngữ trước khi công khai");
+                    "Cần lưu nội dung tiếng Anh trước khi công khai POI");
+        }
+        if (audioService.currentAudio(english).isEmpty()) {
+            throw new ApiException(ErrorCode.PUBLISH_NOT_READY,
+                    "Cần có audio tiếng Anh ở trạng thái sẵn sàng trước khi công khai POI");
         }
         if (!poi.isPublished()) {
             poi.publish(clock.instant());
@@ -180,6 +190,10 @@ public class PoiAdminService {
     @Transactional
     public PoiDtos.AdminPoiDetail uploadImage(Long poiId, MultipartFile file) {
         Poi poi = require(poiId);
+        long imageCount = images.countByPoiId(poiId);
+        if (imageCount >= 6) {
+            throw new ApiException(ErrorCode.CONFLICT, "Mỗi POI chỉ được có tối đa 6 ảnh");
+        }
         if (file == null || file.isEmpty()) {
             throw new ApiException(ErrorCode.BAD_REQUEST, "Vui lòng chọn ảnh");
         }
@@ -203,21 +217,72 @@ public class PoiAdminService {
             log.error("Failed to store POI image", e);
             throw new ApiException(ErrorCode.INTERNAL_ERROR, "Không lưu được ảnh");
         }
-        String oldKey = poi.getCoverImageKey();
-        poi.setCoverImage(key, type.mimeType());
+        images.saveAndFlush(new PoiImage(poiId, key, type.mimeType(), (int) imageCount));
+        if (poi.getCoverImageKey() == null) {
+            poi.setCoverImage(key, type.mimeType());
+        }
+        poi.touch();
         pois.saveAndFlush(poi);
-        if (oldKey != null) {
-            try {
-                storage.delete(oldKey);
-            } catch (IOException | IllegalArgumentException e) {
-                log.warn("Could not delete old image {}", oldKey);
-            }
+        return toDetail(poi);
+    }
+
+    @Transactional
+    public void softDelete(Long id) {
+        Poi poi = require(id);
+        poi.softDelete(clock.instant());
+        pois.saveAndFlush(poi);
+        log.info("POI {} ({}) soft-deleted", poi.getId(), poi.getCode());
+    }
+
+    @Transactional
+    public PoiDtos.AdminPoiDetail deleteImage(Long poiId, Long imageId) {
+        Poi poi = require(poiId);
+        PoiImage image = images.findByIdAndPoiId(imageId, poiId)
+                .orElseThrow(() -> ApiException.notFound("Ảnh địa điểm"));
+        String key = image.getStorageKey();
+        images.delete(image);
+        List<PoiImage> remaining = images.findByPoiIdOrderBySortOrderAscIdAsc(poiId);
+        for (int i = 0; i < remaining.size(); i++) remaining.get(i).setSortOrder(i);
+        if (key.equals(poi.getCoverImageKey())) {
+            PoiImage first = remaining.isEmpty() ? null : remaining.get(0);
+            poi.setCoverImage(first == null ? null : first.getStorageKey(), first == null ? null : first.getMimeType());
+        }
+        poi.touch();
+        pois.saveAndFlush(poi);
+        try { storage.delete(key); } catch (IOException | IllegalArgumentException e) {
+            log.warn("Could not delete removed POI image {}", key);
         }
         return toDetail(poi);
     }
 
+    @Transactional
+    public PoiDtos.AdminPoiDetail reorderImages(Long poiId, List<Long> imageIds) {
+        Poi poi = require(poiId);
+        List<PoiImage> current = images.findByPoiIdOrderBySortOrderAscIdAsc(poiId);
+        if (imageIds == null || imageIds.size() != current.size()
+                || !new java.util.HashSet<>(imageIds).equals(current.stream().map(PoiImage::getId)
+                        .collect(Collectors.toSet()))) {
+            throw new ApiException(ErrorCode.BAD_REQUEST, "Thứ tự ảnh phải chứa đủ các ID ảnh của POI, không trùng lặp");
+        }
+        Map<Long, PoiImage> byId = current.stream().collect(Collectors.toMap(PoiImage::getId, image -> image));
+        for (int i = 0; i < imageIds.size(); i++) byId.get(imageIds.get(i)).setSortOrder(i);
+        images.saveAll(current);
+        PoiImage first = imageIds.isEmpty() ? null : byId.get(imageIds.get(0));
+        poi.setCoverImage(first == null ? null : first.getStorageKey(), first == null ? null : first.getMimeType());
+        poi.touch();
+        pois.saveAndFlush(poi);
+        return toDetail(poi);
+    }
+
+    @Transactional(readOnly = true)
+    public PoiImage requireImageEntity(Long poiId, Long imageId) {
+        require(poiId);
+        return images.findByIdAndPoiId(imageId, poiId).orElseThrow(() -> ApiException.notFound("Ảnh địa điểm"));
+    }
+
     private Poi require(Long id) {
-        return pois.findById(id).orElseThrow(() -> ApiException.notFound("Địa điểm"));
+        return pois.findById(id).filter(p -> !p.isDeleted())
+                .orElseThrow(() -> ApiException.notFound("Địa điểm"));
     }
 
     private PoiTranslation requireTranslation(Long poiId, String lang) {
@@ -231,8 +296,11 @@ public class PoiAdminService {
             views.add(toTranslationView(t));
         }
         String image = p.getCoverImageKey() == null ? null : "/api/v1/admin/pois/" + p.getId() + "/image";
+        List<PoiDtos.AdminPoiImage> imageViews = images.findByPoiIdOrderBySortOrderAscIdAsc(p.getId()).stream()
+                .map(i -> new PoiDtos.AdminPoiImage(i.getId(), "/api/v1/admin/pois/" + p.getId() + "/images/" + i.getId(),
+                        i.getMimeType(), i.getSortOrder())).toList();
         return new PoiDtos.AdminPoiDetail(p.getId(), p.getCode(), p.getDefaultName(), p.getLatitude(),
-                p.getLongitude(), p.getStatus(), p.isDemo(), image, p.getPublishedAt(), p.getCreatedAt(),
+                p.getLongitude(), p.getCategory(), p.getTriggerRadius(), p.getStatus(), p.isDemo(), image, imageViews, p.getPublishedAt(), p.getCreatedAt(),
                 p.getUpdatedAt(), p.getRowVersion(), views);
     }
 

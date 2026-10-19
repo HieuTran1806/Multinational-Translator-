@@ -31,11 +31,14 @@ public class PoiPublicService {
 
     private final PoiRepository pois;
     private final PoiTranslationRepository translations;
+    private final PoiImageRepository images;
     private final AudioService audioService;
 
-    public PoiPublicService(PoiRepository pois, PoiTranslationRepository translations, AudioService audioService) {
+    public PoiPublicService(PoiRepository pois, PoiTranslationRepository translations, PoiImageRepository images,
+                            AudioService audioService) {
         this.pois = pois;
         this.translations = translations;
+        this.images = images;
         this.audioService = audioService;
     }
 
@@ -50,7 +53,7 @@ public class PoiPublicService {
             List<PoiTranslation> ts = byPoi.getOrDefault(p.getId(), List.of());
             String name = pick(ts, lang).map(PoiTranslation::getName).orElse(p.getDefaultName());
             return new PoiDtos.PublicPoiSummary(p.getId(), p.getCode(), name, p.getLatitude(), p.getLongitude(),
-                    imageUrl(p), languagesOf(ts), p.getUpdatedAt());
+                    imageUrl(p), p.getCategory(), p.getTriggerRadius(), languagesOf(ts), p.getUpdatedAt());
         });
     }
 
@@ -63,8 +66,8 @@ public class PoiPublicService {
         String requested = lang == null ? DEFAULT_LANGUAGE : lang;
         return new PoiDtos.PublicPoiDetail(p.getId(), p.getCode(), requested, t.getLanguageCode(),
                 !t.getLanguageCode().equals(requested), languagesOf(ts), t.getName(), t.getDescription(),
-                t.getNarrationText(), t.getContentVersion(), audio, imageUrl(p), p.getLatitude(), p.getLongitude(),
-                p.getUpdatedAt());
+                t.getNarrationText(), t.getContentVersion(), audio, imageUrl(p), imageUrls(p.getId()), p.getCategory(),
+                p.getTriggerRadius(), p.getLatitude(), p.getLongitude(), p.getUpdatedAt());
     }
 
     @Transactional(readOnly = true)
@@ -84,7 +87,8 @@ public class PoiPublicService {
         }
         String version = Hashing.sha256Hex(sig.toString()).substring(0, 16);
         return new PoiDtos.OfflineManifest(p.getId(), p.getCode(), version, Instant.now(), p.getDefaultName(),
-                p.getLatitude(), p.getLongitude(), imageUrl(p), p.getCoverImageType(), p.getUpdatedAt(), items);
+                p.getLatitude(), p.getLongitude(), imageUrl(p), p.getCoverImageType(), p.getCategory(),
+                p.getTriggerRadius(), p.getUpdatedAt(), items);
     }
 
     @Transactional(readOnly = true)
@@ -102,6 +106,17 @@ public class PoiPublicService {
 
     private static List<String> languagesOf(List<PoiTranslation> ts) {
         return ts.stream().map(PoiTranslation::getLanguageCode).sorted().toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PoiImage requirePublishedImage(Long poiId, Long imageId) {
+        requirePublished(poiId);
+        return images.findByIdAndPoiId(imageId, poiId).orElseThrow(() -> ApiException.notFound("Ảnh"));
+    }
+
+    private List<String> imageUrls(Long poiId) {
+        return images.findByPoiIdOrderBySortOrderAscIdAsc(poiId).stream()
+                .map(i -> "/api/v1/public/pois/" + poiId + "/images/" + i.getId()).toList();
     }
 
     private static String imageUrl(Poi p) {

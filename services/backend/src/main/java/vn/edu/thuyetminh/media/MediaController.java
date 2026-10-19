@@ -20,6 +20,7 @@ import vn.edu.thuyetminh.common.error.ApiException;
 import vn.edu.thuyetminh.poi.Poi;
 import vn.edu.thuyetminh.poi.PoiAdminService;
 import vn.edu.thuyetminh.poi.PoiPublicService;
+import vn.edu.thuyetminh.poi.PoiImage;
 import vn.edu.thuyetminh.poi.PoiTranslation;
 import vn.edu.thuyetminh.poi.PoiTranslationRepository;
 
@@ -68,6 +69,12 @@ public class MediaController {
         return stream(a.getStorageKey(), a.getMimeType(), false);
     }
 
+    @GetMapping("/api/v1/public/pois/{poiId}/images/{imageId}")
+    public ResponseEntity<Resource> publicPoiImage(@PathVariable Long poiId, @PathVariable Long imageId) {
+        PoiImage image = publicService.requirePublishedImage(poiId, imageId);
+        return stream(image.getStorageKey(), image.getMimeType(), true);
+    }
+
     @GetMapping("/api/v1/public/pois/{poiId}/image")
     public ResponseEntity<Resource> publicImage(@PathVariable Long poiId) {
         Poi p = publicService.requirePublished(poiId);
@@ -75,6 +82,12 @@ public class MediaController {
             throw ApiException.notFound("Ảnh");
         }
         return stream(p.getCoverImageKey(), p.getCoverImageType(), true);
+    }
+
+    @GetMapping("/api/v1/admin/pois/{poiId}/images/{imageId}")
+    public ResponseEntity<Resource> adminPoiImage(@PathVariable Long poiId, @PathVariable Long imageId) {
+        PoiImage image = adminService.requireImageEntity(poiId, imageId);
+        return stream(image.getStorageKey(), image.getMimeType(), false);
     }
 
     @GetMapping("/api/v1/admin/pois/{poiId}/image")

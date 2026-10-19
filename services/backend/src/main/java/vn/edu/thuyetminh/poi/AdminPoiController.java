@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,8 +61,15 @@ public class AdminPoiController {
         return service.update(id, req);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Xóa mềm POI; giữ lại nội dung và media để tránh mất dữ liệu liên quan")
+    public void delete(@PathVariable Long id) {
+        service.softDelete(id);
+    }
+
     @PostMapping("/{id}/publish")
-    @Operation(summary = "Công khai POI (cần ít nhất một ngôn ngữ có nội dung)")
+    @Operation(summary = "Công khai POI (cần nội dung tiếng Anh và audio tiếng Anh sẵn sàng)")
     public PoiDtos.AdminPoiDetail publish(@PathVariable Long id) {
         return service.publish(id);
     }
@@ -85,6 +93,18 @@ public class AdminPoiController {
     public AudioView uploadAudio(@PathVariable Long id, @PathVariable String lang,
                                  @RequestPart("file") MultipartFile file) {
         return service.uploadAudio(id, lang, file);
+    }
+
+    @DeleteMapping("/{id}/images/{imageId}")
+    @Operation(summary = "Xóa một ảnh của POI")
+    public PoiDtos.AdminPoiDetail deleteImage(@PathVariable Long id, @PathVariable Long imageId) {
+        return service.deleteImage(id, imageId);
+    }
+
+    @PutMapping("/{id}/images/order")
+    @Operation(summary = "Cập nhật thứ tự ảnh của POI")
+    public PoiDtos.AdminPoiDetail reorderImages(@PathVariable Long id, @RequestBody java.util.List<Long> imageIds) {
+        return service.reorderImages(id, imageIds);
     }
 
     @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

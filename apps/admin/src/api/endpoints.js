@@ -14,6 +14,7 @@ export const poiApi = {
     return request(`/api/v1/admin/pois?${params}`);
   },
   get: (id) => request(`/api/v1/admin/pois/${id}`),
+  remove: (id) => request(`/api/v1/admin/pois/${id}`, { method: 'DELETE' }),
   create: (data) => request('/api/v1/admin/pois', { method: 'POST', body: data }),
   update: (id, data) => request(`/api/v1/admin/pois/${id}`, { method: 'PUT', body: data }),
   publish: (id) => request(`/api/v1/admin/pois/${id}/publish`, { method: 'POST' }),
@@ -30,6 +31,8 @@ export const poiApi = {
     fd.append('file', file);
     return request(`/api/v1/admin/pois/${id}/image`, { method: 'POST', formData: fd });
   },
+  deleteImage: (id, imageId) => request(`/api/v1/admin/pois/${id}/images/${imageId}`, { method: 'DELETE' }),
+  reorderImages: (id, imageIds) => request(`/api/v1/admin/pois/${id}/images/order`, { method: 'PUT', body: imageIds }),
 };
 
 export const ttsApi = {
