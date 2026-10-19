@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { USE_MOCK } from '../config.js';
 import { Button } from './ui.jsx';
 
 /** Sidebar shell following Penpot page "04 — ADMIN". Only implemented features are listed (no fake links). */
@@ -11,6 +12,11 @@ export default function Layout() {
         <div className="px-6 py-6">
           <p className="text-xl font-bold tracking-tight">CỦ CHI GUIDE</p>
           <p className="text-xs font-semibold uppercase tracking-wider text-sand/70">Quản trị nội dung</p>
+          {USE_MOCK && (
+            <p className="mt-2 inline-block rounded bg-terracotta px-2 py-0.5 text-xs font-bold text-paper">
+              DỮ LIỆU GIẢ (MOCK)
+            </p>
+          )}
         </div>
         <nav className="flex gap-1 px-3 md:flex-col">
           <NavLink

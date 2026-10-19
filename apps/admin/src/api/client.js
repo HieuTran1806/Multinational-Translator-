@@ -50,6 +50,11 @@ export async function parseError(response) {
  * and signals 401 so the UI can return to the login screen.
  */
 export async function request(path, { method = 'GET', body, formData, signal, raw = false } = {}) {
+  // Same check as USE_MOCK in config.js, inlined so Vite can drop the mock chunk from production builds
+  if (import.meta.env.VITE_USE_MOCK === 'true') {
+    const { mockRequest } = await import('./mock/handlers.js');
+    return mockRequest(path, { method, body, formData, signal, raw });
+  }
   const headers = { Accept: raw ? '*/*' : 'application/json' };
   const token = tokenProvider();
   if (token) headers.Authorization = `Bearer ${token}`;
