@@ -1,21 +1,5 @@
 @import "tailwindcss";
-
-/* Tokens read from the Penpot "02 — Design System" page (values sampled from the rendered SVG). */
-@theme {
-  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
-  --color-olive: #4f5d3a;
-  --color-olive-dark: #3f4a2e;
-  --color-forest: #293526;
-  --color-earth: #795548;
-  --color-terracotta: #a65f3b;
-  --color-danger: #a94738;
-  --color-sand: #f3eacd;
-  --color-paper: #fff9ee;
-  --color-charcoal: #292824;
-  --color-stone: #777268;
-  --color-sidebar: #2e2620;
-  --color-sidebar-active: #5a4536;
-}
+@import "./theme-tokens.css";
 
 html, body, #root {
   height: 100%;
