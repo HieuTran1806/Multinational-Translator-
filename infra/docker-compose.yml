@@ -1,4 +1,4 @@
-# Local development stack: PostgreSQL + backend (dev profile, demo data).
+# Local development stack: PostgreSQL + Spring Boot backend + React Admin (dev profile, demo data).
 # Usage (from repo root):  cp infra/.env.example infra/.env  &&  docker compose -f infra/docker-compose.yml --env-file infra/.env up --build
 name: thuyet-minh
 
@@ -46,6 +46,17 @@ services:
       - media:/app/data/media
       # Uncomment to use Google Cloud TTS (file stays outside the repo):
       # - ${GOOGLE_CREDENTIALS_FILE_ON_HOST}:/run/secrets/gcp-tts.json:ro
+
+  admin:
+    build:
+      context: ../apps/admin
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:${ADMIN_PORT:-5173}:80"
 
 volumes:
   pgdata:

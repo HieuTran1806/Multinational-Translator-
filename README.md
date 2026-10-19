@@ -16,8 +16,13 @@
 
 # Tính năng chính
 
---
---
+- **Quản lý POI trên Admin:** tạo/sửa địa điểm, tìm kiếm, lọc trạng thái, phân trang và điều chỉnh số bản ghi mỗi trang.
+- **Thông tin POI:** mã, tên mặc định, tọa độ GPS, danh mục và bán kính kích hoạt (1–5.000 mét; mặc định 50 mét).
+- **Quản lý hình ảnh POI:** tải nhiều ảnh, tối đa 6 ảnh/POI, xóa ảnh và thay đổi thứ tự; ảnh đầu tiên là ảnh đại diện.
+- **Xuất bản có điều kiện:** yêu cầu nội dung tiếng Anh và audio tiếng Anh hiện hành ở trạng thái sẵn sàng.
+- **Xóa mềm POI:** ẩn POI khỏi danh sách và luồng công khai nhưng giữ lại bản ghi cùng dữ liệu liên quan.
+- **Thuyết minh đa ngôn ngữ:** quản lý bản dịch, audio tải lên hoặc tạo bằng Google Cloud TTS; hỗ trợ nội dung và audio đã tải để dùng offline.
+- **Mobile:** khám phá POI, chọn ngôn ngữ và phát audio online/offline theo khả năng hiện có của MVP.
 
 # Demo
 
@@ -73,7 +78,7 @@ Luồng MVP: Admin đăng nhập → tạo địa điểm (POI) → nhập nội
 | `apps/mobile` | React Native CLI 0.87 + TypeScript (Android trước, iOS chuẩn bị sẵn) |
 | `apps/admin` | Web quản trị React (JavaScript) + Vite + Tailwind CSS |
 | `services/backend` | Spring Boot 4.1 (Java 21, Maven Wrapper), monolith chia module theo chức năng |
-| `infra` | Docker Compose (PostgreSQL + backend), script tạo audio demo, fixture |
+| `infra` | Docker Compose (PostgreSQL + backend + web Admin), script tạo audio demo, fixture |
 | `docs` | Kiến trúc, ERD, API, triển khai, CI/CD, Google TTS/Maps, backlog, báo cáo kiểm chứng |
 | `.github/workflows` | CI (chỉ kiểm tra/build, không deploy) |
 
@@ -102,8 +107,11 @@ cp infra/.env.example infra/.env
 docker compose -f infra/docker-compose.yml --env-file infra/.env up --build
 ```
 
-- Health check: <http://localhost:8080/actuator/health>
+- Web Admin: <http://localhost:5173>
+- Backend health check: <http://localhost:8080/actuator/health>
 - Swagger UI (chỉ dev): <http://localhost:8080/swagger-ui.html>
+- PostgreSQL chỉ publish trên loopback `127.0.0.1:5432`; backend kết nối qua hostname nội bộ `postgres`.
+- Web Admin được build thành static assets và phục vụ bởi Nginx; `VITE_API_BASE_URL` được nhúng vào bundle tại thời điểm build. Nếu đổi URL API, build lại bằng `docker compose ... up --build`.
 - Profile `dev` nạp **2 POI demo công khai + 1 POI nháp** (tên có nhãn `[DEMO]`) và gắn **audio demo dạng tiếng bíp** (không phải giọng đọc) để mobile phát được ngay.
 - Sau khi admin đã được tạo, đặt lại `APP_BOOTSTRAP_ADMIN_ENABLED=false`.
 
@@ -167,7 +175,8 @@ Production dùng cùng cơ chế với secret của nền tảng hosting, chỉ 
 | `APP_STORAGE_LOCAL_ROOT` | backend | Thư mục lưu audio/ảnh (volume Docker) |
 | `APP_TTS_PROVIDER` | backend | `none` (mặc định) hoặc `google` |
 | `GOOGLE_APPLICATION_CREDENTIALS` | backend | Đường dẫn file service account (khi `google`) |
-| `VITE_API_BASE_URL` | admin | URL backend (public, nhúng vào bundle) |
+| `VITE_API_BASE_URL` | admin | URL backend (public, nhúng vào bundle lúc build Docker) |
+| `ADMIN_PORT` | admin | Cổng trên máy host (mặc định `5173`) |
 | `API_BASE_URL`, `GOOGLE_MAPS_ANDROID_API_KEY`, `GOOGLE_MAPS_IOS_API_KEY` | mobile | Trong `apps/mobile/.env` (không phải bí mật) |
 
 ## Chạy test
@@ -194,6 +203,29 @@ Những gì các test kiểm tra: [`docs/development/testing.md`](docs/developme
 
 - TTS (chỉ backend gọi): [`docs/integrations/google-tts.md`](docs/integrations/google-tts.md)
 - Maps (Android/iOS, giới hạn key): [`docs/integrations/google-maps.md`](docs/integrations/google-maps.md)
+
+## Quản lý POI Admin — trạng thái triển khai
+
+Phần quản lý POI được triển khai trong `apps/admin` và `services/backend`.
+
+- Danh sách POI sử dụng API thật, có tìm kiếm, lọc trạng thái, phân trang và chọn kích thước trang 10/20/50/100.
+- Form tạo/sửa POI có kiểm tra dữ liệu, bao gồm tọa độ, danh mục và bán kính kích hoạt.
+- Xuất bản yêu cầu có bản dịch tiếng Anh (`en`) và audio tiếng Anh hiện hành sẵn sàng; nếu thiếu điều kiện, API từ chối xuất bản.
+- Xóa POI là xóa mềm thông qua `deleted_at`; không xóa cứng bản ghi hoặc tự động xóa dữ liệu bản dịch/media liên quan.
+- Mỗi POI hỗ trợ tối đa 6 ảnh. Có thể tải lên, xóa và sắp xếp ảnh; ảnh đầu tiên là ảnh đại diện.
+- Migration `V3__align_poi_admin_uc10.sql` bổ sung `category`, `trigger_radius`, `deleted_at` và bảng `poi_image`. Migration cần được chạy qua quy trình Flyway của backend; không tự sửa database thủ công.
+
+### Kiểm tra gần nhất
+
+| Kiểm tra | Kết quả |
+|---|---|
+| Admin: `npm test` | 17 tests passed |
+| Admin: `npm run lint` | Passed |
+| Admin: `npm run build` | Passed |
+| Backend: `./mvnw clean test` (JDK 21+) | 10 tests passed |
+| Backend integration tests / PostgreSQL migration | **Chưa xác minh trong lượt cập nhật này**; cần PostgreSQL khả dụng và chạy `./mvnw verify` theo mục [Chạy test](#chạy-test) |
+
+> Lưu ý: các kết quả trên là lần kiểm tra gần nhất của nhánh làm việc, không phải cam kết rằng integration tests hoặc migration đã chạy thành công trên database thực.
 
 ## Giới hạn MVP
 
