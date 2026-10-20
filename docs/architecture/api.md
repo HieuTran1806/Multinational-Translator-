@@ -1,5 +1,7 @@
 # REST API `/api/v1`
 
+> **Lưu ý phạm vi:** Tài liệu này phản ánh hợp đồng/hiện trạng API hiện có. Nghiệp vụ đích mới cần bổ sung giao dịch Seller, xác minh thanh toán, QR dùng một lần, quyền User có thời hạn và báo cáo Seller; các endpoint/cơ chế offline cũ không thuộc phạm vi nghiệp vụ online-only và cần được rà soát riêng.
+
 OpenAPI: `GET /v3/api-docs`, Swagger UI: `/swagger-ui.html` (bật ở dev; tắt ở prod trừ khi `APP_API_DOCS_ENABLED=true`).
 
 URL media trong response là **đường dẫn tương đối** (ví dụ `/api/v1/public/audio/12`); client tự ghép với base URL.
@@ -61,7 +63,7 @@ Query `page` (từ 0), `size` (1..100). Response: `{ items, page, size, totalIte
 | POST | `/admin/pois` | Tạo POI (nháp) → 201 |
 | GET | `/admin/pois/{id}` | Chi tiết, nội dung, audio hiện hành, job TTS gần nhất |
 | PUT | `/admin/pois/{id}` | Sửa (gửi `rowVersion` để phát hiện ghi đè → 409) |
-| POST | `/admin/pois/{id}/publish` | Công khai (cần ≥ 1 ngôn ngữ có nội dung) |
+| POST | `/admin/pois/{id}/publish` | Công khai theo đích nghiệp vụ: yêu cầu English content hợp lệ và audio tiếng Anh hiện hành khớp content version; xác minh implementation trước khi coi là đã hỗ trợ |
 | POST | `/admin/pois/{id}/unpublish` | Về nháp |
 | PUT | `/admin/pois/{id}/translations/{lang}` | Lưu nội dung; đổi `narrationText` → `contentVersion+1`, audio cũ `STALE` |
 | POST | `/admin/pois/{id}/translations/{lang}/audio` | multipart `file` (MP3/M4A/WAV/OGG, ≤ 20 MB, kiểm tra magic bytes) → 201 |
@@ -75,3 +77,32 @@ Query `page` (từ 0), `size` (1..100). Response: `{ items, page, size, totalIte
 ## Health
 
 `GET /actuator/health` (+ `/liveness`, `/readiness`) — public, không lộ chi tiết.
+
+## Hợp đồng đích Seller/Payment/QR — chưa triển khai/xác minh
+
+> Phần này là đề xuất kiến trúc đích, không khẳng định endpoint đã tồn tại trong OpenAPI hoặc mã nguồn.
+
+| Method | Path đề xuất | Hành vi |
+|---|---|---|
+| POST | `/seller/transactions` | Định hướng giai đoạn sau (UC12 ngoài MVP); gói lấy từ cấu hình/dữ liệu, không hard-code. |
+| POST | `/seller/transactions/{id}/cancel` | Định hướng giai đoạn sau; chính sách hủy do Seller/chủ sản phẩm chốt khi UC12 được triển khai. |
+| GET | `/seller/transactions/{id}` | Định hướng giai đoạn sau; kiểm tra ownership phía backend, không lộ secret. |
+| POST | `/payments/vnpay/return` | Điều hướng trình duyệt; không coi redirect là bằng chứng thanh toán. |
+| POST | `/payments/vnpay/ipn` | Xác minh chữ ký, mã tham chiếu, số tiền/trạng thái; xử lý idempotent; sai lệch chuyển sang cần kiểm tra. |
+| POST | `/public/access/redeem` | Định hướng giai đoạn sau khi tích hợp tạo/cấp QR; QR redeem một lần, không hết hạn trước redeem nhưng có thể bị thu hồi; grant 24h từ redeem thành công theo cấu hình gói demo. |
+| GET | `/public/access/me` | Kiểm tra grant hiện tại và thời hạn ở backend. |
+
+### Quy tắc tích hợp VNPAY Sandbox
+
+- Chỉ cấu hình endpoint và merchant credentials sandbox; secret không được commit vào repository.
+- Xác minh checksum/chữ ký theo tài liệu chính thức, đối chiếu mã đơn hàng, số tiền và trạng thái. Không tin tham số từ trình duyệt đơn thuần.
+- Callback lặp/trễ phải idempotent; không tạo QR/grant trùng. Kiểm thử chữ ký sai, số tiền/mã sai, callback trễ/lặp và timeout.
+- Chỉ phát QR sau khi backend xác nhận thanh toán. Grant và đánh dấu QR đã dùng phải được bảo vệ bởi transaction/constraint để không thể cấp hai grant.
+- UC12 ngoài MVP. Thiết kế gói phải mở rộng được; `DEMO_24H` (1 VND/24 giờ từ redeem thành công) chỉ là cấu hình demo tham khảo cho giai đoạn sau. Phương thức thu tiền/cấp QR do Seller tự quyết định trong MVP.
+- IPN có thể cần URL backend truy cập được từ Internet; `localhost` không tự nhận callback từ nhà cung cấp. Nếu dùng tunnel, chỉ dùng tunnel demo có kiểm soát.
+
+### Bảo vệ quyền User
+
+Tất cả API User yêu cầu grant hợp lệ ở backend, ngoại trừ endpoint tối thiểu cần thiết để xem/đổi QR và xử lý lỗi. QR dùng một lần; grant gắn với phiên trình duyệt/credential. Mất cookie hoặc đổi trình duyệt cần quy trình hỗ trợ được đặc tả, không tự động cấp lại grant.
+
+Các endpoint ở bảng trên là hợp đồng đề xuất; cần đối chiếu controller, SecurityConfig, migration/schema và integration tests trước khi công bố là khả dụng. API hiện tại cho phép truy cập public cần được rà soát theo điều kiện grant mới.

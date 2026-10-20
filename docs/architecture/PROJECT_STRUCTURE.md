@@ -1,6 +1,6 @@
 # Bản đồ cấu trúc thư mục
 
-Tài liệu này mô tả trách nhiệm của các thư mục hiện có và các thư mục feature được chuẩn bị theo `docs/development/DEVELOPMENT_STANDARDS.md`, 16 Use Case và Penpot `02 — Design System`.
+Tài liệu này mô tả cấu trúc repository hiện có. Lưu ý: cấu trúc bên dưới vẫn phản ánh ứng dụng Mobile React Native/Admin Web trước thay đổi nghiệp vụ; chưa phải kiến trúc đích cho website User online-only và Seller/QR theo `docs/requirements/Use_Case_Specification_Final_15_UC.md`. Cần có thay đổi kiến trúc/triển khai riêng; cập nhật đặc tả không tự động chuyển đổi mã nguồn.
 
 ## 1. Cây thư mục chính
 
@@ -81,7 +81,7 @@ Multitional-Translator-/
 Trang `02 — Design System` có các nhóm token màu, typography, spacing, iconography, buttons, inputs, cards, navigation, POI marker, audio control, feedback và state coverage. Vì vậy:
 - UI dùng token/component chung; không tạo palette riêng trong từng feature.
 - Button/Input/Card/Feedback nên tái sử dụng từ component dùng chung.
-- POI/audio/offline/permission UI chỉ chứa behavior thuộc đúng Use Case.
+- POI/audio/permission UI chỉ chứa behavior thuộc đúng Use Case; các thư mục offline hiện hữu là dấu vết triển khai cũ và không thuộc phạm vi nghiệp vụ đích.
 - Các state board không mặc nhiên là route/màn hình độc lập.
 
 Penpot hiện được dùng làm nguồn tham chiếu thiết kế. Việc kiểm tra cấu trúc trang không tự động chứng minh rằng toàn bộ token đã được xuất thành code hoặc mọi UI đã hoàn thiện.
@@ -95,5 +95,5 @@ Các thư mục con feature trong `apps/mobile/src/screens/`, `apps/admin/src/fe
 1. Đặt code gần feature sở hữu; tránh nhân bản logic.
 2. Trước khi chuyển file, kiểm tra import, route, test và build.
 3. Controller không nên chứa business logic; UI không phải cơ chế bảo mật.
-4. Không tạo feature/màn hình ngoài 16 Use Case nếu chưa được phê duyệt.
+4. Không tạo feature/màn hình ngoài 15 Use Case hiện hành nếu chưa được phê duyệt.
 5. Khi thêm code vào thư mục mới, cập nhật README tương ứng để mô tả module thực tế.

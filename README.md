@@ -254,3 +254,11 @@ Backlog đầy đủ: [`docs/planning/backlog.md`](docs/planning/backlog.md). Ki
 - CI/CD tự động hóa build & deploy
 
 ---
+## Thanh toán demo — chưa khẳng định đã tích hợp
+
+- Phạm vi đã chốt: một gói `DEMO_24H`, giá 1 VND, thời hạn 24 giờ tính từ lúc đổi QR thành công.
+- UC12 (thanh toán, giao dịch và tạo QR nội bộ) ngoài MVP; Seller tự quyết định cách thu tiền và cung cấp QR ngoài hệ thống. VNPAY Sandbox chỉ là phương án tham khảo cho giai đoạn sau.
+- Hủy chỉ trước khi QR được đổi; chưa hỗ trợ hoàn tiền sau kích hoạt. QR dùng một lần và grant phải được kiểm tra ở backend.
+- Seller/payment/QR là phần kiến trúc đích cho tới khi được xác minh bằng code, schema/migration, OpenAPI và test.
+- Callback/IPN có thể cần backend URL truy cập được từ Internet; localhost đơn thuần không nhận callback bên ngoài. Chỉ dùng tunnel/môi trường demo có kiểm soát khi cần.
+- Analytics, Audit Log và NFR mục tiêu được mô tả trong `docs/requirements/BRD.md`; các ngưỡng định lượng chưa được đo kiểm.

@@ -1,12 +1,12 @@
 # Quy ước phát triển Multitional Translator
 
-> **Mục đích:** Thống nhất các quy tắc về code, giao diện, API, bảo mật, kiểm thử và quy trình phối hợp để cả nhóm phát triển 16 Use Case theo cùng một chuẩn.
+> **Mục đích:** Thống nhất các quy tắc về code, giao diện, API, bảo mật, kiểm thử và quy trình phối hợp để cả nhóm phát triển các Use Case theo cùng một chuẩn.
 >
-> **Nguồn chuẩn:** Tài liệu Use Case trong `docs/requirements/Use_Case_Specification_Final_16_UC.md` xác định phạm vi và hành vi nghiệp vụ. Penpot `02 — Design System` là nguồn tham chiếu thiết kế. Khi tài liệu chưa quyết định một chi tiết kỹ thuật, nhóm phải thống nhất và ghi lại trước khi triển khai; ví dụ trong tài liệu này không tự động trở thành quyết định về framework hay cấu hình thực tế.
+> **Nguồn chuẩn:** Tài liệu Use Case trong `docs/requirements/Use_Case_Specification_Final_15_UC.md` xác định phạm vi và hành vi nghiệp vụ. Penpot `02 — Design System` là nguồn tham chiếu thiết kế. Khi tài liệu chưa quyết định một chi tiết kỹ thuật, nhóm phải thống nhất và ghi lại trước khi triển khai; ví dụ trong tài liệu này không tự động trở thành quyết định về framework hay cấu hình thực tế.
 
 ## 1. Nguyên tắc chung
 
-1. **Bám sát phạm vi 16 Use Case.** Không tự thêm tính năng, màn hình hoặc luồng nghiệp vụ ngoài đặc tả nếu chưa được thống nhất.
+1. **Bám sát phạm vi 15 Use Case hiện hành và các mục đã được chủ sản phẩm phê duyệt.** Không tự thêm tính năng, màn hình hoặc luồng nghiệp vụ ngoài đặc tả nếu chưa được thống nhất.
 2. **Một nguồn sự thật cho mỗi loại quyết định:**
    - Phạm vi và hành vi: tài liệu Use Case.
    - Màu sắc, kiểu chữ, khoảng cách và thành phần UI: Penpot Design System.
