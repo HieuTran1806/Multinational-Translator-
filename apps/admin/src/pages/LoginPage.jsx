@@ -66,9 +66,6 @@ export default function LoginPage() {
         <Button type="submit" className="w-full" loading={submitting}>
           {submitting ? 'Đang xác thực…' : 'Đăng nhập'}
         </Button>
-        <p className="text-xs text-stone">
-          Chưa có tài khoản? Tài khoản quản trị do người phụ trách hệ thống cấp (xem README).
-        </p>
       </form>
     </div>
   );
