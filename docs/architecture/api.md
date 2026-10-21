@@ -63,9 +63,9 @@ Tham số truy vấn `page` (bắt đầu từ 0), `size` (1..100). Phản hồi
 - `SUPER_ADMIN`: quản lý tài khoản Admin, RBAC và Audit Log; không có quyền quản lý POI hoặc Seller.
 - Chỉ `SUPER_ADMIN` được xem Audit Log toàn hệ thống. Mọi quy tắc phải được thực thi tại backend, không chỉ ẩn giao diện.
 
-> **RBAC đích đã chốt, chưa được xác minh là thực thi đầy đủ trong mã nguồn:** Admin quản lý POI/nội dung/audio và Seller; Super Admin không được truy cập chức năng quản lý POI hoặc Seller, chỉ quản lý Admin/RBAC và xem Audit Log. Tài liệu API hiện tại mô tả một số đường dẫn dùng chung `ADMIN/SUPER_ADMIN`; phải kiểm tra/cập nhật SecurityConfig và kiểm thử theo vai trò trước khi coi quy tắc này đã được thực thi.
+> **RBAC đích đã chốt, đã thực thi một phần:** `SecurityConfig` giới hạn toàn bộ `/api/v1/admin/**` cho vai trò `ADMIN`, nên Super Admin bị từ chối (403) khi quản lý POI/nội dung/audio; kiểm thử `SecurityIT.superAdminCannotManagePoiContent` và `apps/admin/scripts/verify-e2e.mjs` xác minh lại. Các endpoint dành riêng cho Super Admin (quản lý Admin/RBAC/Audit Log) chưa được triển khai, nên hiện chưa có đường dẫn nào chỉ Super Admin truy cập được; khi bổ sung phải khai báo matcher riêng trước `/api/v1/admin/**`.
 
-## API quản trị (Bearer token, vai trò ADMIN/SUPER_ADMIN)
+## API quản trị (Bearer token, vai trò ADMIN)
 
 | Phương thức | Đường dẫn | Mô tả |
 |---|---|---|
