@@ -1,22 +1,21 @@
-# Local Docker environment
+# Môi trường Docker local
 
-This directory provides a local development stack for the services present on the
-`phase-1-contract-baseline` branch: PostgreSQL and the Spring Boot backend.
+Docker Compose cung cấp PostgreSQL và backend Spring Boot cho phát triển local. Admin web chạy riêng bằng Vite.
 
-## Requirements
+## Yêu cầu
 
-- Docker Desktop with Docker Compose v2+
-- Ports 5432 and 8080 available (or override them in `.env`)
-- Network access for the first image build and Maven dependency download
+- Docker Desktop và Docker Compose v2+
+- Cổng 5432 và 8080 chưa bị sử dụng (hoặc đổi trong `.env`)
+- Kết nối Internet lần đầu để tải image và Maven dependencies
 
-## Start
+## Khởi động
 
-From the repository root in PowerShell:
+Chạy trong PowerShell từ thư mục gốc repository:
 
 ```powershell
-Copy-Item infra/.env.example infra/.env
+if (-not (Test-Path infra/.env)) { Copy-Item infra/.env.example infra/.env }
 notepad infra/.env
-# Set POSTGRES_PASSWORD to a private local password before starting.
+# Đổi POSTGRES_PASSWORD thành mật khẩu riêng cho môi trường local.
 docker compose --env-file infra/.env -f infra/docker-compose.yml config
 docker compose --env-file infra/.env -f infra/docker-compose.yml up --build -d
 docker compose --env-file infra/.env -f infra/docker-compose.yml ps
@@ -24,32 +23,22 @@ docker compose --env-file infra/.env -f infra/docker-compose.yml ps
 
 Backend: http://localhost:8080  
 Health: http://localhost:8080/actuator/health  
-Readiness: http://localhost:8080/actuator/health/readiness  
-Liveness: http://localhost:8080/actuator/health/liveness
+Readiness: http://localhost:8080/actuator/health/readiness
 
-The `dev` Spring profile runs Flyway migrations and loads development demo data.
-Use a separate database for integration tests; do not point tests at the development
-database.
+Profile `dev` chạy Flyway migrations và nạp dữ liệu demo. Để chạy Admin, xem [README gốc](../README.md#3-khởi-động-admin-web).
 
-## Inspect and stop
+## Nhật ký và dừng
 
 ```powershell
 docker compose --env-file infra/.env -f infra/docker-compose.yml logs --tail 200 backend postgres
 docker compose --env-file infra/.env -f infra/docker-compose.yml down
 ```
 
-The ordinary `down` command preserves named volumes. Do not add `-v` unless you
-intentionally want to delete the database and media volumes.
+Lệnh `down` thông thường giữ named volumes. Không thêm `-v` nếu chưa chủ động muốn xóa database và media local.
 
-## Scope on this branch
+## Lưu ý
 
-This branch currently does not contain `apps/admin/` or `apps/mobile/`. Consequently,
-this Compose file does not claim to run the entire product UI or mobile app. The Admin
-web app can only be added to the stack after its source and Docker build context are
-restored to this branch. Mobile apps are normally built and run with their platform
-toolchains, not as a long-running Compose service.
-
-The backend image is built from the current source. It uses PostgreSQL in this stack,
-a named volume for uploaded media, and the Dockerfile health check. Production deployment
-requires separate secrets, HTTPS, a persistent storage/backup plan, and production
-configuration; this local stack is not a production deployment.
+- `infra/.env` chỉ dành cho local và không được commit.
+- Nếu cần tạo Admin đầu tiên, chỉ bật `APP_BOOTSTRAP_ADMIN_ENABLED` với username/password local trong lúc khởi tạo, sau đó tắt lại.
+- TTS Google cần credentials được cấu hình riêng; mặc định `APP_TTS_PROVIDER=none`.
+- Đây không phải cấu hình production. Production cần secrets riêng, HTTPS, database có backup và nơi lưu media bền vững.

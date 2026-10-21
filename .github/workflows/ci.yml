@@ -3,7 +3,6 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -34,6 +33,8 @@ jobs:
           test -f docs/reports/current-state-inventory.md
           test -f docs/operations/ci-cd.md
           test -f services/backend/ARCHITECTURE.md
+          test -f apps/admin/package.json
+          test -f apps/admin/package-lock.json
       - name: Check patch whitespace
         shell: bash
         env:
@@ -67,3 +68,27 @@ jobs:
           cache: maven
       - name: Run unit tests
         run: ./mvnw --batch-mode --no-transfer-progress clean test
+
+  admin-quality:
+    name: Admin lint, tests and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/admin
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/admin/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
