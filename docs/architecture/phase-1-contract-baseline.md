@@ -1,4 +1,4 @@
-﻿# Phase 1 — Shared contract baseline
+# Phase 1 — Shared contract baseline
 
 Status: **Draft baseline for review by all three contributors.** The retained legacy code is evidence only; the approved contract in this document and the linked requirements must govern the rebuild. Unresolved business decisions must be raised rather than guessed.
 
@@ -19,7 +19,8 @@ Proposed common response:
 
 ```json
 {
-  "code": "VALIDATION_ERROR",
+  "code": "VALIDATION_FAILED",
+  "status": 400,
   "message": "Request validation failed",
   "path": "/api/v1/example",
   "timestamp": "2026-01-01T00:00:00Z",
@@ -29,19 +30,19 @@ Proposed common response:
 
 `fieldErrors` may be omitted when not applicable. Do not expose stack traces, secrets, internal SQL, tokens, or provider credentials.
 
-- `400 VALIDATION_ERROR` — malformed or invalid input.
+- `400 VALIDATION_FAILED` — malformed or invalid input.
 - `401 UNAUTHENTICATED` — missing, invalid, expired, or revoked authentication.
 - `403 FORBIDDEN` — authenticated principal lacks permission or violates protected self-management rules.
 - `404 NOT_FOUND` — resource absent or deliberately concealed by the access policy.
 - `409 CONFLICT` — state transition, uniqueness, optimistic-lock, duplicate payment/QR or lifecycle conflict.
 - `413 PAYLOAD_TOO_LARGE` — upload/request exceeds configured limit.
-- `415 UNSUPPORTED_MEDIA_TYPE` — unsupported content type.
+- `415 UNSUPPORTED_MEDIA` — unsupported content type.
 - `422 BUSINESS_RULE_VIOLATION` — syntactically valid request cannot be applied under business rules (use consistently; do not overlap casually with 409).
 - `429 RATE_LIMITED` — rate limit reached.
 - `500 INTERNAL_ERROR` — unexpected failure with correlation ID, no sensitive internals.
 - `503 DEPENDENCY_UNAVAILABLE` — required dependency unavailable.
 
-Agree exact field names and whether business-rule failures use 409 or 422 before implementation. Error codes are stable machine-readable contract; localized text belongs in `message` only if localization policy is agreed.
+The common response fields are `code`, `status`, `message`, `path`, and `timestamp`; `fieldErrors` is optional. Error codes are stable machine-readable contract. The team must decide whether business-rule failures use 409 or 422 before implementation; do not use both inconsistently.
 
 ## 3. Identity and RBAC baseline
 
