@@ -1,5 +1,7 @@
 # Kiểm thử
 
+> Các test offline hiện có trong bảng bên dưới là kiểm thử legacy của code hiện tại; chúng không phải tiêu chí nghiệm thu cho ứng dụng User online-only và không có nghĩa tính năng offline nằm trong phạm vi mục tiêu.
+
 | Yêu cầu | Test | Thành phần |
 |---|---|---|
 | Khách không gọi được API admin | `SecurityIT.guestCannotCallAdminApi` | backend IT |
@@ -23,7 +25,7 @@
 
 Lệnh chạy: xem README mục "Chạy test". Integration test backend cần PostgreSQL (`TEST_DB_URL`); bảng dữ liệu bị `TRUNCATE` trước mỗi test, nên **không trỏ vào DB thật**.
 
-## Kịch bản kiểm thử giai đoạn sau — Seller, thanh toán và QR (ngoài MVP/UC12)
+## Kịch bản kiểm thử mục tiêu — RBAC, Seller, thanh toán và QR (các phần UC12 ngoài MVP)
 
 > Đây là test plan; không có nghĩa các kịch bản đã có test tự động hoặc đã chạy thành công.
 

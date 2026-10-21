@@ -1,5 +1,7 @@
 # Ứng dụng di động (React Native CLI)
 
+> **Trạng thái phạm vi:** ứng dụng User mục tiêu hoạt động online-only. Các hướng dẫn offline bên dưới mô tả code/test legacy hiện có, không phải yêu cầu nghiệm thu hoặc tính năng cần tiếp tục phát triển. Không bổ sung tải offline, offline map, POI hoặc audio.
+
 ## Màn hình (đối chiếu Penpot)
 
 | Penpot | Màn hình MVP | Ghi chú |

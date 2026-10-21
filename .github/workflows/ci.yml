@@ -1,12 +1,10 @@
-# Continuous Integration: checks + builds only. Nothing is deployed from this workflow.
-name: CI
+﻿name: CI
 
 on:
   pull_request:
   push:
     branches: [main]
 
-# Least privilege: read-only token. No secrets are used by CI.
 permissions:
   contents: read
 
@@ -15,142 +13,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  backend:
-    name: Backend (Java 21 / Maven)
+  contract-docs:
+    name: Contract documentation checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    defaults:
-      run:
-        working-directory: services/backend
-    services:
-      postgres:
-        image: postgres:16-alpine
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify required baseline documents
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f README.md
+          test -f docs/README.md
+          test -f docs/requirements/BRD.md
+          test -f docs/requirements/Use_Case_Specification_Final_15_UC.md
+          test -f docs/architecture/api.md
+          test -f docs/architecture/phase-1-contract-baseline.md
+          test -f docs/reports/current-state-inventory.md
+          test -f docs/operations/ci-cd.md
+      - name: Check patch whitespace
+        shell: bash
         env:
-          POSTGRES_DB: thuyetminh_test
-          POSTGRES_USER: thuyetminh
-          POSTGRES_PASSWORD: ci-only-password
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U thuyetminh -d thuyetminh_test"
-          --health-interval 5s --health-timeout 5s --health-retries 20
-    env:
-      TEST_DB_URL: jdbc:postgresql://localhost:5432/thuyetminh_test
-      TEST_DB_USERNAME: thuyetminh
-      TEST_DB_PASSWORD: ci-only-password
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-java@v6.0.1
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-      - name: Unit + integration tests (Flyway migrations run against PostgreSQL, Hibernate validates schema)
-        run: ./mvnw -B -ntp verify
-      - name: Upload test reports on failure
-        if: failure()
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: backend-test-reports
-          path: |
-            services/backend/target/surefire-reports
-            services/backend/target/failsafe-reports
-          retention-days: 7
-      - name: Upload JAR
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: backend-jar
-          path: services/backend/target/thuyet-minh-backend.jar
-          retention-days: 7
-
-  backend-docker:
-    name: Backend Docker image builds
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    needs: backend
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: docker/setup-buildx-action@v4.4.1
-      - name: Build image (not pushed)
-        uses: docker/build-push-action@v7.4.0
-        with:
-          context: services/backend
-          push: false
-          tags: thuyet-minh-backend:ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  admin:
-    name: Web admin (lint, test, build)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: apps/admin
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-node@v7.0.0
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: apps/admin/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
-        env:
-          VITE_API_BASE_URL: https://api.example.invalid   # placeholder; real value is set on the hosting side
-      - uses: actions/upload-artifact@v7.0.1
-        with:
-          name: admin-dist
-          path: apps/admin/dist
-          retention-days: 7
-
-  mobile-js:
-    name: Mobile (lint, typecheck, unit tests)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: apps/mobile
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-node@v7.0.0
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: apps/mobile/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-
-  mobile-android:
-    name: Mobile Android debug APK
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    needs: mobile-js
-    defaults:
-      run:
-        working-directory: apps/mobile
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-node@v7.0.0
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: apps/mobile/package-lock.json
-      - uses: actions/setup-java@v6.0.1
-        with:
-          distribution: temurin
-          java-version: "17"
-      - uses: gradle/actions/setup-gradle@v6.3.0
-      - run: npm ci
-      # No .env in CI: the APK is built without a Maps key and shows "map not configured".
-      - name: Assemble debug APK (two ABIs to keep build time reasonable)
-        working-directory: apps/mobile/android
-        run: ./gradlew assembleDebug --no-daemon -PreactNativeArchitectures=arm64-v8a,x86_64
-      - uses: actions/upload-artifact@v7.0.1
-        with:
-          name: android-debug-apk
-          path: apps/mobile/android/app/build/outputs/apk/debug/*.apk
-          retention-days: 7
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$PR_BASE" ]]; then
+            base="$PR_BASE"
+          elif [[ "$PUSH_BEFORE" =~ ^0+$ ]]; then
+            base="HEAD^"
+          else
+            base="$PUSH_BEFORE"
+          fi
+          git diff --check "$base...HEAD"

@@ -204,15 +204,15 @@ Các luồng audio, offline và analytics cần quy định rõ trạng thái h�
 ## 7. Bảo mật, tài khoản và phân quyền
 
 - Backend là nơi thực thi quyền truy cập có thẩm quyền; mọi endpoint nhạy cảm phải kiểm tra quyền ở server.
-- Áp dụng RBAC theo UC14; UI chỉ hỗ trợ trải nghiệm và không thay thế kiểm tra quyền phía backend.
-- Phân biệt rõ UC12 (quản lý tài khoản người dùng) và UC13 (quản lý tài khoản Admin).
+- Áp dụng RBAC theo UC11; UI chỉ hỗ trợ trải nghiệm và không thay thế kiểm tra quyền phía backend.
+- Phân biệt rõ UC09 (quản lý tài khoản Seller) và UC10 (quản lý tài khoản Admin).
 - Quy trình tạo Admin, vai trò mặc định và quyền có hiệu lực phải theo Use Case/đặc tả đã thống nhất; không tự gán thêm quyền.
 - Kiểm tra dữ liệu ở cả frontend (trải nghiệm) và backend (bảo vệ dữ liệu).
 - Không log mật khẩu, token, secret hoặc dữ liệu cá nhân không cần thiết.
 - Không lưu secret trong source control; dùng biến môi trường và cung cấp file mẫu không chứa giá trị bí mật.
 - Thao tác nhạy cảm hoặc phá hủy phải xác nhận phù hợp và kiểm tra quyền ở backend.
 - Audit Log phải được ghi nhận ở backend cho những hành động thuộc phạm vi yêu cầu; không dựa vào log frontend làm bằng chứng kiểm toán.
-- Không tự thêm chức năng Audit Log Detail/export nếu không nằm trong phạm vi đã duyệt.
+- Không triển khai chức năng xuất báo cáo. Audit Log chỉ cho Super Admin xem; không tự thêm export/log download.
 
 ## 8. Git và phối hợp nhóm
 
@@ -262,8 +262,8 @@ Tùy stack, ưu tiên:
 
 Các luồng E2E tối thiểu cần cân nhắc dựa trên đặc tả:
 
-- Tourist: đăng ký/đăng nhập, chọn ngôn ngữ, khám phá bản đồ, mở chi tiết POI, phát audio, quản lý dữ liệu offline.
-- Admin: đăng nhập, quản lý POI, theo dõi tiến độ audio, quản lý User/Admin, quản lý Role/Permission, xem Analytics và Audit Log.
+- User: kích hoạt QR một lần, khôi phục phiên trên cùng thiết bị trong 24 giờ, chọn ngôn ngữ, khám phá bản đồ, mở chi tiết POI và phát audio online. Không có tài khoản Tourist hoặc tính năng offline.
+- Admin: đăng nhập, quản lý POI/nội dung/audio, tạo/quản lý Seller, xem Analytics. Super Admin: quản lý Admin/RBAC và xem Audit Log; không quản lý POI/Seller.
 - Phân quyền: kiểm tra cả trường hợp được phép và bị từ chối ở backend.
 
 ### 9.2 Checklist Definition of Done

@@ -1,5 +1,5 @@
-# GitHub Workflows
+﻿# GitHub Workflows
 
-Chứa workflow tự động hóa như build, test, lint, kiểm tra chất lượng và deployment khi được cấu hình.
+This branch keeps a documentation/contract validation workflow at `.github/workflows/ci.yml`. It checks required baseline documents and whitespace errors only; there are no application build or deployment jobs while implementation directories are absent.
 
-Mỗi workflow cần trigger/permissions rõ ràng, dùng secret an toàn, báo lỗi đáng tin cậy và tránh triển khai production từ nhánh không được phép. Cập nhật `docs/operations/ci-cd.md` khi pipeline thay đổi.
+When application components are rebuilt, reintroduce test/build jobs after confirming their source trees and commands. Use least-privilege permissions, trusted triggers, timeouts, concurrency, safe secrets handling, and update `docs/operations/ci-cd.md` whenever the workflow changes. Deployment templates under `docs/operations/cd-templates/` are inactive references.
