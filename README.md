@@ -1,9 +1,11 @@
 # Multitional-Translator — Nền tảng hợp đồng
 
-Nhánh nền hợp đồng Giai đoạn 1. Backend cũ đã được khôi phục riêng tại `services/backend/` để chuẩn hóa dần; các phần triển khai khác vẫn không có trên nhánh này. Bản gốc vẫn được giữ trên nhánh `XuanHoai_UC01-03`.
+Nhánh nền hợp đồng Giai đoạn 1. Backend cũ đã được khôi phục riêng tại `services/backend/` để chuẩn hóa dần; ứng dụng quản trị đã được khôi phục tại `apps/admin/` để hoàn thiện Admin module (UC07) trên nền backend này. Bản gốc vẫn được giữ trên nhánh `XuanHoai_UC01-03`.
 
 ## Nội dung kho mã
 
+- `apps/admin/` — web quản trị React + Vite: đăng nhập, quản lý POI, bản dịch theo ngôn ngữ, hình ảnh, audio.
+- `design-system/tokens.json` — token thiết kế dùng chung (sinh ra `apps/admin/src/theme-tokens.css`).
 - `services/backend/` — backend Spring Boot được khôi phục từ nhánh gốc; đang được chuẩn hóa theo các ranh giới SOLID/Clean Architecture.
 - `docs/requirements/` — yêu cầu nghiệp vụ và các ca sử dụng.
 - `docs/architecture/` — kiến trúc, hợp đồng API, cấu trúc dự án và nền tảng Giai đoạn 1.
@@ -14,7 +16,7 @@ Nhánh nền hợp đồng Giai đoạn 1. Backend cũ đã được khôi phụ
 - `docs/operations/` — CI/CD, triển khai và các mẫu CD chưa hoạt động.
 - `LICENSE`, `.gitignore`, `.editorconfig`, `.nvmrc` — giấy phép và các tệp hỗ trợ kho mã.
 
-Các phần `apps/`, `infra/`, `design-system/` và `scripts/` vẫn chưa được khôi phục. Backend hiện tại chưa triển khai Seller/payment/QR; không xem các luồng này là đã có chỉ vì chúng xuất hiện trong tài liệu.
+Các phần `apps/mobile/` và `scripts/` vẫn chưa được khôi phục; `infra/` (docker-compose PostgreSQL + backend) đang có trong cây làm việc nhưng chưa được Git theo dõi trên nhánh này. Backend hiện tại chưa triển khai Seller/payment/QR; không xem các luồng này là đã có chỉ vì chúng xuất hiện trong tài liệu.
 
 ## Tài liệu Giai đoạn 1
 
