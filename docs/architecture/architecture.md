@@ -1,4 +1,4 @@
-# Kiến trúc
+﻿# Kiến trúc
 
 > **Trạng thái tài liệu:** Mô tả kiến trúc/mã nguồn hiện có. Đặc tả nghiệp vụ đích đã chuyển sang ứng dụng User online-only với Seller/QR theo `docs/requirements/Use_Case_Specification_Final_15_UC.md`. Các mô tả mobile/offline bên dưới là hiện trạng legacy, không được hiểu là phạm vi nghiệp vụ đích; cần thiết kế và triển khai migration riêng.
 
@@ -6,19 +6,19 @@
 
 ```mermaid
 flowchart LR
-  subgraph Clients
-    A[Web admin<br/>React + Vite] -->|Bearer token| API
-    M[Mobile<br/>React Native] -->|public GET| API
+  subgraph Khách_hàng
+    A[Web Admin<br/>React + Vite] -->|Bearer token| API
+    M[Ứng_dụng_di_động<br/>React Native] -->|public GET| API
   end
-  subgraph Backend[Spring Boot monolith]
+  subgraph Backend[Ứng dụng Spring Boot nguyên khối]
     API[REST /api/v1] --> S[Services]
     S --> R[(PostgreSQL<br/>Flyway)]
-    S --> MS[MediaStorage<br/>local volume]
-    W[TTS worker<br/>@Scheduled polling] --> TP[TtsProvider]
+    S --> MS[MediaStorage<br/>ổ đĩa cục bộ]
+    W[Worker TTS<br/>thăm dò theo lịch @Scheduled] --> TP[TtsProvider]
     TP -->|ADC credentials| G[Google Cloud TTS]
   end
-  M -. offline .-> SQ[(SQLite + files)]
-  M -. device voice .-> RT[react-native-tts]
+  M -. ngoại_tuyến .-> SQ[(SQLite + files)]
+  M -. giọng_thiết_bị .-> RT[react-native-tts]
   M --> GM[Google Maps SDK]
 ```
 
@@ -26,10 +26,10 @@ Backend là **một ứng dụng** chia module theo chức năng (package `vn.ed
 
 | Module | Trách nhiệm |
 |---|---|
-| `auth` | Account, phiên đăng nhập (token), Spring Security, bootstrap admin |
+| `auth` | Tài khoản, phiên đăng nhập (token), Spring Security, khởi tạo Admin ban đầu |
 | `language` | Danh mục ngôn ngữ |
-| `poi` | POI, nội dung theo ngôn ngữ, API admin/public, manifest offline |
-| `audio` | Metadata audio, upload, xác định audio hiện hành, seed demo (dev) |
+| `poi` | POI, nội dung theo ngôn ngữ, API admin/public, manifest ngoại tuyến |
+| `audio` | Metadata âm thanh, tải lên, xác định âm thanh hiện hành, dữ liệu demo (môi trường phát triển) |
 | `tts` | `TtsProvider`, job bất đồng bộ bền vững, worker |
 | `media` | `MediaStorage` (local), nhận dạng định dạng theo magic bytes, stream file (hỗ trợ HTTP Range) |
 | `common` | Lỗi thống nhất, phân trang, cấu hình `app.*`, OpenAPI |
@@ -112,28 +112,28 @@ erDiagram
   }
 ```
 
-Ràng buộc chính (xem `services/backend/src/main/resources/db/migration/V1__init_schema.sql`):
+Các ràng buộc chính (xem `services/backend/src/main/resources/db/migration/V1__init_schema.sql`):
 
 - `UNIQUE (poi_id, language_code)` trên `poi_translation`.
 - `CHECK` toạ độ, trạng thái, nguồn audio, định dạng; `narration_text` không rỗng.
 - Partial unique index `uq_job_active_content`: tối đa một job đang chờ/chạy cho cùng nội dung.
-- Index cho truy vấn danh sách, audio hiện hành, worker (`status, next_attempt_at`).
-- File audio/ảnh **không** lưu trong PostgreSQL; chỉ lưu `storage_key` tương đối (không có host).
+- Index cho truy vấn danh sách, âm thanh hiện hành, worker (`status, next_attempt_at`).
+- Tệp âm thanh/hình ảnh **không** lưu trong PostgreSQL; chỉ lưu `storage_key` tương đối (không chứa host).
 
-Dữ liệu mẫu: `db/demo/V100__demo_pois.sql` chỉ nạp với profile `dev` (đánh dấu `is_demo = true`, tên có `[DEMO]`).
+Dữ liệu mẫu: `db/demo/V100__demo_pois.sql` chỉ được nạp với cấu hình `dev` (đánh dấu `is_demo = true`, tên có `[DEMO]`).
 
-## Không phát nhầm audio phiên bản cũ
+## Ngăn phát nhầm âm thanh phiên bản cũ
 
 1. `poi_translation.content_version` tăng mỗi khi `narration_text` thay đổi (đổi tên/mô tả không tăng).
 2. Mỗi `audio_asset` ghi `content_version` mà nó được tạo cho.
 3. Khi nội dung thay đổi: mọi asset `READY` của bản dịch chuyển sang `STALE`.
-4. "Audio hiện hành" = `READY` **và** `content_version` bằng của bản dịch. API public, URL stream và manifest offline đều áp dụng điều kiện này (audio cũ trả 404).
+4. "Audio hiện hành" = `READY` **và** `content_version` bằng của bản dịch. API công khai, URL stream và manifest ngoại tuyến đều áp dụng điều kiện này (âm thanh cũ trả 404).
 5. Job TTS ghi `content_version` lúc yêu cầu; nếu nội dung đổi trong lúc job chạy, kết quả bị huỷ (`CONTENT_CHANGED`) và không lưu file.
-6. Mobile chỉ dùng file local hoặc audio online có cùng `content_version` với nội dung đang hiển thị.
+6. Mobile chỉ dùng tệp cục bộ hoặc âm thanh trực tuyến có cùng `content_version` với nội dung đang hiển thị.
 
-## Xác thực admin — lựa chọn và lý do
+## Xác thực Admin — lựa chọn và lý do
 
-**Cơ chế:** token mờ (opaque bearer token) lưu phía server.
+**Cơ chế:** token bearer mờ (opaque bearer token) được lưu ở phía máy chủ.
 
 - `POST /api/v1/auth/login` kiểm tra mật khẩu bằng **BCrypt** (Spring Security `BCryptPasswordEncoder`), sinh 32 byte ngẫu nhiên (`SecureRandom`), trả token **một lần**.
 - DB chỉ lưu **SHA-256(token)** + `expires_at` (mặc định 8 giờ, tuyệt đối) — lộ DB không lộ token dùng được.
@@ -143,17 +143,17 @@ Dữ liệu mẫu: `db/demo/V100__demo_pois.sql` chỉ nạp với profile `dev`
 
 **Vì sao không dùng JWT:** JWT không thu hồi được trước hạn nếu không có danh sách chặn — tức vẫn cần tra DB. Token mờ đơn giản hơn và logout thật.
 
-**Vì sao không dùng cookie session:** admin (Vercel) và backend (Render) khác site; cookie cross-site cần `SameSite=None; Secure` + CSRF token + CORS credentials, phức tạp hơn cho MVP.
+**Vì sao không dùng phiên cookie:** admin (Vercel) và backend (Render) khác site; cookie cross-site cần `SameSite=None; Secure` + CSRF token + CORS credentials, phức tạp hơn cho MVP.
 
 **CSRF:** tắt CSRF là có chủ đích và an toàn trong mô hình này vì trình duyệt **không tự gửi** header `Authorization` (CSRF khai thác thông tin xác thực tự động như cookie). Nếu sau này chuyển sang cookie thì **phải** bật lại CSRF.
 
-**Lưu token phía admin:** `sessionStorage` (theo tab, mất khi đóng tab) + bộ nhớ. Rủi ro: XSS trên origin admin có thể đọc token → admin không render HTML không tin cậy, token có hạn ngắn, header bảo mật trong `vercel.json`. Không lưu token trong URL hay `localStorage`.
+**Lưu token phía Admin:** `sessionStorage` (theo tab, mất khi đóng tab) + bộ nhớ. Rủi ro: XSS trên origin admin có thể đọc token → admin không render HTML không tin cậy, token có hạn ngắn, header bảo mật trong `vercel.json`. Không lưu token trong URL hay `localStorage`.
 
-**Phân quyền:** kiểm tra ở backend (`/api/v1/admin/**` yêu cầu `ROLE_ADMIN`/`ROLE_SUPER_ADMIN`). API public chỉ đọc và luôn lọc `status = PUBLISHED` (POI nháp trả 404 cả ở danh sách, chi tiết, manifest, audio, ảnh).
+**Phân quyền:** kiểm tra ở backend (`/api/v1/admin/**` yêu cầu `ROLE_ADMIN`/`ROLE_SUPER_ADMIN`). API công khai chỉ đọc và luôn lọc `status = PUBLISHED` (POI nháp trả 404 cả ở danh sách, chi tiết, manifest, audio, ảnh).
 
 **CORS:** đọc từ `APP_CORS_ALLOWED_ORIGINS`; không dùng credentials/cookie.
 
-## TTS bất đồng bộ
+## TTS xử lý bất đồng bộ
 
 ```mermaid
 sequenceDiagram
@@ -175,34 +175,34 @@ sequenceDiagram
 ```
 
 - `content_hash = SHA-256(provider, mã ngôn ngữ TTS, giọng, MP3, văn bản)` → tránh gọi lại khi không có gì thay đổi.
-- Lỗi tạm thời (UNAVAILABLE, DEADLINE_EXCEEDED, RESOURCE_EXHAUSTED, timeout…) được thử lại tối đa `APP_TTS_MAX_ATTEMPTS` lần với backoff 5s, 10s, 20s…; lỗi khác thất bại ngay.
+- Lỗi tạm thời (UNAVAILABLE, DEADLINE_EXCEEDED, RESOURCE_EXHAUSTED, hết thời gian chờ…) được thử lại tối đa `APP_TTS_MAX_ATTEMPTS` lần với thời gian chờ tăng dần 5 giây, 10 giây, 20 giây…; lỗi khác thất bại ngay.
 - Khởi động lại: job đang `RUNNING` được xếp lại hàng (hoặc `FAILED` nếu hết lượt). Định kỳ có bước dọn job `RUNNING` quá 10 phút.
 - Giới hạn độ dài: `APP_TTS_MAX_INPUT_BYTES` (mặc định 4500 byte UTF-8, dưới giới hạn 5000 byte của Google).
 - Lỗi TTS không ảnh hưởng POI (POI vẫn công khai, mobile đề xuất giọng thiết bị).
-- Khi không có credential: `TtsProvider` = `DisabledTtsProvider`, API trả `503 TTS_NOT_CONFIGURED`; **không** tạo audio giả.
+- Khi không có thông tin xác thực: `TtsProvider` = `DisabledTtsProvider`, API trả `503 TTS_NOT_CONFIGURED`; **không** tạo âm thanh giả.
 
-## Mobile
+## Ứng dụng di động
 
 | Thành phần | Vai trò |
 |---|---|
-| `audio/NarrationPlayer` + `SoundNarrationPlayer` | Abstraction phát file (react-native-sound) |
+| `audio/NarrationPlayer` + `SoundNarrationPlayer` | Lớp trừu tượng phát tệp (react-native-sound) |
 | `audio/narrationController` | Một nguồn phát duy nhất; đổi POI/ngôn ngữ/nguồn luôn dừng nguồn cũ |
-| `audio/sourceResolver` | Ưu tiên: file local hợp lệ → audio online (khi có mạng) → đề xuất giọng thiết bị |
+| `audio/sourceResolver` | Ưu tiên: tệp cục bộ hợp lệ → âm thanh trực tuyến (khi có mạng) → đề xuất giọng thiết bị |
 | `audio/deviceTts` + `voiceSelection` | Kiểm tra engine, giọng đúng ngôn ngữ, đã cài, offline-capable; chia đoạn văn bản dài |
 | `offline/offlineManager` | Tải manifest + audio, kiểm tra size + SHA-256, retry, dọn file cũ, xoá |
 | `storage/db` | SQLite (op-sqlite): settings, metadata/nội dung offline |
 | `@dr.pogodin/react-native-fs` | Lưu file audio trong thư mục riêng của ứng dụng |
 
-## Kiến trúc đích Seller/Payment/QR cho demo — chưa triển khai/xác minh
+## Kiến trúc đích Seller/thanh toán/QR cho bản demo — chưa triển khai hoặc xác minh
 
 - **Seller Transaction API:** tạo giao dịch gói `DEMO_24H`, giá 1 VND; kiểm tra ownership ở backend; chỉ hủy trước redeem.
-- **VNPAY Sandbox Adapter:** chỉ dùng endpoint/credentials sandbox. Backend xác minh chữ ký, mã tham chiếu, số tiền và trạng thái. Return URL của trình duyệt không phải bằng chứng thanh toán.
-- **Payment reconciliation:** callback lặp phải idempotent. Sai lệch giao dịch chuyển trạng thái cần kiểm tra, không tự đánh dấu thành công.
-- **One-time QR redeemer:** redeem trong transaction nguyên tử, xác minh payment và trạng thái QR trước khi đánh dấu đã dùng/tạo grant.
-- **User access grant:** lưu `activated_at`, `expires_at` và trạng thái; `expires_at = activated_at + 24 hours`. Mọi API User cần grant hợp lệ ở backend, trừ luồng cần thiết để xem/đổi QR và lỗi.
+- **Bộ tích hợp VNPAY Sandbox:** chỉ dùng điểm cuối API/thông tin xác thực sandbox. Backend xác minh chữ ký, mã tham chiếu, số tiền và trạng thái. URL quay về của trình duyệt không phải bằng chứng thanh toán.
+- **Đối soát thanh toán:** callback lặp phải idempotent. Sai lệch giao dịch chuyển trạng thái cần kiểm tra, không tự đánh dấu thành công.
+- **Bộ xử lý kích hoạt QR một lần:** redeem trong transaction nguyên tử, xác minh thanh toán và trạng thái QR trước khi đánh dấu đã dùng/tạo grant.
+- **Quyền truy cập User:** lưu `activated_at`, `expires_at` và trạng thái; `expires_at = activated_at + 24 giờ`. Mọi API User cần grant hợp lệ ở backend, trừ luồng cần thiết để xem/đổi QR và lỗi.
 - **Analytics/Audit:** ghi các sự kiện nghiệp vụ đã chốt, không ghi token QR/credential dạng rõ; tách quyền đọc/ghi audit và xác định retention/backup trước production.
 
-### Entity/thuộc tính đích cần xem xét trong ERD/Data Dictionary
+### Thực thể/thuộc tính đích cần xem xét trong ERD/từ điển dữ liệu
 
 Các mục sau là dữ liệu mục tiêu, chưa khẳng định schema hiện tại đã có:
 
@@ -211,25 +211,25 @@ Các mục sau là dữ liệu mục tiêu, chưa khẳng định schema hiện 
 - `payment_notification`: provider event/reference, kết quả xác minh chữ ký, idempotency và thời điểm nhận; chỉ lưu payload tối thiểu đã làm sạch.
 - `access_qr`: token hash, trạng thái, `redeemed_at`, `revoked_at`; QR không tự hết hạn trước kích hoạt đầu tiên; Seller có thể thu hồi QR. Seller tạo/cấp QR sau thanh toán thành công; UC12/luồng tạo QR ngoài MVP.
 - `user_access_grant`: transaction/QR, `activated_at`, `expires_at`, trạng thái và binding với thiết bị đã kích hoạt; khôi phục chỉ trên cùng thiết bị trong thời hạn.
-- `usage_event`/`analytics_read_model`: loại sự kiện, POI, locale, timestamp và metadata tối thiểu.
-- `audit_record`: actor, action, resource, timestamp, outcome và metadata đã loại bỏ secret.
+- `usage_event`/`analytics_read_model`: loại sự kiện, POI, ngôn ngữ, thời điểm và metadata tối thiểu.
+- `audit_record`: tác nhân, hành động, tài nguyên, thời điểm, kết quả và metadata đã loại bỏ bí mật.
 
-### NFR mục tiêu MVP (chưa đo kiểm)
+### Mục tiêu yêu cầu phi chức năng (NFR) của MVP — chưa đo kiểm
 
 | Hạng mục | Mục tiêu đề xuất | Xác minh |
 |---|---|---|
-| API thường | P95 < 500 ms | Load test với môi trường/dataset được ghi rõ |
-| Redeem QR + grant | P95 < 1 giây, không tính hệ thống ngoài | Load/race-condition test |
-| Trang User chính | Tải < 3 giây trong điều kiện đo xác định | Browser performance test |
-| Tính đúng đắn | Không grant trùng, QR một lần, callback idempotent | Integration/concurrency tests |
-| Bảo mật | Authorization, IDOR, replay, expiry, chữ ký/số tiền sai | Negative security tests |
-| Khả dụng/khôi phục | Mục tiêu tham khảo 99,5%/tháng; RPO ≤ 24h; RTO ≤ 8h nếu có backup | Monitoring và restore drill; chưa đo kiểm |
+| API thường | P95 < 500 ms | Kiểm thử tải với môi trường/bộ dữ liệu được ghi rõ |
+| Redeem QR + grant | P95 < 1 giây, không tính hệ thống ngoài | Kiểm thử tải/điều kiện tranh chấp |
+| Trang User chính | Tải < 3 giây trong điều kiện đo xác định | Kiểm thử hiệu năng trình duyệt |
+| Tính đúng đắn | Không grant trùng, QR một lần, callback idempotent | Kiểm thử tích hợp/xử lý đồng thời |
+| Bảo mật | Authorization, IDOR, replay, expiry, chữ ký/số tiền sai | Kiểm thử bảo mật theo tình huống bị từ chối |
+| Khả dụng/khôi phục | Mục tiêu tham khảo 99,5%/tháng; RPO ≤ 24h; RTO ≤ 8h nếu có backup | Giám sát và diễn tập khôi phục; chưa đo kiểm |
 
-VNPAY Sandbox chỉ phục vụ demo/test. Các endpoint/entity trên là thiết kế mục tiêu, không phải bằng chứng đã triển khai.
+VNPAY Sandbox chỉ phục vụ bản demo/kiểm thử. Các endpoint/entity trên là thiết kế mục tiêu, không phải bằng chứng đã triển khai.
 
-## Quy tắc dữ liệu xuyên suốt: soft delete và khả năng mở rộng
+## Quy tắc dữ liệu xuyên suốt: xóa mềm và khả năng mở rộng
 
-- Mọi thực thể nghiệp vụ có thể xóa dùng soft delete (`deleted_at`, `deleted_by` hoặc tương đương); truy vấn mặc định loại bản ghi đã xóa. Không hard-delete qua UI/API thông thường; giữ khóa ngoại, lịch sử và audit. Khôi phục cần quyền riêng và audit event.
-- Audit log append-only; lưu tối thiểu 24 tháng theo mục tiêu hiện tại, backup hằng ngày và kiểm thử khôi phục định kỳ. Chính sách phải được rà soát trước production.
-- Locale được quản lý bằng bảng/cấu hình và khóa locale chuẩn, không enum cố định chỉ gồm `vi`/`en`; MVP chỉ bật hai locale này. Fallback là chính sách dữ liệu/tài nguyên, không phải nhánh hard-code theo từng ngôn ngữ.
-- Gói dịch vụ là dữ liệu cấu hình (mã, giá, currency, duration, trạng thái/phiên bản điều kiện); không hard-code một gói. UC12 và việc tạo QR nội bộ ngoài MVP; theo quy tắc đích Seller chỉ tạo/cấp QR sau thanh toán thành công.
+- Mọi thực thể nghiệp vụ có thể xóa đều dùng cơ chế xóa mềm (`deleted_at`, `deleted_by` hoặc tương đương); truy vấn mặc định loại bản ghi đã xóa. Không xóa vật lý qua UI/API thông thường; giữ khóa ngoại, lịch sử và audit. Khôi phục cần quyền riêng và audit event.
+- Audit log append-only; lưu tối thiểu 24 tháng theo mục tiêu hiện tại, sao lưu hằng ngày và kiểm thử khôi phục định kỳ. Chính sách phải được rà soát trước production.
+- Ngôn ngữ được quản lý bằng bảng/cấu hình và khóa mã ngôn ngữ chuẩn, không enum cố định chỉ gồm `vi`/`en`; MVP chỉ bật hai ngôn ngữ này. Phương án dự phòng là chính sách dữ liệu/tài nguyên, không phải nhánh mã hóa cứng theo từng ngôn ngữ.
+- Gói dịch vụ là dữ liệu cấu hình (mã, giá, đơn vị tiền tệ, thời lượng, trạng thái/phiên bản điều kiện); không mã hóa cứng một gói. UC12 và việc tạo QR nội bộ ngoài MVP; theo quy tắc đích Seller chỉ tạo/cấp QR sau thanh toán thành công.

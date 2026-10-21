@@ -1,27 +1,27 @@
-﻿# Documentation index
+# Danh mục tài liệu
 
-This branch is the Phase 1 contract baseline. It retains requirements, architecture, development standards, planning, reports, integration references, and operational/CI-CD documentation. Application code was removed from this branch; the original branch remains the recovery point for the previous implementation.
+Nhánh này là nền tảng hợp đồng của Giai đoạn 1. Nhánh giữ lại yêu cầu, kiến trúc, tiêu chuẩn phát triển, kế hoạch, báo cáo, tài liệu tích hợp và vận hành/CI-CD. Mã ứng dụng đã được loại bỏ khỏi nhánh này; nhánh gốc vẫn là điểm khôi phục bản triển khai trước.
 
-## Requirements
+## Yêu cầu
 - `requirements/BRD.md`
 - `requirements/Use_Case_Specification_Final_15_UC.md`
 
-## Architecture and contracts
+## Kiến trúc và hợp đồng
 - `architecture/architecture.md`
 - `architecture/api.md`
 - `architecture/PROJECT_STRUCTURE.md`
 - `architecture/phase-1-contract-baseline.md`
 
-## Development and planning
+## Phát triển và lập kế hoạch
 - `development/DEVELOPMENT_STANDARDS.md`
 - `development/mobile.md`
 - `development/testing.md`
 - `planning/backlog.md`
 - `planning/plan-and-assumptions.md`
 
-## Reports and operations
+## Báo cáo và vận hành
 - `reports/current-state-inventory.md`
 - `reports/verification-report.md`
 - `operations/ci-cd.md`
 - `operations/deployment.md`
-- `integrations/` — retained provider/integration references.
+- `integrations/` — tài liệu tham khảo nhà cung cấp và tích hợp.

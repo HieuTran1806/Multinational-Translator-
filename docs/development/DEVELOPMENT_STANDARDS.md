@@ -22,12 +22,12 @@ Trước khi phát triển song song, nhóm cần xác nhận và ghi vào tài 
 
 - Ngôn ngữ, framework và phiên bản runtime.
 - Cấu trúc frontend, backend và cách các phần giao tiếp.
-- Router, quản lý state, thư viện form/validation, HTTP client và UI component.
+- Router, quản lý state, thư viện biểu mẫu/kiểm tra hợp lệ, HTTP client và UI component.
 - Cơ sở dữ liệu, migration và quy ước truy cập dữ liệu.
-- Công cụ test, formatter, linter, type checker và package manager.
+- Công cụ test, formatter, linter, type checker và trình quản lý gói.
 - Phiên bản công cụ cần thiết để chạy dự án tại máy mới.
 
-**Quy tắc:** Dùng một package manager và commit lockfile tương ứng. Không thêm thư viện mới khi công cụ hiện có đáp ứng được yêu cầu mà không tạo gánh nặng đáng kể. Không tự nâng phiên bản framework hoặc thay kiến trúc mà chưa trao đổi với nhóm.
+**Quy tắc:** Dùng một trình quản lý gói và commit lockfile tương ứng. Không thêm thư viện mới khi công cụ hiện có đáp ứng được yêu cầu mà không tạo gánh nặng đáng kể. Không tự nâng phiên bản framework hoặc thay kiến trúc mà chưa trao đổi với nhóm.
 
 ## 3. Quy tắc code và cấu trúc
 
@@ -126,10 +126,10 @@ Không cần tạo mọi trạng thái cho mọi màn hình một cách máy mó
 - Không chặn người dùng vô thời hạn khi request lỗi; cung cấp cách thử lại hoặc quay lại an toàn.
 - Ngăn gửi form lặp khi request đang xử lý; chỉ khóa thao tác khi thực sự cần thiết.
 
-### 4.5 Ranh giới Tourist và Admin
+### 4.5 Ranh giới ứng dụng User và Admin
 
-- Tourist Mobile và Admin/Super Admin Web Dashboard là hai khu vực trải nghiệm khác nhau.
-- Không đặt menu hoặc điều hướng Admin trong Tourist Mobile navigation.
+- Ứng dụng di động User và bảng điều khiển web Admin/Super Admin là hai khu vực trải nghiệm khác nhau.
+- Không đặt menu hoặc điều hướng Admin trong hệ thống điều hướng của ứng dụng User.
 - Màn hình/state board trên Penpot không mặc nhiên là một màn hình chức năng độc lập; chỉ tính là màn hình riêng khi có mục đích điều hướng hoặc tác vụ riêng.
 - Không tự thêm tính năng ngoài đặc tả, chẳng hạn POI search/favorites hoặc Audit Log Detail, nếu chưa được phê duyệt.
 - Màn hình Profile/Settings và vị trí đặt đổi ngôn ngữ/đăng xuất cần được nhóm xác nhận nhất quán với thiết kế và Use Case; không tự tạo luồng mới.
@@ -209,10 +209,10 @@ Các luồng audio, offline và analytics cần quy định rõ trạng thái h�
 - Quy trình tạo Admin, vai trò mặc định và quyền có hiệu lực phải theo Use Case/đặc tả đã thống nhất; không tự gán thêm quyền.
 - Kiểm tra dữ liệu ở cả frontend (trải nghiệm) và backend (bảo vệ dữ liệu).
 - Không log mật khẩu, token, secret hoặc dữ liệu cá nhân không cần thiết.
-- Không lưu secret trong source control; dùng biến môi trường và cung cấp file mẫu không chứa giá trị bí mật.
+- Không lưu bí mật trong hệ thống quản lý phiên bản; dùng biến môi trường và cung cấp tệp mẫu không chứa giá trị bí mật.
 - Thao tác nhạy cảm hoặc phá hủy phải xác nhận phù hợp và kiểm tra quyền ở backend.
 - Audit Log phải được ghi nhận ở backend cho những hành động thuộc phạm vi yêu cầu; không dựa vào log frontend làm bằng chứng kiểm toán.
-- Không triển khai chức năng xuất báo cáo. Audit Log chỉ cho Super Admin xem; không tự thêm export/log download.
+- Không triển khai chức năng xuất báo cáo. Chỉ Super Admin được xem Audit Log; không tự thêm chức năng xuất/tải nhật ký.
 
 ## 8. Git và phối hợp nhóm
 
@@ -247,7 +247,7 @@ docs(setup): update development instructions
 - Thống nhất chủ sở hữu file dùng chung như router, API client, Design System và cấu hình build để giảm conflict.
 - Sau khi merge, xác nhận luồng tích hợp hoạt động; không coi “merge thành công” là bằng chứng tính năng hoàn chỉnh.
 
-## 9. Kiểm thử và Definition of Done
+## 9. Kiểm thử và tiêu chí hoàn thành (Definition of Done)
 
 ### 9.1 Các lớp kiểm thử
 
@@ -266,34 +266,34 @@ Các luồng E2E tối thiểu cần cân nhắc dựa trên đặc tả:
 - Admin: đăng nhập, quản lý POI/nội dung/audio, tạo/quản lý Seller, xem Analytics. Super Admin: quản lý Admin/RBAC và xem Audit Log; không quản lý POI/Seller.
 - Phân quyền: kiểm tra cả trường hợp được phép và bị từ chối ở backend.
 
-### 9.2 Checklist Definition of Done
+### 9.2 Danh sách kiểm tra tiêu chí hoàn thành
 
 Một thay đổi chỉ được coi là hoàn tất khi các mục phù hợp đều đạt:
 
 - [ ] Đúng phạm vi và tiêu chí chấp nhận của Use Case.
 - [ ] UI tuân thủ Penpot Design System và điều hướng đã thống nhất.
-- [ ] Có các trạng thái cần thiết (loading, empty, error, success và trạng thái đặc thù).
+- [ ] Có các trạng thái cần thiết (đang tải, không có dữ liệu, lỗi, thành công và trạng thái đặc thù).
 - [ ] Request/response và xử lý lỗi khớp hợp đồng API.
 - [ ] Kiểm tra quyền đúng ở backend khi có liên quan.
-- [ ] Có test phù hợp; test liên quan đã chạy thành công.
-- [ ] Formatter/linter/type-check (nếu có) không còn lỗi mới.
+- [ ] Có kiểm thử phù hợp; các kiểm thử liên quan đã chạy thành công.
+- [ ] Công cụ định dạng, phân tích mã và kiểm tra kiểu dữ liệu (nếu có) không còn lỗi mới.
 - [ ] Không đưa secret hoặc dữ liệu nhạy cảm vào repo/log.
-- [ ] Có review từ thành viên khác theo quy trình nhóm.
+- [ ] Được thành viên khác rà soát theo quy trình của nhóm.
 - [ ] Tài liệu, ví dụ cấu hình hoặc hướng dẫn chạy được cập nhật khi cần.
-- [ ] Thay đổi đã tích hợp và luồng liên quan được xác minh.
+- [ ] Thay đổi đã được tích hợp và luồng liên quan đã được xác minh.
 
-## 11. Các quyết định cần chốt trước khi triển khai rộng
+## 11. Các quyết định cần thống nhất trước khi triển khai trên diện rộng
 
 Đánh dấu hoàn tất trong buổi thống nhất nhóm và ghi quyết định vào tài liệu tương ứng:
 
-- [ ] Framework, phiên bản runtime và package manager chính thức.
+- [ ] Framework, phiên bản runtime và trình quản lý gói chính thức.
 - [ ] Cấu trúc frontend/backend và cách chạy local.
-- [ ] Router, state management, form/validation và HTTP client.
-- [ ] Quy ước API, lỗi, pagination/filter/sort và ngày giờ.
+- [ ] Router, quản lý trạng thái, biểu mẫu/kiểm tra hợp lệ và HTTP client.
+- [ ] Quy ước API, lỗi, phân trang/lọc/sắp xếp và ngày giờ.
 - [ ] Token/component lấy từ Penpot và cách triển khai thành code.
 - [ ] Vị trí đổi ngôn ngữ/đăng xuất và phạm vi màn hình Profile/Settings.
-- [ ] Quy tắc nhánh, commit, review và kiểm tra bắt buộc trước merge.
-- [ ] Bộ test tối thiểu cho từng Use Case và Definition of Done.
+- [ ] Quy tắc nhánh, commit, rà soát và kiểm tra bắt buộc trước khi hợp nhất.
+- [ ] Bộ test tối thiểu cho từng ca sử dụng và tiêu chí hoàn thành.
 - [ ] Quy trình cập nhật tài liệu khi thay đổi quyết định hoặc hợp đồng.
 
 **Nguyên tắc cuối cùng:** Nếu quy tắc trong tài liệu này mâu thuẫn với Use Case đã được phê duyệt hoặc cấu hình thực tế của repository, không tự ý sửa theo phỏng đoán. Hãy nêu rõ mâu thuẫn, thống nhất quyết định mới và cập nhật tài liệu nguồn trước khi triển khai.

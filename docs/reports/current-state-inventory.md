@@ -1,55 +1,55 @@
-﻿# Phase 1 — Current-state inventory (before branch reset)
+# Giai đoạn 1 — Kiểm kê hiện trạng (trước khi làm sạch nhánh)
 
-## Scope and confidence
+## Phạm vi và độ tin cậy
 
-This inventory was captured from the previous implementation on branch `XuanHoai_UC01-03` before removing implementation directories from `phase-1-contract-baseline`. The original branch is retained. The working tree contained 13 modified documentation files; those changes were stashed for recovery and reapplied on this new branch. The stash is intentionally retained as an additional backup.
+Bản kiểm kê này được lập từ triển khai trước trên nhánh `XuanHoai_UC01-03`, trước khi loại bỏ các thư mục triển khai khỏi `phase-1-contract-baseline`. Nhánh gốc vẫn được giữ lại. cây làm việc có 13 tệp tài liệu đã chỉnh sửa; các thay đổi đó được đưa vào stash (vùng lưu tạm Git) để dự phòng rồi áp dụng lại trên nhánh mới. Stash được cố ý giữ làm bản sao lưu bổ sung.
 
-The inventory below is based on tracked-file inspection and source-level route/model searches, not on a fresh full test run. Treat route names and fields as observed legacy behavior, not as an approved target contract.
+Bản kiểm kê dưới đây dựa trên việc kiểm tra tệp được Git theo dõi và tìm kiếm route/model trong mã nguồn, không dựa trên một lần chạy toàn bộ kiểm thử mới. Hãy xem tên route và trường dữ liệu là hành vi quan sát được từ hệ thống cũ, không phải hợp đồng đích đã được phê duyệt.
 
-## Person 1 — User mobile app
+## Người 1 — Ứng dụng di động User
 
-Observed:
-- React Native/TypeScript mobile client under `apps/mobile`.
-- API client had GET-only JSON helper with timeout and normalized network/HTTP errors.
-- Client consumed public POI list/detail, offline manifest, and language endpoints.
-- DTOs included POI summary/detail, localized narration, audio metadata, and offline translations.
-- Tests existed for API client, narration, offline handling, media source resolution, and voice selection.
+Đã quan sát:
+- Ứng dụng di động React Native/TypeScript nằm trong `apps/mobile`.
+- API client có hàm JSON chỉ dùng GET, timeout và chuẩn hóa lỗi mạng/HTTP.
+- Client gọi các endpoint danh sách/chi tiết POI công khai, manifest ngoại tuyến và ngôn ngữ.
+- DTO gồm tóm tắt/chi tiết POI, thuyết minh theo ngôn ngữ, metadata âm thanh và bản dịch ngoại tuyến.
+- Đã có kiểm thử cho API client, thuyết minh, xử lý ngoại tuyến, phân giải nguồn đa phương tiện và chọn giọng đọc.
 
-Gaps / not evidenced in the inspected client:
-- No User registration/login/profile/session contract was found in the inspected mobile API files.
-- No payment, purchase entitlement, QR issuance, or QR activation flow was found in the inspected mobile API files.
-- Need a full use-case-to-screen mapping and explicit offline conflict/error rules before implementation.
+Khoảng trống / chưa tìm thấy bằng chứng trong client đã kiểm tra:
+- Không tìm thấy hợp đồng đăng ký/đăng nhập/hồ sơ/phiên User trong các tệp API di động đã kiểm tra.
+- Không tìm thấy luồng thanh toán, quyền mua, cấp QR hoặc kích hoạt QR trong các tệp API di động đã kiểm tra.
+- Cần lập ma trận ánh xạ đầy đủ từ ca sử dụng sang màn hình và quy định rõ xung đột/lỗi ngoại tuyến trước khi triển khai.
 
-## Person 2 — POI, media, Seller
+## Người 2 — POI, đa phương tiện, Seller
 
-Observed legacy backend:
-- Public POI endpoints: `GET /api/v1/public/pois`, `GET /api/v1/public/pois/{id}`, and `GET /api/v1/public/pois/{id}/offline-manifest`.
-- Admin POI endpoints covered CRUD, publish/unpublish, translations, audio upload, image upload/delete/order.
-- Media endpoints served public/admin audio and POI images.
-- Data entities included POI, POI translation, POI image, audio asset, and TTS jobs.
+Backend cũ đã quan sát:
+- Các endpoint POI công khai: `GET /api/v1/public/pois`, `GET /api/v1/public/pois/{id}`, và `GET /api/v1/public/pois/{id}/offline-manifest`.
+- Các endpoint POI dành cho Admin hỗ trợ CRUD, xuất bản/gỡ xuất bản, bản dịch, tải âm thanh, tải/xóa/sắp xếp hình ảnh.
+- Endpoint đa phương tiện cung cấp âm thanh công khai/dành cho Admin và hình ảnh POI.
+- Các thực thể dữ liệu gồm POI, bản dịch POI, hình ảnh POI, tài nguyên âm thanh và tác vụ TTS.
 
-Gaps:
-- No Seller controller/model, payment/order API, QR issuance API, or QR activation API was found in the tracked legacy backend inventory.
-- The agreed business rule is that Seller issues a User-specific QR only after successful payment; QR must not expire before activation. Expiration/revocation after activation, duplicate issuance, refund/chargeback, and replay prevention still need explicit decisions.
-- Media storage authorization and lifecycle need to be redefined against the new role matrix.
+Khoảng trống:
+- Không tìm thấy controller/model Seller, API thanh toán/đơn hàng, API cấp QR hoặc API kích hoạt QR trong danh mục backend cũ được Git theo dõi.
+- Quy tắc nghiệp vụ đã thống nhất là Seller chỉ cấp QR riêng cho User sau khi thanh toán thành công; QR không được hết hạn trước khi kích hoạt. Cần quyết định rõ về hết hạn/thu hồi sau kích hoạt, cấp trùng, hoàn tiền/chargeback và chống phát lại.
+- Cần xác định lại quyền truy cập và vòng đời lưu trữ đa phương tiện theo ma trận vai trò mới.
 
-## Person 3 — RBAC, Admin API, reports
+## Người 3 — RBAC, API Admin, báo cáo
 
-Observed legacy backend:
+Backend cũ đã quan sát:
 - Auth endpoints: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`.
-- Security config allowed health/info, login, and public GET endpoints; authenticated rules existed for `/api/v1/auth/**`. Admin controllers were present, but a complete role-based permission matrix was not evidenced by the inspected route annotations.
-- Shared API error model included `code`, `message`, path/context and field-error support; exact response fields must be reconciled in the contract.
-- Admin UI API client covered auth, POI, translation, audio, image and TTS operations.
+- Cấu hình bảo mật cho phép các endpoint health/info, đăng nhập và GET công khai; các quy tắc xác thực đã tồn tại cho `/api/v1/auth/**`. Có controller Admin, nhưng chú thích đường dẫn đã kiểm tra chưa chứng minh được có ma trận phân quyền theo vai trò đầy đủ.
+- Mô hình lỗi API dùng chung có `code`, `message`, đường dẫn/ngữ cảnh và hỗ trợ lỗi theo trường; các trường phản hồi chính xác cần được thống nhất trong hợp đồng.
+- API client của giao diện Admin hỗ trợ xác thực, POI, bản dịch, âm thanh, hình ảnh và thao tác TTS.
 
-Required agreed rules:
-- Only Super Admin can create Admin accounts.
-- Super Admin does not manage POIs and does not create Seller accounts.
-- Protected self-management actions must be blocked if they would leave no other active Super Admin; at least one other active Super Admin must remain.
+Các quy tắc bắt buộc đã thống nhất:
+- Chỉ Super Admin được tạo tài khoản Admin.
+- Super Admin không quản lý POI và không tạo tài khoản Seller.
+- Phải chặn thao tác tự quản lý được bảo vệ nếu thao tác đó khiến không còn Super Admin nào khác đang hoạt động; phải luôn còn ít nhất một Super Admin khác hoạt động.
 
-Gaps:
-- Seller, payment/QR, comprehensive audit reporting and a complete RBAC enforcement matrix were not found as implemented API modules in the inspected source inventory.
-- Need to distinguish authentication (401) from authenticated-but-forbidden access (403) consistently.
+Khoảng trống:
+- Không tìm thấy mô-đun API đã triển khai cho Seller, thanh toán/QR, báo cáo kiểm toán toàn diện hoặc ma trận thực thi RBAC đầy đủ trong mã nguồn đã kiểm tra.
+- Cần phân biệt nhất quán lỗi chưa xác thực (401) với đã xác thực nhưng không được phép truy cập (403).
 
-## Repository reset result
+## Kết quả làm sạch kho mã
 
-This branch removes the legacy implementation directories and keeps documentation, CI workflow/configuration, and repository support files. No claim is made that the legacy implementation passed all tests as part of this reset.
+Nhánh này loại bỏ các thư mục triển khai cũ và giữ lại tài liệu, workflow/cấu hình CI cùng các tệp hỗ trợ kho mã. Việc làm sạch này không đồng nghĩa với tuyên bố rằng toàn bộ kiểm thử của bản triển khai cũ đều đạt.

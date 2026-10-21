@@ -1,4 +1,4 @@
-# BRD — Business Requirements Document
+﻿# BRD — Tài liệu yêu cầu nghiệp vụ
 ## Hệ thống Multitional-Translator-
 
 ## 1. Tóm tắt điều hành
@@ -7,9 +7,9 @@ Hệ thống là ứng dụng User hướng dẫn tham quan đa ngôn ngữ, cho
 
 UC12 (thanh toán/quản lý giao dịch/tạo QR nội bộ) ngoài MVP. UC12 ngoài MVP; Seller tạo và cấp QR riêng cho từng khách hàng sau khi thanh toán thành công. UC02 kích hoạt QR một lần và cấp quyền 24 giờ kể từ khi kích hoạt thành công. VNPAY Sandbox chỉ là phương án tham khảo cho giai đoạn sau.
 
-Ứng dụng User React Native là **online-only**. Khi mất mạng, người dùng không thể tiếp tục sử dụng các trang/tính năng phụ thuộc dịch vụ trực tuyến. Hệ thống phải hiển thị trạng thái kết nối/lỗi phù hợp và cho phép thử lại, không quảng bá hoặc cung cấp chức năng offline.
+Ứng dụng User React Native là **chỉ hoạt động trực tuyến**. Khi mất mạng, người dùng không thể tiếp tục sử dụng các trang/tính năng phụ thuộc dịch vụ trực tuyến. Hệ thống phải hiển thị trạng thái kết nối/lỗi phù hợp và cho phép thử lại, không quảng bá hoặc cung cấp chức năng ngoại tuyến.
 
-Khu vực quản trị cung cấp quản lý POI/audio, tài khoản Seller/Admin, RBAC, Analytics toàn hệ thống và Audit Log. Seller có báo cáo riêng về doanh thu, giao dịch và usage chỉ trong phạm vi dữ liệu của chính Seller.
+Khu vực quản trị cung cấp quản lý POI/audio, tài khoản Seller/Admin, RBAC, Analytics toàn hệ thống và Audit Log. Seller có báo cáo riêng về doanh thu, giao dịch và mức sử dụng chỉ trong phạm vi dữ liệu của chính Seller.
 
 ## 2. Bối cảnh và vấn đề nghiệp vụ
 
@@ -30,12 +30,12 @@ Khách tham quan cần truy cập nhanh nội dung du lịch đa ngôn ngữ mà
 | BO-01 | Truy cập nhanh cho User | User quét QR hợp lệ, không cần tài khoản Tourist, và dùng chức năng trong thời hạn đã cấp |
 | BO-02 | Cấp quyền User | User kích hoạt QR riêng; Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công. Quản lý giao dịch/thanh toán/tạo QR nội bộ (UC12) ngoài MVP |
 | BO-03 | Kiểm soát tái sử dụng QR | Mỗi QR chỉ đổi thành công một lần; backend kiểm tra tính hợp lệ và thời hạn |
-| BO-04 | Hỗ trợ khám phá POI | User xem bản đồ, chi tiết POI và nội dung đa ngôn ngữ khi online |
-| BO-05 | Cung cấp thuyết minh | User phát audio thủ công hoặc dùng auto narration trong giới hạn trình duyệt |
+| BO-04 | Hỗ trợ khám phá POI | User xem bản đồ, chi tiết POI và nội dung đa ngôn ngữ khi trực tuyến |
+| BO-05 | Cung cấp thuyết minh | User phát audio thủ công hoặc dùng thuyết minh tự động trong giới hạn trình duyệt |
 | BO-06 | Vận hành nội dung | Admin quản lý POI, bản dịch, media và tác vụ audio |
 | BO-07 | Quản lý Seller và quản trị | Admin/Super Admin quản lý tài khoản; RBAC bảo vệ các chức năng |
 | BO-08 | Báo cáo và truy vết | Seller xem báo cáo của mình; Admin/Super Admin xem Analytics hệ thống; Super Admin xem Audit Log |
-| BO-09 | Online-only minh bạch | Khi mất mạng, hệ thống thông báo rõ và không hứa hẹn khả năng offline |
+| BO-09 | Minh bạch về việc chỉ hoạt động trực tuyến | Khi mất mạng, hệ thống thông báo rõ và không hứa hẹn khả năng ngoại tuyến |
 
 ## 4. Phạm vi hệ thống
 
@@ -51,15 +51,15 @@ Khách tham quan cần truy cập nhanh nội dung du lịch đa ngôn ngữ mà
 - Super Admin là vai trò duy nhất được tạo/quản lý tài khoản Admin và quản lý RBAC.
 - UC12 và nghiệp vụ tạo QR nội bộ ngoài MVP. Mỗi khách hàng phải có QR riêng; Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công. UC02 chỉ kích hoạt QR một lần, cấp quyền 24 giờ gắn với thiết bị kích hoạt.
 - Mỗi khách hàng có QR riêng, chỉ kích hoạt một lần. Quyền có hiệu lực 24 giờ kể từ kích hoạt thành công và gắn với thiết bị đã kích hoạt.
-- Seller xem báo cáo doanh thu, giao dịch và usage của chính mình.
+- Seller xem báo cáo doanh thu, giao dịch và mức sử dụng của chính mình.
 - Admin và Super Admin xem Analytics toàn hệ thống; chỉ Super Admin xem Audit Log.
 - Super Admin xem Audit Log.
 
 ### 4.2 Ngoài phạm vi
 
 - Đăng ký/đăng nhập/đăng xuất Tourist/User bằng tài khoản cá nhân.
-- Tải, cài đặt, cập nhật hoặc gỡ gói offline.
-- Offline map, offline POI snapshot, offline images/audio hoặc tiếp tục sử dụng khi mất mạng.
+- Tải, cài đặt, cập nhật hoặc gỡ gói ngoại tuyến.
+- Bản đồ ngoại tuyến, bản chụp POI ngoại tuyến, hình ảnh/âm thanh ngoại tuyến hoặc tiếp tục sử dụng khi mất mạng.
 - Seller tự đăng ký tài khoản.
 - QR cấp quyền quản trị.
 - Seller truy cập/sửa dữ liệu giao dịch hoặc báo cáo của Seller khác.
@@ -94,9 +94,9 @@ Khách tham quan cần truy cập nhanh nội dung du lịch đa ngôn ngữ mà
 | UC08 | Giám sát tiến độ tạo Audio | Admin | Theo dõi trạng thái xử lý audio |
 | UC09 | Quản lý tài khoản Seller | Admin | Tạo/cập nhật/vô hiệu hóa Seller |
 | UC10 | Quản lý tài khoản Admin | Super Admin | Quản lý tài khoản quản trị |
-| UC11 | Quản lý vai trò và phân quyền (RBAC) | Super Admin | Quản lý role/permission |
+| UC11 | Quản lý vai trò và phân quyền (RBAC) | Super Admin | Quản lý vai trò/quyền |
 | UC12 | Quản lý thanh toán và tạo QR truy cập | Seller | Ghi nhận thanh toán và phát QR dùng một lần |
-| UC13 | Xem thống kê và báo cáo Seller | Seller | Xem doanh thu, giao dịch, usage của chính mình |
+| UC13 | Xem thống kê và báo cáo Seller | Seller | Xem doanh thu, giao dịch, mức sử dụng của chính mình |
 | UC14 | Xem Analytics toàn hệ thống | Admin | Xem số liệu tổng hợp theo quyền |
 | UC15 | Xem Audit Log | Super Admin | Truy vết hoạt động quan trọng |
 
@@ -131,10 +131,10 @@ Chi tiết luồng chính, ngoại lệ, điều kiện tiên quyết và depend
 - **BR-REPORT-01:** Seller xem báo cáo doanh thu theo ngày/tháng và phương thức thanh toán.
 - **BR-REPORT-02:** Seller xem số giao dịch theo trạng thái và phương thức thanh toán.
 - **BR-REPORT-03:** Seller xem số QR tạo/đổi/chưa đổi/hết hạn/thu hồi nếu trạng thái tương ứng được hỗ trợ.
-- **BR-REPORT-04:** Seller xem usage theo các sự kiện đã được định nghĩa, ví dụ lượt truy cập, xem POI và phát audio.
+- **BR-REPORT-04:** Seller xem mức sử dụng theo các sự kiện đã được định nghĩa, ví dụ lượt truy cập, xem POI và phát audio.
 - **BR-REPORT-05:** Seller chỉ được xem dữ liệu của chính mình; backend thực thi ownership.
 - **BR-REPORT-06:** Admin và Super Admin có thể xem Analytics toàn hệ thống; chỉ Super Admin được xem Audit Log, tách biệt khỏi báo cáo riêng của Seller.
-- **BR-REPORT-07:** Metric usage, múi giờ `Asia/Ho_Chi_Minh`, độ trễ mục tiêu 5 phút, event thô 90 ngày và tổng hợp 13 tháng; doanh thu chỉ có hiệu lực khi UC12 được triển khai.
+- **BR-REPORT-07:** Metric mức sử dụng, múi giờ `Asia/Ho_Chi_Minh`, độ trễ mục tiêu 5 phút, event thô 90 ngày và tổng hợp 13 tháng; doanh thu chỉ có hiệu lực khi UC12 được triển khai.
 - **BR-REPORT-08:** Không hiển thị dữ liệu cá nhân nhạy cảm không cần thiết trong báo cáo.
 
 ### 7.4 Ngôn ngữ, bản đồ và POI
@@ -146,9 +146,9 @@ Chi tiết luồng chính, ngoại lệ, điều kiện tiên quyết và depend
 - **BR-POI-05:** Chi tiết POI thể hiện nội dung, bản dịch, hình ảnh và audio khả dụng.
 - **BR-POI-06:** Admin có thể quản lý POI và media theo quyền.
 - **BR-POI-07:** POI chưa đáp ứng readiness rules không được công khai.
-- **BR-POI-08:** Khi tài nguyên online không tải được, hệ thống hiển thị lỗi/trạng thái retry; không chuyển sang offline resources.
+- **BR-POI-08:** Khi không tải được tài nguyên trực tuyến, hệ thống hiển thị lỗi/trạng thái thử lại; không chuyển sang tài nguyên ngoại tuyến.
 
-### 7.5 Audio và online-only
+### 7.5 Audio và chỉ hoạt động trực tuyến
 
 - **BR-AUDIO-01:** User có thể phát audio trực tuyến khi tài nguyên phù hợp tồn tại.
 - **BR-AUDIO-02:** Hệ thống thông báo rõ khi audio không khả dụng hoặc tải/phát thất bại.
@@ -156,8 +156,8 @@ Chi tiết luồng chính, ngoại lệ, điều kiện tiên quyết và depend
 - **BR-AUDIO-04:** Cần xác nhận giới hạn Geolocation nền trên trình duyệt; không cam kết phát tự động khi tab đóng hoặc thiết bị khóa.
 - **BR-AUDIO-05:** Admin có thể theo dõi trạng thái tác vụ audio; điều khiển Pause/Resume/Cancel cần được chốt riêng.
 - **BR-WEB-01:** Website và chức năng nghiệp vụ phụ thuộc backend, bản đồ, nội dung và audio cần kết nối mạng.
-- **BR-WEB-02:** Khi mất mạng, hệ thống hiển thị trạng thái offline/lỗi và cung cấp thử lại khi kết nối phục hồi.
-- **BR-WEB-03:** Ứng dụng User không cung cấp tính năng tải/quản lý offline pack, offline map, offline POI hoặc offline audio; không tuyên bố các chức năng đó hoạt động khi mất mạng.
+- **BR-WEB-02:** Khi mất mạng, hệ thống hiển thị trạng thái ngoại tuyến/lỗi và cung cấp thử lại khi kết nối phục hồi.
+- **BR-WEB-03:** Ứng dụng User không cung cấp tính năng tải/quản lý ngoại tuyến pack, ngoại tuyến map, ngoại tuyến POI hoặc ngoại tuyến audio; không tuyên bố các chức năng đó hoạt động khi mất mạng.
 
 ### 7.6 Tài khoản quản trị và RBAC
 ### Ma trận RBAC đã xác nhận
@@ -183,7 +183,7 @@ Quy tắc bảo vệ tài khoản Super Admin: Super Admin không được tự 
 ### 7.7 Audit Log
 
 - **BR-AUD-01:** Audit Log ghi nhận sự kiện quan trọng như quản lý Seller, thanh toán, tạo/đổi/thu hồi QR, RBAC và thao tác quản trị.
-- **BR-AUD-02:** Bản ghi cần actor, action, resource, timestamp, kết quả và metadata an toàn phù hợp.
+- **BR-AUD-02:** Bản ghi cần tác nhân, hành động, tài nguyên, thời điểm, kết quả và metadata an toàn phù hợp.
 - **BR-AUD-03:** Không ghi password, token QR dạng rõ, credential ngân hàng hoặc dữ liệu nhạy cảm không cần thiết.
 - **BR-AUD-04:** Retention, chống sửa đổi, backup và quyền quản lý audit cần được chốt.
 
@@ -198,7 +198,7 @@ Quy tắc bảo vệ tài khoản Super Admin: Super Admin không được tự 
 | RULE-05 | Tiền mặt do Seller xác nhận; chuyển khoản xác minh tự động qua tích hợp đáng tin cậy |
 | RULE-06 | Seller chỉ xem/thao tác dữ liệu của chính mình |
 | RULE-07 | Không cấp quyền khi QR/thanh toán không xác minh được |
-| RULE-08 | Ứng dụng User React Native online-only; không có gói offline hoặc fallback offline |
+| RULE-08 | Ứng dụng User React Native chỉ hoạt động trực tuyến; không có gói ngoại tuyến hoặc fallback ngoại tuyến |
 | RULE-09 | Role/permission được kiểm tra phía backend |
 | RULE-10 | Audit sự kiện tài chính/QR và thay đổi quyền theo chính sách được chốt |
 
@@ -214,7 +214,7 @@ Quy tắc bảo vệ tài khoản Super Admin: Super Admin không được tự 
 - **POI/Translation/Media/Audio Task:** dữ liệu nội dung tham quan.
 - **Role/Permission:** cấu hình quyền.
 - **Analytics Read Models:** số liệu tổng hợp.
-- **Audit Record:** actor, action, resource, timestamp, outcome và metadata an toàn.
+- **Bản ghi kiểm toán:** tác nhân, hành động, tài nguyên, thời điểm, kết quả và metadata an toàn.
 
 Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải được xác định trong SRS/data dictionary.
 
@@ -225,12 +225,12 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 | NFR-01 | Bảo mật QR | Token khó đoán, một lần, có thời hạn/thu hồi; đổi QR nguyên tử | Bắt buộc |
 | NFR-02 | Thanh toán | Xác minh nguồn đáng tin cậy, idempotency, đối soát và audit | Bắt buộc; tích hợp TBD |
 | NFR-03 | Phân quyền | Backend kiểm tra role và ownership Seller ở mọi thao tác được bảo vệ | Bắt buộc |
-| NFR-04 | Online-only | Trạng thái mất mạng rõ ràng, không giả định offline fallback | Bắt buộc |
+| NFR-04 | Chỉ hoạt động trực tuyến | Trạng thái mất mạng rõ ràng, không giả định có phương án dự phòng ngoại tuyến | Bắt buộc |
 | NFR-05 | Quyền riêng tư | Hạn chế dữ liệu User và thông tin nhạy cảm trong log/báo cáo | Bắt buộc |
 | NFR-06 | Tính toàn vẹn | Không cấp quyền khi không xác minh được thanh toán/QR | Bắt buộc |
 | NFR-07 | Hiệu năng | API thường P95 < 500 ms; redeem QR/cấp quyền P95 < 1 giây, không tính hệ thống ngoài | Mục tiêu MVP đề xuất, cần đo kiểm |
 | NFR-08 | Khả năng mở rộng | Tải đồng thời cần được định nghĩa trong kịch bản demo; không tuyên bố năng lực production | Cần đo kiểm theo tải demo |
-| NFR-09 | Khả dụng | Mục tiêu tham khảo 99,5%/tháng; RPO ≤ 24 giờ, RTO ≤ 8 giờ nếu triển khai backup/restore | Mục tiêu đề xuất, chưa đo kiểm |
+| NFR-09 | Khả dụng | Mục tiêu tham khảo 99,5%/tháng; RPO ≤ 24 giờ, RTO ≤ 8 giờ nếu triển khai sao lưu/khôi phục | Mục tiêu đề xuất, chưa đo kiểm |
 | NFR-10 | Tương thích | Kiểm thử trình duyệt desktop/mobile được xác định; xử lý từ chối camera/Geolocation/autoplay | Cần ghi trong test report |
 | NFR-11 | Audit | Không ghi secret/token QR dạng rõ; giới hạn quyền đọc/ghi log | Retention và chống sửa đổi cần chốt trước production |
 
@@ -245,10 +245,10 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 | AC-05 | UC12 ngoài MVP; không có yêu cầu nghiệm thu tích hợp VNPAY trong MVP |
 | AC-06 | Idempotency webhook là tiêu chí cho giai đoạn sau khi UC12 được đưa vào phạm vi, không phải tiêu chí nghiệm thu MVP |
 | AC-07 | Khi UC12/UC13 được triển khai, Seller A không thể xem/sửa dữ liệu giao dịch, QR hay báo cáo của Seller B bằng cách thay ID/request |
-| AC-08 | Báo cáo Seller chỉ hiển thị dữ liệu thuộc Seller đó; doanh thu/giao dịch chỉ khả dụng khi UC12 được triển khai, usage theo metric đã định nghĩa |
+| AC-08 | Báo cáo Seller chỉ hiển thị dữ liệu thuộc Seller đó; doanh thu/giao dịch chỉ khả dụng khi UC12 được triển khai, mức sử dụng theo metric đã định nghĩa |
 | AC-09 | Admin quản lý Seller; Super Admin không quản lý Seller; Super Admin quản lý Admin/RBAC theo quyền |
-| AC-10 | User có thể khám phá bản đồ, xem POI và phát audio khi ứng dụng User online |
-| AC-11 | Khi mất mạng, ứng dụng User báo trạng thái phù hợp và không giả lập tính năng offline |
+| AC-10 | User có thể khám phá bản đồ, xem POI và phát audio khi ứng dụng User trực tuyến |
+| AC-11 | Khi mất mạng, ứng dụng User báo trạng thái phù hợp và không giả lập tính năng ngoại tuyến |
 | AC-12 | Analytics toàn hệ thống và báo cáo Seller có phạm vi dữ liệu riêng biệt |
 | AC-13 | Audit Log ghi nhận sự kiện trọng yếu đã chốt và không lộ token/credential nhạy cảm |
 | AC-14 | Các lỗi dịch vụ/thanh toán/QR có thông báo rõ; không cấp quyền hoặc báo thành công giả |
@@ -261,8 +261,8 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 - Thanh toán/tạo QR nội bộ không thuộc MVP. Theo quy tắc nghiệp vụ đích, Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công; QR không tự hết hạn trước khi kích hoạt. UC12 vẫn ngoài MVP.
 - QR riêng cho từng khách hàng chỉ kích hoạt một lần; quyền gắn với thiết bị đã kích hoạt, có thể khôi phục trên chính thiết bị đó trong 24 giờ và không chuyển/khôi phục sang thiết bị khác. Gói `DEMO_24H` 1 VND chỉ là cấu hình demo tham khảo.
 - Seller chỉ xem/thao tác dữ liệu của chính mình.
-- Seller có thể xem/lọc số liệu doanh thu, giao dịch và usage trong phạm vi được phép; không có chức năng xuất báo cáo.
-- Ứng dụng User React Native online-only, không có chức năng offline.
+- Seller có thể xem/lọc số liệu doanh thu, giao dịch và mức sử dụng trong phạm vi được phép; không có chức năng xuất báo cáo.
+- Ứng dụng User React Native chỉ hoạt động trực tuyến, không có chức năng ngoại tuyến.
 
 ### 12.2 Còn cần đặc tả/kiểm chứng trước nghiệm thu hoặc production
 1. UC12 ngoài MVP; khi được đưa vào phạm vi, mới chọn nhà cung cấp thanh toán và thiết kế xác minh callback/đối soát.
@@ -284,7 +284,7 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 | R-05 | Seller đọc dữ liệu Seller khác | Ownership enforcement ở backend và kiểm thử IDOR |
 | R-06 | Báo cáo doanh thu sai định nghĩa | Chốt gross/net, hoàn tiền, múi giờ và nguồn dữ liệu |
 | R-07 | User mất thiết bị sau khi QR đã đổi | Chốt quy trình hỗ trợ/thu hồi/cấp lại quyền |
-| R-08 | Mất mạng khi đang xem/nghe | Hiển thị lỗi, không cam kết offline |
+| R-08 | Mất mạng khi đang xem/nghe | Hiển thị lỗi, không cam kết ngoại tuyến |
 | R-09 | Mô tả Use Case khác mã nguồn | Lập ma trận truy vết UC/API/UI/test và xác minh trước nghiệm thu |
 
 ## 14. Ưu tiên triển khai đề xuất
@@ -294,8 +294,8 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 | P0 | Tài khoản Seller, giao dịch và xác minh thanh toán | Cơ sở cho quy trình cấp quyền |
 | P0 | QR một lần, cấp quyền có thời hạn, thu hồi | Bảo vệ truy cập sau thanh toán |
 | P0 | Backend authorization và ownership Seller | Ngăn truy cập dữ liệu/giao dịch chéo |
-| P1 | POI, bản đồ, nội dung đa ngôn ngữ và audio online | Trải nghiệm User cốt lõi |
-| P1 | Báo cáo Seller về doanh thu/giao dịch/usage | Theo dõi hiệu quả bán và sử dụng |
+| P1 | POI, bản đồ, nội dung đa ngôn ngữ và audio trực tuyến | Trải nghiệm User cốt lõi |
+| P1 | Báo cáo Seller về doanh thu/giao dịch/mức sử dụng | Theo dõi hiệu quả bán và sử dụng |
 | P1 | Audit Log cho thanh toán/QR/RBAC | Truy vết sự cố và sai lệch |
 | P2 | Analytics toàn hệ thống và báo cáo nâng cao | Phụ thuộc định nghĩa metric và dữ liệu đủ tin cậy |
 
@@ -311,7 +311,7 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 | BO-06 — Quản trị Seller/Admin | UC09, UC10, UC11 |
 | BO-07 — Báo cáo Seller | UC12, UC13 |
 | BO-08 — Analytics/Audit | UC14, UC15 |
-| BO-09 — Online-only | UC01–UC08, UC12–UC14 |
+| BO-09 — Chỉ hoạt động trực tuyến | UC01–UC08, UC12–UC14 |
 
 ## 16. Phê duyệt
 
@@ -326,7 +326,7 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 | Phiên bản | Ngày | Nội dung |
 |---|---|---|
 | 1.0 | 2026-10-20 | BRD dự thảo dựa trên Use Case trước đây |
-| 2.0 | 2026-10-20 | Bỏ tài khoản Tourist và offline; bổ sung Seller, thanh toán, QR dùng một lần, quyền có thời hạn và báo cáo Seller |
+| 2.0 | 2026-10-20 | Bỏ tài khoản Tourist và ngoại tuyến; bổ sung Seller, thanh toán, QR dùng một lần, quyền có thời hạn và báo cáo Seller |
 
 ## 17. Quyết định demo đã xác nhận (2026-10-20)
 
@@ -340,7 +340,7 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 - **Auto narration:** chỉ chạy khi tab hoạt động và trình duyệt cho phép Geolocation/phát audio.
 - **Analytics MVP:** tổng giao dịch theo trạng thái; thanh toán thành công; doanh thu đã xác nhận; QR tạo/đổi; grant đang hiệu lực/hết hạn; lượt xem POI; lượt phát audio; POI được quan tâm; tỷ lệ POI có English content/audio hiện hành; lỗi thanh toán, redeem và audio; thời điểm cập nhật dữ liệu. Mỗi metric cần định nghĩa công thức, nguồn, múi giờ, deduplication và độ trễ.
 - **Audit Log:** ghi login outcome, thay đổi POI/publish, trạng thái audio, giao dịch/thanh toán/hủy, tạo/đổi/thu hồi QR, cấp/từ chối grant, thay đổi Seller/Admin/RBAC và cấu hình bảo mật. Không ghi password, secret, credential hoặc token QR dạng rõ. Retention, chống sửa đổi và hành vi khi kho log lỗi cần được chốt trước production.
-- **NFR mục tiêu đề xuất, chưa đo kiểm:** API thường P95 < 500 ms; redeem QR + grant P95 < 1 giây không tính độ trễ hệ thống ngoài; trang User chính tải < 3 giây trong điều kiện test xác định; khả dụng tham khảo 99,5%/tháng; RPO ≤ 24 giờ và RTO ≤ 8 giờ nếu triển khai backup/restore. Phải có kiểm thử concurrency, callback idempotency, authorization/IDOR, replay và expiry.
+- **Mục tiêu yêu cầu phi chức năng (NFR) đề xuất, chưa đo kiểm:** API thường P95 < 500 ms; redeem QR + grant P95 < 1 giây không tính độ trễ hệ thống ngoài; trang User chính tải < 3 giây trong điều kiện test xác định; khả dụng tham khảo 99,5%/tháng; RPO ≤ 24 giờ và RTO ≤ 8 giờ nếu triển khai sao lưu/khôi phục. Phải có kiểm thử xử lý đồng thời, tính lặp an toàn của callback, phân quyền/IDOR, phát lại và hết hạn.
 - **Phạm vi trạng thái:** nội dung trên là quyết định/đích nghiệp vụ. Không coi là bằng chứng endpoint, schema hoặc tích hợp đã được triển khai. Các chỉ tiêu định lượng chỉ được báo đạt sau khi có kết quả đo và điều kiện chạy rõ ràng.
 
 ### Ma trận quyết định
@@ -358,7 +358,7 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 | DEC-09 | Auto narration chỉ khi tab hoạt động và trình duyệt cho phép | Đã chốt; cần test quyền vị trí/autoplay |
 | DEC-10 | Tối đa 6 ảnh/POI, có sắp xếp/gallery | Đã chốt |
 | DEC-11 | Analytics MVP theo bộ metric đã đề xuất | Phạm vi chấp thuận; công thức/nguồn/timezone/deduplication cần đặc tả |
-| DEC-12 | Audit Log theo danh mục sự kiện và phân tích rủi ro | Cơ sở chấp thuận; retention/tamper protection/failure policy cần đặc tả |
+| DEC-12 | Audit Log theo danh mục sự kiện và phân tích rủi ro | Cơ sở chấp thuận; thời gian lưu giữ/cơ chế chống sửa đổi/chính sách xử lý lỗi cần đặc tả |
 | DEC-13 | NFR theo mục tiêu định lượng trong BRD | Cơ sở chấp thuận; tất cả mục tiêu chưa đo kiểm |
 
 ## 18. Quyết định bổ sung về phạm vi và dữ liệu

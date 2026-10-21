@@ -1,88 +1,88 @@
-# Phase 1 — Shared contract baseline
+# Giai đoạn 1 — Hợp đồng nền tảng dùng chung
 
-Status: **Draft baseline for review by all three contributors.** The retained legacy code is evidence only; the approved contract in this document and the linked requirements must govern the rebuild. Unresolved business decisions must be raised rather than guessed.
+Trạng thái: **Bản dự thảo nền tảng, chờ cả ba thành viên rà soát.** Mã nguồn cũ chỉ là bằng chứng tham khảo; việc xây dựng lại phải tuân theo hợp đồng được thông qua trong tài liệu này và các yêu cầu được liên kết. Những quyết định nghiệp vụ chưa rõ phải được đưa ra thảo luận, không tự suy đoán.
 
-## 1. API conventions
+## 1. Quy ước API
 
-- Base path: `/api/v1`.
-- JSON request/response bodies use `application/json`; binary upload endpoints declare multipart explicitly.
-- Field naming: `camelCase` in JSON; stable identifiers are opaque to clients unless a use case requires a human-readable code.
-- Timestamps: ISO-8601 UTC (`Z`) in API responses. Store/audit instants in UTC.
-- Pagination: agree one shared shape before implementation. Proposed shape: `{ "items": [], "page": 0, "size": 20, "totalItems": 0, "totalPages": 0 }`; `page` is zero-based.
-- List sorting and filtering must be explicit, validated, and have documented defaults and maximum page sizes.
-- Mutating endpoints must validate authorization on the server, not trust UI-hidden controls.
-- Use idempotency protection for payment callbacks and QR issuance where retries could create duplicate effects.
+- Đường dẫn gốc: `/api/v1`.
+- Phần thân yêu cầu/phản hồi JSON dùng `application/json`; endpoint tải tệp nhị phân phải khai báo rõ kiểu multipart.
+- Quy tắc đặt tên trường: Dùng `camelCase` trong JSON; mã định danh ổn định không cần tiết lộ cấu trúc cho client, trừ khi ca sử dụng yêu cầu mã dễ đọc.
+- Dấu thời gian: Phản hồi API dùng ISO-8601 UTC (`Z`). Lưu thời điểm và thời điểm kiểm toán theo UTC.
+- Phân trang: thống nhất một cấu trúc dùng chung trước khi triển khai. Cấu trúc đề xuất: `{ "items": [], "page": 0, "size": 20, "totalItems": 0, "totalPages": 0 }`; `page` bắt đầu từ 0.
+- Việc sắp xếp và lọc danh sách phải được khai báo rõ, kiểm tra hợp lệ, có giá trị mặc định và kích thước trang tối đa được ghi tài liệu.
+- Endpoint làm thay đổi dữ liệu phải kiểm tra quyền ở máy chủ, không dựa vào việc ẩn điều khiển trên giao diện.
+- Dùng cơ chế chống xử lý lặp cho callback thanh toán và cấp QR ở những nơi việc thử lại có thể gây tác động trùng lặp.
 
-## 2. Error contract
+## 2. Hợp đồng lỗi
 
-Proposed common response:
+Cấu trúc phản hồi chung đề xuất:
 
 ```json
 {
   "code": "VALIDATION_FAILED",
   "status": 400,
-  "message": "Request validation failed",
+  "message": "Dữ liệu yêu cầu không hợp lệ",
   "path": "/api/v1/example",
   "timestamp": "2026-01-01T00:00:00Z",
-  "fieldErrors": [{ "field": "name", "message": "must not be blank" }]
+  "fieldErrors": [{ "field": "name", "message": "không được để trống" }]
 }
 ```
 
-`fieldErrors` may be omitted when not applicable. Do not expose stack traces, secrets, internal SQL, tokens, or provider credentials.
+Có thể bỏ `fieldErrors` khi không áp dụng. Không để lộ stack trace, bí mật, SQL nội bộ, token hoặc thông tin xác thực của nhà cung cấp.
 
-- `400 VALIDATION_FAILED` — malformed or invalid input.
-- `401 UNAUTHENTICATED` — missing, invalid, expired, or revoked authentication.
-- `403 FORBIDDEN` — authenticated principal lacks permission or violates protected self-management rules.
-- `404 NOT_FOUND` — resource absent or deliberately concealed by the access policy.
-- `409 CONFLICT` — state transition, uniqueness, optimistic-lock, duplicate payment/QR or lifecycle conflict.
-- `413 PAYLOAD_TOO_LARGE` — upload/request exceeds configured limit.
-- `415 UNSUPPORTED_MEDIA` — unsupported content type.
-- `422 BUSINESS_RULE_VIOLATION` — syntactically valid request cannot be applied under business rules (use consistently; do not overlap casually with 409).
-- `429 RATE_LIMITED` — rate limit reached.
-- `500 INTERNAL_ERROR` — unexpected failure with correlation ID, no sensitive internals.
-- `503 DEPENDENCY_UNAVAILABLE` — required dependency unavailable.
+- `400 VALIDATION_FAILED` — dữ liệu đầu vào sai định dạng hoặc không hợp lệ.
+- `401 UNAUTHENTICATED` — thiếu thông tin xác thực, thông tin không hợp lệ, hết hạn hoặc đã bị thu hồi.
+- `403 FORBIDDEN` — người dùng đã xác thực nhưng không có quyền hoặc vi phạm quy tắc tự quản lý được bảo vệ.
+- `404 NOT_FOUND` — không tồn tại tài nguyên hoặc tài nguyên được che giấu theo chính sách truy cập.
+- `409 CONFLICT` — xung đột chuyển trạng thái, tính duy nhất, khóa lạc quan, thanh toán/QR trùng lặp hoặc vòng đời tài nguyên.
+- `413 PAYLOAD_TOO_LARGE` — tệp tải lên/yêu cầu vượt quá giới hạn cấu hình.
+- `415 UNSUPPORTED_MEDIA` — kiểu nội dung không được hỗ trợ.
+- `422 BUSINESS_RULE_VIOLATION` — yêu cầu đúng cú pháp nhưng không thể thực hiện theo quy tắc nghiệp vụ (dùng nhất quán, không tùy tiện trùng với mã 409).
+- `429 RATE_LIMITED` — đã đạt giới hạn tần suất yêu cầu.
+- `500 INTERNAL_ERROR` — lỗi ngoài dự kiến; kèm mã tương quan nhưng không tiết lộ thông tin nội bộ nhạy cảm.
+- `503 DEPENDENCY_UNAVAILABLE` — dịch vụ phụ thuộc bắt buộc hiện không khả dụng.
 
-The common response fields are `code`, `status`, `message`, `path`, and `timestamp`; `fieldErrors` is optional. Error codes are stable machine-readable contract. The team must decide whether business-rule failures use 409 or 422 before implementation; do not use both inconsistently.
+Các trường phản hồi chung gồm `code`, `status`, `message`, `path` và `timestamp`; `fieldErrors` là tùy chọn. Mã lỗi là hợp đồng ổn định để máy xử lý. Nhóm phải quyết định lỗi quy tắc nghiệp vụ dùng 409 hay 422 trước khi triển khai; không được dùng hai mã thiếu nhất quán.
 
-## 3. Identity and RBAC baseline
+## 3. Nền tảng định danh và RBAC
 
-- Authorization is deny-by-default and enforced at API/service boundaries.
-- Public User-facing read APIs are explicitly allowlisted; every other endpoint requires authentication and a permission check.
-- Only Super Admin can create Admin accounts.
-- Super Admin cannot manage POIs and cannot create Seller accounts.
-- A Super Admin cannot deactivate, demote, delete, or otherwise disable their own Super Admin privileges if that would leave no other active Super Admin. The operation is permitted only while at least one *other* active Super Admin remains after the transaction. Enforce transactionally to avoid concurrent requests removing the last two active administrators.
-- Return 401 for absent/invalid authentication and 403 for insufficient permissions or protected self-action.
-- Audit security-sensitive actions: actor, action, target, timestamp, outcome, and correlation/request ID. Never log credentials, bearer tokens, payment secrets, or full QR secrets.
-- Define exact roles/permissions and resource ownership in a reviewed matrix before coding. Role names below are provisional: `SUPER_ADMIN`, `ADMIN`, `SELLER`, `USER`.
+- Mặc định từ chối quyền truy cập nếu chưa được cho phép; việc phân quyền phải được thực thi tại ranh giới API/dịch vụ.
+- Các API đọc công khai dành cho User phải nằm trong danh sách cho phép rõ ràng; mọi endpoint khác đều cần xác thực và kiểm tra quyền.
+- Chỉ Super Admin được tạo tài khoản Admin.
+- Super Admin không được quản lý POI và không được tạo tài khoản Seller.
+- Super Admin không được tự vô hiệu hóa, hạ vai trò, xóa hoặc làm mất quyền Super Admin của chính mình nếu việc đó khiến không còn Super Admin nào khác đang hoạt động. Chỉ cho phép thao tác khi sau giao dịch vẫn còn ít nhất một Super Admin khác đang hoạt động. Phải bảo đảm bằng giao dịch để tránh các yêu cầu đồng thời vô hiệu hóa hai Super Admin cuối cùng.
+- Trả 401 khi thiếu thông tin xác thực hoặc xác thực không hợp lệ; trả 403 khi không đủ quyền hoặc vi phạm quy tắc tự thao tác được bảo vệ.
+- Ghi nhật ký kiểm toán cho thao tác nhạy cảm về bảo mật: tác nhân, hành động, đối tượng, thời điểm, kết quả và mã tương quan/yêu cầu. Không bao giờ ghi thông tin xác thực, bearer token, bí mật thanh toán hoặc toàn bộ bí mật QR.
+- Trước khi lập trình, xác định vai trò/quyền và quyền sở hữu tài nguyên trong ma trận đã được rà soát. Tên vai trò dưới đây chỉ là đề xuất: `SUPER_ADMIN`, `ADMIN`, `SELLER`, `USER`.
 
-## 4. POI/media baseline
+## 4. Nền tảng POI và đa phương tiện
 
-- POI lifecycle and visibility must be explicit (e.g. draft/published/archived only after confirming allowed transitions).
-- Translations belong to a POI and language; audio assets must be associated with the correct translation/content version.
-- Media access must use resource ownership and visibility policy, not only guessable IDs. Upload type, size, checksum, storage key, and ordering validation are server-side.
-- Offline manifest versioning and stale-content behavior must be specified. Do not assume a downloaded entitlement or QR is an authorization token unless separately approved.
+- Vòng đời và khả năng hiển thị của POI phải được quy định rõ (ví dụ: nháp/đã xuất bản/đã lưu trữ, sau khi xác nhận các chuyển trạng thái được phép).
+- Bản dịch thuộc về một POI và một ngôn ngữ; tài nguyên âm thanh phải gắn với đúng bản dịch/phiên bản nội dung.
+- Quyền truy cập đa phương tiện phải dựa trên quyền sở hữu và chính sách hiển thị tài nguyên, không chỉ dựa vào ID có thể đoán được. Máy chủ phải kiểm tra loại tệp tải lên, kích thước, checksum, khóa lưu trữ và thứ tự.
+- Phải đặc tả phiên bản manifest ngoại tuyến và cách xử lý nội dung lỗi thời. Không mặc định quyền truy cập đã tải xuống hoặc QR là token phân quyền nếu chưa được phê duyệt riêng.
 
-## 5. Seller, payment, and QR baseline
+## 5. Nền tảng Seller, thanh toán và QR
 
-- Seller may issue a QR for a specific User only after the payment has been confirmed successful by a trusted server-side payment result.
-- A QR must not expire before it is activated.
-- QR must be bound to a unique issuance/entitlement and have replay protection. A scan/activation operation must be atomic and idempotent.
-- Do not treat a client-provided “payment successful” flag as authoritative.
-- Decisions still required: payment provider/webhook verification, refund/chargeback behavior, duplicate payment handling, post-activation expiry (if any), QR rotation/revocation, allowed activator identity, and what content/service the QR grants.
+- Seller chỉ được cấp QR cho một User cụ thể sau khi kết quả thanh toán đáng tin cậy ở phía máy chủ xác nhận thành công.
+- QR không được hết hạn trước khi được kích hoạt.
+- QR phải gắn với một lần cấp/quyền truy cập duy nhất và có cơ chế chống phát lại. Thao tác quét/kích hoạt phải nguyên tử và có tính lặp an toàn.
+- Không xem cờ “thanh toán thành công” do client gửi lên là bằng chứng có thẩm quyền.
+- Các quyết định còn thiếu: nhà cung cấp thanh toán/xác minh webhook, xử lý hoàn tiền/chargeback, thanh toán trùng, hết hạn sau kích hoạt (nếu có), đổi/thu hồi QR, danh tính được phép kích hoạt và nội dung/dịch vụ mà QR cấp quyền.
 
-## 6. Minimum API domains to agree
+## 6. Các miền API tối thiểu cần thống nhất
 
-| Domain | Minimum scope to specify | Owner for initial review |
+| Miền | Phạm vi tối thiểu cần đặc tả | Người phụ trách rà soát ban đầu |
 |---|---|---|
-| User app | User identity/session if required; public POI discovery/detail; language; media; offline manifest; entitlement/QR activation | Person 1 |
-| POI/media/Seller | POI lifecycle; translations; image/audio; Seller identity; payment confirmation; QR issue/reissue/revoke | Person 2 |
-| RBAC/Admin/reporting | Admin auth; account lifecycle; roles/permissions; audit logs; reporting; Super Admin safety invariant | Person 3 |
+| Ứng dụng User | Định danh/phiên User nếu cần; khám phá/xem chi tiết POI công khai; ngôn ngữ; đa phương tiện; manifest ngoại tuyến; quyền truy cập/kích hoạt QR | Người 1 |
+| POI/đa phương tiện/Seller | Vòng đời POI; bản dịch; hình ảnh/âm thanh; định danh Seller; xác nhận thanh toán; cấp/cấp lại/thu hồi QR | Người 2 |
+| RBAC/Admin/báo cáo | Xác thực Admin; vòng đời tài khoản; vai trò/quyền; nhật ký kiểm toán; báo cáo; quy tắc an toàn Super Admin | Người 3 |
 
-## 7. Acceptance criteria for contract sign-off
+## 7. Tiêu chí thông qua hợp đồng
 
-- Every use case maps to an endpoint/operation, request/response schema, permission, and state transition.
-- Every protected endpoint has an explicit role/permission and ownership rule.
-- Every endpoint documents success and failure status codes.
-- QR issuance cannot happen before trusted payment success; activation cannot be replayed; QR is non-expiring until activation.
-- Last-active-Super-Admin invariant is enforced atomically and covered by tests.
-- Open questions are recorded as decisions, not silently implemented as assumptions.
+- Mỗi ca sử dụng phải ánh xạ tới endpoint/thao tác, lược đồ yêu cầu/phản hồi, quyền và chuyển trạng thái.
+- Mỗi endpoint được bảo vệ phải có quy tắc vai trò/quyền và sở hữu dữ liệu rõ ràng.
+- Mỗi endpoint phải ghi rõ mã trạng thái thành công và thất bại.
+- Không được cấp QR trước khi xác minh thanh toán thành công; không được phát lại thao tác kích hoạt; QR không hết hạn trước khi kích hoạt.
+- Quy tắc giữ lại ít nhất một Super Admin khác đang hoạt động phải được thực thi nguyên tử và có kiểm thử.
+- Các câu hỏi còn mở phải được ghi lại để quyết định, không được âm thầm triển khai dựa trên giả định.
