@@ -17,14 +17,14 @@ public class PoiAdminService {
 
     private static final Logger log = LoggerFactory.getLogger(PoiAdminService.class);
 
-    private final PoiRepository pois;
-    private final PoiTranslationRepository translations;
+    private final PoiStore pois;
+    private final PoiTranslationStore translations;
     private final LanguageService languages;
     private final AudioService audioService;
     private final PoiAdminQueryService queries;
     private final Clock clock;
 
-    public PoiAdminService(PoiRepository pois, PoiTranslationRepository translations, LanguageService languages,
+    public PoiAdminService(PoiStore pois, PoiTranslationStore translations, LanguageService languages,
                            AudioService audioService, PoiAdminQueryService queries, Clock clock) {
         this.pois = pois;
         this.translations = translations;
@@ -36,7 +36,7 @@ public class PoiAdminService {
 
     @Transactional
     public PoiDtos.AdminPoiDetail create(PoiDtos.PoiUpsertRequest req) {
-        if (pois.existsByCode(req.code())) {
+        if (pois.isCodeTaken(req.code())) {
             throw new ApiException(ErrorCode.CONFLICT, "Mã địa điểm '" + req.code() + "' đã tồn tại");
         }
         Poi poi = new Poi(req.code(), req.defaultName().trim(), req.latitude(), req.longitude());
@@ -52,12 +52,12 @@ public class PoiAdminService {
         if (req.rowVersion() != null && req.rowVersion() != poi.getRowVersion()) {
             throw new ApiException(ErrorCode.CONFLICT, "Địa điểm đã được người khác cập nhật, vui lòng tải lại");
         }
-        if (pois.existsByCodeAndIdNot(req.code(), id)) {
+        if (pois.isCodeTakenByOther(req.code(), id)) {
             throw new ApiException(ErrorCode.CONFLICT, "Mã địa điểm '" + req.code() + "' đã tồn tại");
         }
         poi.update(req.code(), req.defaultName().trim(), req.latitude(), req.longitude());
         poi.updateAdminFields(req.category(), req.triggerRadius() == null ? poi.getTriggerRadius() : req.triggerRadius());
-        pois.saveAndFlush(poi);
+        pois.saveNow(poi);
         return queries.get(poi.getId());
     }
 
@@ -65,7 +65,7 @@ public class PoiAdminService {
     @Transactional
     public PoiDtos.AdminPoiDetail publish(Long id) {
         Poi poi = require(id);
-        PoiTranslation english = translations.findByPoiIdAndLanguageCode(id, "en").orElse(null);
+        PoiTranslation english = translations.findByPoiAndLanguage(id, "en").orElse(null);
         if (english == null) {
             throw new ApiException(ErrorCode.PUBLISH_NOT_READY,
                     "Cần lưu nội dung tiếng Anh trước khi công khai POI");
@@ -76,7 +76,7 @@ public class PoiAdminService {
         }
         if (!poi.isPublished()) {
             poi.publish(clock.instant());
-            pois.saveAndFlush(poi);
+            pois.saveNow(poi);
         }
         return queries.get(poi.getId());
     }
@@ -86,7 +86,7 @@ public class PoiAdminService {
         Poi poi = require(id);
         if (poi.isPublished()) {
             poi.unpublish();
-            pois.saveAndFlush(poi);
+            pois.saveNow(poi);
         }
         return queries.get(poi.getId());
     }
@@ -99,12 +99,12 @@ public class PoiAdminService {
         String name = req.name().trim();
         String description = req.description() == null ? null : req.description().trim();
         String narration = req.narrationText().trim();
-        PoiTranslation t = translations.findByPoiIdAndLanguageCode(poiId, lang).orElse(null);
+        PoiTranslation t = translations.findByPoiAndLanguage(poiId, lang).orElse(null);
         if (t == null) {
             t = translations.save(new PoiTranslation(poi, lang, name, description, narration));
         } else if (t.update(name, description, narration)) {
             // Narration changed -> all previous audio becomes STALE and is never served again.
-            translations.saveAndFlush(t);
+            translations.saveNow(t);
             audioService.invalidateForTranslation(t.getId());
         }
         poi.touch();
@@ -117,12 +117,11 @@ public class PoiAdminService {
     public void softDelete(Long id) {
         Poi poi = require(id);
         poi.softDelete(clock.instant());
-        pois.saveAndFlush(poi);
+        pois.saveNow(poi);
         log.info("POI {} ({}) soft-deleted", poi.getId(), poi.getCode());
     }
 
     private Poi require(Long id) {
-        return pois.findById(id).filter(p -> !p.isDeleted())
-                .orElseThrow(() -> ApiException.notFound("Địa điểm"));
+        return pois.findActive(id).orElseThrow(() -> ApiException.notFound("Địa điểm"));
     }
 }

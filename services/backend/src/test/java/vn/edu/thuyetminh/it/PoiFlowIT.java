@@ -91,7 +91,6 @@ class PoiFlowIT extends AbstractIntegrationTest {
     void updatingNarrationInvalidatesOldAudio() throws Exception {
         String token = login();
         long id = createPoiWithContent(token, "EDIT-1", true);
-        uploadAudio(token, id, "en");
         String before = mvc.perform(get("/api/v1/public/pois/" + id).param("lang", "en"))
                 .andReturn().getResponse().getContentAsString();
         String oldUrl = JsonPath.read(before, "$.audio.url");

@@ -34,11 +34,11 @@ public class AudioService {
 
     private static final Logger log = LoggerFactory.getLogger(AudioService.class);
 
-    private final AudioAssetRepository assets;
+    private final AudioAssetStore assets;
     private final MediaStorage storage;
     private final AppProperties props;
 
-    public AudioService(AudioAssetRepository assets, MediaStorage storage, AppProperties props) {
+    public AudioService(AudioAssetStore assets, MediaStorage storage, AppProperties props) {
         this.assets = assets;
         this.storage = storage;
         this.props = props;
@@ -47,8 +47,7 @@ public class AudioService {
     /** The only audio that may be played for this translation, if any. */
     @Transactional(readOnly = true)
     public Optional<AudioAsset> currentAudio(PoiTranslation t) {
-        return assets.findFirstByTranslationIdAndContentVersionAndStatusOrderByIdDesc(
-                t.getId(), t.getContentVersion(), AudioAssetStatus.READY);
+        return assets.findCurrent(t.getId(), t.getContentVersion());
     }
 
     /** translationId -> current audio, for list views. */
@@ -59,7 +58,7 @@ public class AudioService {
         }
         Map<Long, Integer> versions = translations.stream()
                 .collect(Collectors.toMap(PoiTranslation::getId, PoiTranslation::getContentVersion));
-        return assets.findByTranslationIdInAndStatus(versions.keySet(), AudioAssetStatus.READY).stream()
+        return assets.findReadyForTranslations(versions.keySet()).stream()
                 .filter(a -> versions.get(a.getTranslationId()) == a.getContentVersion())
                 .collect(Collectors.toMap(AudioAsset::getTranslationId, Function.identity(),
                         (a, b) -> a.getId() > b.getId() ? a : b));
@@ -67,7 +66,7 @@ public class AudioService {
 
     @Transactional(readOnly = true)
     public List<AudioAsset> history(Long translationId) {
-        return assets.findTop10ByTranslationIdOrderByIdDesc(translationId);
+        return assets.findLatest(translationId);
     }
 
     @Transactional
@@ -155,8 +154,7 @@ public class AudioService {
     }
 
     public Optional<AudioAsset> findReadyByContentHash(Long translationId, String contentHash) {
-        return assets.findFirstByTranslationIdAndContentHashAndStatusOrderByIdDesc(
-                translationId, contentHash, AudioAssetStatus.READY);
+        return assets.findReadyByContentHash(translationId, contentHash);
     }
 
     public Optional<AudioAsset> findById(Long id) {

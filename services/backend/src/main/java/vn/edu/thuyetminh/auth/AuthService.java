@@ -33,15 +33,15 @@ public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private final AccountRepository accounts;
-    private final AuthSessionRepository sessions;
+    private final AccountStore accounts;
+    private final AuthSessionStore sessions;
     private final PasswordEncoder passwordEncoder;
     private final AppProperties props;
     private final Clock clock;
     /** BCrypt hash of a random value; used to equalise timing when the username does not exist. */
     private final String dummyHash;
 
-    public AuthService(AccountRepository accounts, AuthSessionRepository sessions, PasswordEncoder passwordEncoder,
+    public AuthService(AccountStore accounts, AuthSessionStore sessions, PasswordEncoder passwordEncoder,
                        AppProperties props, Clock clock) {
         this.accounts = accounts;
         this.sessions = sessions;

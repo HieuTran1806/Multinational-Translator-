@@ -158,8 +158,12 @@ class TtsIT extends AbstractIntegrationTest {
         mvc.perform(get("/api/v1/admin/tts/jobs/" + jobId).header("Authorization", bearer(token)))
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.errorCode").value("CONTENT_CHANGED"));
-        Integer assets = jdbc.queryForObject("SELECT count(*) FROM audio_asset", Integer.class);
-        assertThat(assets).isZero();
+        // no audio may be attached to the new content version (the fixture's EN upload is on version 1)
+        Integer attachedToCurrentVersion = jdbc.queryForObject(
+                "SELECT count(*) FROM audio_asset a JOIN poi_translation t ON t.id = a.translation_id "
+                        + "WHERE t.poi_id = ? AND t.language_code = 'en' AND a.content_version = t.content_version",
+                Integer.class, id);
+        assertThat(attachedToCurrentVersion).isZero();
     }
 
     @Test

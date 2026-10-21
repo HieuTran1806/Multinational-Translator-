@@ -27,15 +27,15 @@ import vn.edu.thuyetminh.media.UploadedFile;
 public class PoiMediaService {
     private static final Logger log = LoggerFactory.getLogger(PoiMediaService.class);
 
-    private final PoiRepository pois;
-    private final PoiTranslationRepository translations;
-    private final PoiImageRepository images;
+    private final PoiStore pois;
+    private final PoiTranslationStore translations;
+    private final PoiImageStore images;
     private final PoiAdminQueryService poiAdminQueries;
     private final AudioService audioService;
     private final MediaStorage storage;
     private final AppProperties props;
 
-    public PoiMediaService(PoiRepository pois, PoiTranslationRepository translations, PoiImageRepository images,
+    public PoiMediaService(PoiStore pois, PoiTranslationStore translations, PoiImageStore images,
                            PoiAdminQueryService poiAdminQueries, AudioService audioService, MediaStorage storage,
                            AppProperties props) {
         this.pois = pois;
@@ -50,7 +50,7 @@ public class PoiMediaService {
     @Transactional
     public AudioView uploadAudio(Long poiId, String languageCode, UploadedFile file) {
         Poi poi = requirePoi(poiId);
-        PoiTranslation translation = translations.findByPoiIdAndLanguageCode(poiId, languageCode)
+        PoiTranslation translation = translations.findByPoiAndLanguage(poiId, languageCode)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
                         "Hãy lưu nội dung ngôn ngữ '" + languageCode + "' trước khi gắn audio"));
         var asset = audioService.storeUpload(translation, file);
@@ -62,7 +62,7 @@ public class PoiMediaService {
     @Transactional
     public PoiDtos.AdminPoiDetail uploadImage(Long poiId, UploadedFile file) {
         Poi poi = requirePoi(poiId);
-        long imageCount = images.countByPoiId(poiId);
+        long imageCount = images.countByPoi(poiId);
         if (imageCount >= 6) {
             throw new ApiException(ErrorCode.CONFLICT, "Mỗi POI chỉ được có tối đa 6 ảnh");
         }
@@ -91,23 +91,23 @@ public class PoiMediaService {
             log.error("Failed to store POI image", e);
             throw new ApiException(ErrorCode.INTERNAL_ERROR, "Không lưu được ảnh");
         }
-        images.saveAndFlush(new PoiImage(poiId, key, type.mimeType(), (int) imageCount));
+        images.saveNow(new PoiImage(poiId, key, type.mimeType(), (int) imageCount));
         if (poi.getCoverImageKey() == null) {
             poi.setCoverImage(key, type.mimeType());
         }
         poi.touch();
-        pois.saveAndFlush(poi);
+        pois.saveNow(poi);
         return poiAdminQueries.get(poiId);
     }
 
     @Transactional
     public PoiDtos.AdminPoiDetail deleteImage(Long poiId, Long imageId) {
         Poi poi = requirePoi(poiId);
-        PoiImage image = images.findByIdAndPoiId(imageId, poiId)
+        PoiImage image = images.findByPoiAndId(poiId, imageId)
                 .orElseThrow(() -> ApiException.notFound("Ảnh địa điểm"));
         String key = image.getStorageKey();
         images.delete(image);
-        List<PoiImage> remaining = images.findByPoiIdOrderBySortOrderAscIdAsc(poiId);
+        List<PoiImage> remaining = images.listByPoi(poiId);
         for (int i = 0; i < remaining.size(); i++) {
             remaining.get(i).setSortOrder(i);
         }
@@ -116,7 +116,7 @@ public class PoiMediaService {
             poi.setCoverImage(first == null ? null : first.getStorageKey(), first == null ? null : first.getMimeType());
         }
         poi.touch();
-        pois.saveAndFlush(poi);
+        pois.saveNow(poi);
         try {
             storage.delete(key);
         } catch (IOException | IllegalArgumentException e) {
@@ -128,7 +128,7 @@ public class PoiMediaService {
     @Transactional
     public PoiDtos.AdminPoiDetail reorderImages(Long poiId, List<Long> imageIds) {
         Poi poi = requirePoi(poiId);
-        List<PoiImage> current = images.findByPoiIdOrderBySortOrderAscIdAsc(poiId);
+        List<PoiImage> current = images.listByPoi(poiId);
         if (imageIds == null || imageIds.size() != current.size()
                 || !new HashSet<>(imageIds).equals(current.stream().map(PoiImage::getId).collect(Collectors.toSet()))) {
             throw new ApiException(ErrorCode.BAD_REQUEST, "Thứ tự ảnh phải chứa đủ các ID ảnh của POI, không trùng lặp");
@@ -141,14 +141,14 @@ public class PoiMediaService {
         PoiImage first = imageIds.isEmpty() ? null : byId.get(imageIds.get(0));
         poi.setCoverImage(first == null ? null : first.getStorageKey(), first == null ? null : first.getMimeType());
         poi.touch();
-        pois.saveAndFlush(poi);
+        pois.saveNow(poi);
         return poiAdminQueries.get(poiId);
     }
 
     @Transactional(readOnly = true)
     public PoiImage requireImageEntity(Long poiId, Long imageId) {
         requirePoi(poiId);
-        return images.findByIdAndPoiId(imageId, poiId).orElseThrow(() -> ApiException.notFound("Ảnh địa điểm"));
+        return images.findByPoiAndId(poiId, imageId).orElseThrow(() -> ApiException.notFound("Ảnh địa điểm"));
     }
 
     @Transactional(readOnly = true)
@@ -157,7 +157,6 @@ public class PoiMediaService {
     }
 
     private Poi requirePoi(Long id) {
-        return pois.findById(id).filter(poi -> !poi.isDeleted())
-                .orElseThrow(() -> ApiException.notFound("Địa điểm"));
+        return pois.findActive(id).orElseThrow(() -> ApiException.notFound("Địa điểm"));
     }
 }

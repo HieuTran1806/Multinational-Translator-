@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +11,6 @@ import vn.edu.thuyetminh.audio.AudioAsset;
 import vn.edu.thuyetminh.audio.AudioService;
 import vn.edu.thuyetminh.audio.AudioView;
 import vn.edu.thuyetminh.common.error.ApiException;
-import vn.edu.thuyetminh.common.web.PageRequests;
 import vn.edu.thuyetminh.common.web.PageResponse;
 import vn.edu.thuyetminh.tts.TtsJobService;
 import vn.edu.thuyetminh.tts.TtsJobView;
@@ -21,13 +18,13 @@ import vn.edu.thuyetminh.tts.TtsJobView;
 /** Read models for the Admin POI API; no mutation operations live here. */
 @Service
 public class PoiAdminQueryService {
-    private final PoiRepository pois;
-    private final PoiTranslationRepository translations;
-    private final PoiImageRepository images;
+    private final PoiStore pois;
+    private final PoiTranslationStore translations;
+    private final PoiImageStore images;
     private final AudioService audioService;
     private final TtsJobService ttsJobs;
 
-    public PoiAdminQueryService(PoiRepository pois, PoiTranslationRepository translations, PoiImageRepository images,
+    public PoiAdminQueryService(PoiStore pois, PoiTranslationStore translations, PoiImageStore images,
                                 AudioService audioService, TtsJobService ttsJobs) {
         this.pois = pois;
         this.translations = translations;
@@ -39,15 +36,14 @@ public class PoiAdminQueryService {
     @Transactional(readOnly = true)
     public PageResponse<PoiDtos.AdminPoiSummary> list(int page, int size, PoiStatus status, String query) {
         String like = query == null || query.isBlank() ? null : "%" + query.trim().toLowerCase() + "%";
-        Page<Poi> result = pois.search(status, like,
-                PageRequests.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt").and(Sort.by("id"))));
-        List<Long> ids = result.getContent().stream().map(Poi::getId).toList();
-        List<PoiTranslation> items = ids.isEmpty() ? List.of() : translations.findByPoiIdIn(ids);
+        PageResponse<Poi> result = pois.search(status, like, page, size);
+        List<Long> ids = result.items().stream().map(Poi::getId).toList();
+        List<PoiTranslation> items = ids.isEmpty() ? List.of() : translations.listByPois(ids);
         Map<Long, AudioAsset> currentAudio = audioService.currentAudioByTranslation(items);
         Map<Long, List<PoiTranslation>> byPoi = items.stream()
                 .collect(Collectors.groupingBy(translation -> translation.getPoi().getId()));
 
-        return PageResponse.of(result, poi -> new PoiDtos.AdminPoiSummary(poi.getId(), poi.getCode(),
+        return result.map(poi -> new PoiDtos.AdminPoiSummary(poi.getId(), poi.getCode(),
                 poi.getDefaultName(), poi.getLatitude(), poi.getLongitude(), poi.getCategory(), poi.getTriggerRadius(),
                 poi.getStatus(), poi.isDemo(), poi.getUpdatedAt(),
                 byPoi.getOrDefault(poi.getId(), List.of()).stream()
@@ -59,8 +55,7 @@ public class PoiAdminQueryService {
 
     @Transactional(readOnly = true)
     public PoiDtos.AdminPoiDetail get(Long id) {
-        Poi poi = pois.findById(id).filter(item -> !item.isDeleted())
-                .orElseThrow(() -> ApiException.notFound("Địa điểm"));
+        Poi poi = pois.findActive(id).orElseThrow(() -> ApiException.notFound("Địa điểm"));
         return toDetail(poi);
     }
 
@@ -89,11 +84,11 @@ public class PoiAdminQueryService {
 
     private PoiDtos.AdminPoiDetail toDetail(Poi poi) {
         List<PoiDtos.AdminTranslationView> translationViews = translations
-                .findByPoiIdOrderByLanguageCodeAsc(poi.getId()).stream()
+                .listByPoi(poi.getId()).stream()
                 .map(this::translationView).toList();
         String coverImage = poi.getCoverImageKey() == null ? null
                 : "/api/v1/admin/pois/" + poi.getId() + "/image";
-        List<PoiDtos.AdminPoiImage> imageViews = images.findByPoiIdOrderBySortOrderAscIdAsc(poi.getId()).stream()
+        List<PoiDtos.AdminPoiImage> imageViews = images.listByPoi(poi.getId()).stream()
                 .map(image -> new PoiDtos.AdminPoiImage(image.getId(),
                         "/api/v1/admin/pois/" + poi.getId() + "/images/" + image.getId(),
                         image.getMimeType(), image.getSortOrder()))

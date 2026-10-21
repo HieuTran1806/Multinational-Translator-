@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +15,6 @@ import vn.edu.thuyetminh.audio.AudioService;
 import vn.edu.thuyetminh.audio.AudioView;
 import vn.edu.thuyetminh.common.Hashing;
 import vn.edu.thuyetminh.common.error.ApiException;
-import vn.edu.thuyetminh.common.web.PageRequests;
 import vn.edu.thuyetminh.common.web.PageResponse;
 
 /**
@@ -29,12 +26,12 @@ public class PoiPublicService {
 
     public static final String DEFAULT_LANGUAGE = "vi";
 
-    private final PoiRepository pois;
-    private final PoiTranslationRepository translations;
-    private final PoiImageRepository images;
+    private final PoiStore pois;
+    private final PoiTranslationStore translations;
+    private final PoiImageStore images;
     private final AudioService audioService;
 
-    public PoiPublicService(PoiRepository pois, PoiTranslationRepository translations, PoiImageRepository images,
+    public PoiPublicService(PoiStore pois, PoiTranslationStore translations, PoiImageStore images,
                             AudioService audioService) {
         this.pois = pois;
         this.translations = translations;
@@ -44,12 +41,11 @@ public class PoiPublicService {
 
     @Transactional(readOnly = true)
     public PageResponse<PoiDtos.PublicPoiSummary> list(int page, int size, String lang) {
-        Page<Poi> result = pois.findByStatus(PoiStatus.PUBLISHED,
-                PageRequests.of(page, size, Sort.by("defaultName").and(Sort.by("id"))));
-        List<Long> ids = result.getContent().stream().map(Poi::getId).toList();
+        PageResponse<Poi> result = pois.listPublished(page, size);
+        List<Long> ids = result.items().stream().map(Poi::getId).toList();
         Map<Long, List<PoiTranslation>> byPoi = ids.isEmpty() ? Map.of()
-                : translations.findByPoiIdIn(ids).stream().collect(Collectors.groupingBy(t -> t.getPoi().getId()));
-        return PageResponse.of(result, p -> {
+                : translations.listByPois(ids).stream().collect(Collectors.groupingBy(t -> t.getPoi().getId()));
+        return result.map(p -> {
             List<PoiTranslation> ts = byPoi.getOrDefault(p.getId(), List.of());
             String name = pick(ts, lang).map(PoiTranslation::getName).orElse(p.getDefaultName());
             return new PoiDtos.PublicPoiSummary(p.getId(), p.getCode(), name, p.getLatitude(), p.getLongitude(),
@@ -60,7 +56,7 @@ public class PoiPublicService {
     @Transactional(readOnly = true)
     public PoiDtos.PublicPoiDetail detail(Long id, String lang) {
         Poi p = requirePublished(id);
-        List<PoiTranslation> ts = translations.findByPoiIdOrderByLanguageCodeAsc(id);
+        List<PoiTranslation> ts = translations.listByPoi(id);
         PoiTranslation t = pick(ts, lang).orElseThrow(() -> ApiException.notFound("Nội dung địa điểm"));
         AudioView audio = audioService.currentAudio(t).map(AudioView::publicView).orElse(null);
         String requested = lang == null ? DEFAULT_LANGUAGE : lang;
@@ -73,7 +69,7 @@ public class PoiPublicService {
     @Transactional(readOnly = true)
     public PoiDtos.OfflineManifest offlineManifest(Long id) {
         Poi p = requirePublished(id);
-        List<PoiTranslation> ts = translations.findByPoiIdOrderByLanguageCodeAsc(id);
+        List<PoiTranslation> ts = translations.listByPoi(id);
         Map<Long, AudioAsset> audio = audioService.currentAudioByTranslation(ts);
         List<PoiDtos.OfflineTranslation> items = ts.stream().map(t -> new PoiDtos.OfflineTranslation(
                 t.getLanguageCode(), t.getName(), t.getDescription(), t.getNarrationText(), t.getContentVersion(),
@@ -93,8 +89,7 @@ public class PoiPublicService {
 
     @Transactional(readOnly = true)
     public Poi requirePublished(Long id) {
-        return pois.findByIdAndStatus(id, PoiStatus.PUBLISHED)
-                .orElseThrow(() -> ApiException.notFound("Địa điểm"));
+        return pois.findPublished(id).orElseThrow(() -> ApiException.notFound("Địa điểm"));
     }
 
     /** Requested language, else Vietnamese, else first available. */
@@ -111,11 +106,11 @@ public class PoiPublicService {
     @Transactional(readOnly = true)
     public PoiImage requirePublishedImage(Long poiId, Long imageId) {
         requirePublished(poiId);
-        return images.findByIdAndPoiId(imageId, poiId).orElseThrow(() -> ApiException.notFound("Ảnh"));
+        return images.findByPoiAndId(poiId, imageId).orElseThrow(() -> ApiException.notFound("Ảnh"));
     }
 
     private List<String> imageUrls(Long poiId) {
-        return images.findByPoiIdOrderBySortOrderAscIdAsc(poiId).stream()
+        return images.listByPoi(poiId).stream()
                 .map(i -> "/api/v1/public/pois/" + poiId + "/images/" + i.getId()).toList();
     }
 

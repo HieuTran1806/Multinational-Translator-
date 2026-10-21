@@ -1,5 +1,6 @@
 package vn.edu.thuyetminh.support;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -74,10 +76,23 @@ public abstract class AbstractIntegrationTest {
         putTranslation(token, id, "vi", "Tên tiếng Việt", "Thuyết minh tiếng Việt");
         putTranslation(token, id, "en", "English name", "English narration");
         if (publish) {
-            mvc.perform(post("/api/v1/admin/pois/" + id + "/publish").header("Authorization", bearer(token)))
-                    .andExpect(status().isOk());
+            publishWithEnglishAudio(token, id);
         }
         return id;
+    }
+
+    /**
+     * Publishing requires ready English audio for the current content version, so this uploads a valid
+     * English file before calling /publish. The production readiness rule is never bypassed or mocked.
+     */
+    protected void publishWithEnglishAudio(String token, long poiId) throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "narration-en.wav", "audio/wav",
+                AudioFixtures.wav("en"));
+        mvc.perform(multipart("/api/v1/admin/pois/" + poiId + "/translations/en/audio")
+                        .file(file).header("Authorization", bearer(token)))
+                .andExpect(status().isCreated());
+        mvc.perform(post("/api/v1/admin/pois/" + poiId + "/publish").header("Authorization", bearer(token)))
+                .andExpect(status().isOk());
     }
 
     protected void putTranslation(String token, long poiId, String lang, String name, String narration)

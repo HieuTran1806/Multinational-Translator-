@@ -24,7 +24,7 @@ import vn.edu.thuyetminh.common.error.ErrorCode;
 import vn.edu.thuyetminh.language.Language;
 import vn.edu.thuyetminh.language.LanguageService;
 import vn.edu.thuyetminh.poi.PoiTranslation;
-import vn.edu.thuyetminh.poi.PoiTranslationRepository;
+import vn.edu.thuyetminh.poi.PoiTranslationStore;
 
 /**
  * Asynchronous TTS generation backed by the {@code audio_generation_job} table.
@@ -41,8 +41,8 @@ public class TtsJobService {
     private static final Logger log = LoggerFactory.getLogger(TtsJobService.class);
     private static final List<JobStatus> ACTIVE = List.of(JobStatus.QUEUED, JobStatus.RUNNING);
 
-    private final AudioGenerationJobRepository jobs;
-    private final PoiTranslationRepository translations;
+    private final AudioGenerationJobStore jobs;
+    private final PoiTranslationStore translations;
     private final LanguageService languages;
     private final AudioService audioService;
     private final TtsProvider provider;
@@ -50,7 +50,7 @@ public class TtsJobService {
     private final Clock clock;
     private final TransactionTemplate tx;
 
-    public TtsJobService(AudioGenerationJobRepository jobs, PoiTranslationRepository translations,
+    public TtsJobService(AudioGenerationJobStore jobs, PoiTranslationStore translations,
                          LanguageService languages, AudioService audioService, TtsProvider provider,
                          AppProperties props, Clock clock, PlatformTransactionManager txManager) {
         this.jobs = jobs;
@@ -76,7 +76,7 @@ public class TtsJobService {
             throw new ApiException(ErrorCode.TTS_NOT_CONFIGURED,
                     "Dịch vụ Google Cloud TTS chưa được cấu hình trên máy chủ. Hãy tải file audio lên thay thế.");
         }
-        PoiTranslation t = translations.findByPoiIdAndLanguageCode(poiId, languageCode)
+        PoiTranslation t = translations.findByPoiAndLanguage(poiId, languageCode)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,
                         "Chưa có nội dung ngôn ngữ '" + languageCode + "' cho địa điểm này"));
         int bytes = t.getNarrationText().getBytes(StandardCharsets.UTF_8).length;
@@ -97,8 +97,7 @@ public class TtsJobService {
                     null, AudioView.adminView(a, true), true, a.getCreatedAt(), a.getCreatedAt());
         }
         // 2) an equivalent job is already queued/running -> return it
-        Optional<AudioGenerationJob> active = jobs.findFirstByTranslationIdAndContentHashAndStatusIn(
-                t.getId(), hash, ACTIVE);
+        Optional<AudioGenerationJob> active = jobs.findActive(t.getId(), hash, ACTIVE);
         if (active.isPresent()) {
             return toView(active.get());
         }
@@ -115,7 +114,7 @@ public class TtsJobService {
 
     @Transactional(readOnly = true)
     public Optional<TtsJobView> latestForTranslation(Long translationId) {
-        return jobs.findFirstByTranslationIdOrderByIdDesc(translationId).map(this::toView);
+        return jobs.findLatestForTranslation(translationId).map(this::toView);
     }
 
     /**
@@ -216,7 +215,7 @@ public class TtsJobService {
 
     void recoverInterruptedJobs(Instant startedBefore) {
         tx.executeWithoutResult(s -> {
-            for (AudioGenerationJob j : jobs.findByStatusAndStartedAtBefore(JobStatus.RUNNING, startedBefore)) {
+            for (AudioGenerationJob j : jobs.findInterrupted(JobStatus.RUNNING, startedBefore)) {
                 if (j.canRetry()) {
                     j.retryLater("INTERRUPTED", "Tác vụ bị gián đoạn (máy chủ khởi động lại); đã xếp hàng lại",
                             clock.instant());
