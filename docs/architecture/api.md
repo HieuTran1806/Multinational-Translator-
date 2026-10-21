@@ -1,5 +1,7 @@
 # REST API `/api/v1`
 
+> **Hợp đồng chuẩn cho giai đoạn rebuild:** [phase-1-contract-baseline.md](./phase-1-contract-baseline.md) là nguồn tham chiếu cho quy ước chung, error envelope, RBAC và nghiệp vụ Seller/payment/QR. Các endpoint legacy hoặc được đánh dấu đề xuất trong tài liệu này không mặc nhiên được xem là endpoint đã triển khai.
+
 > **Lưu ý phạm vi:** Tài liệu này phản ánh hợp đồng/hiện trạng API hiện có. Nghiệp vụ đích mới cần bổ sung giao dịch Seller, xác minh thanh toán, QR dùng một lần, quyền User có thời hạn và báo cáo Seller; các endpoint/cơ chế offline cũ không thuộc phạm vi nghiệp vụ online-only và cần được rà soát riêng.
 
 OpenAPI: `GET /v3/api-docs`, Swagger UI: `/swagger-ui.html` (bật ở dev; tắt ở prod trừ khi `APP_API_DOCS_ENABLED=true`).
