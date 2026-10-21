@@ -1,0 +1,17 @@
+# Maven build output
+/target/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.yaml
+application-*.local.yml
+application-*.local.yaml
+
+# IDE and JVM artifacts
+.idea/
+*.iml
+*.hprof
+*.log

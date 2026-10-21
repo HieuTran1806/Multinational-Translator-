@@ -1,6 +1,6 @@
 # Danh mục tài liệu
 
-Nhánh này là nền tảng hợp đồng của Giai đoạn 1. Nhánh giữ lại yêu cầu, kiến trúc, tiêu chuẩn phát triển, kế hoạch, báo cáo, tài liệu tích hợp và vận hành/CI-CD. Mã ứng dụng đã được loại bỏ khỏi nhánh này; nhánh gốc vẫn là điểm khôi phục bản triển khai trước.
+Nhánh này giữ tài liệu hợp đồng Giai đoạn 1 và backend cũ đã được khôi phục tại `services/backend/`. Các phần mobile, frontend Admin, hạ tầng và design system vẫn chưa được khôi phục; nhánh gốc `XuanHoai_UC01-03` vẫn giữ bản triển khai trước.
 
 ## Yêu cầu
 - `requirements/BRD.md`
@@ -11,6 +11,7 @@ Nhánh này là nền tảng hợp đồng của Giai đoạn 1. Nhánh giữ l�
 - `architecture/api.md`
 - `architecture/PROJECT_STRUCTURE.md`
 - `architecture/phase-1-contract-baseline.md`
+- `../services/backend/ARCHITECTURE.md` — ranh giới lớp và quy tắc phụ thuộc backend.
 
 ## Phát triển và lập kế hoạch
 - `development/DEVELOPMENT_STANDARDS.md`
