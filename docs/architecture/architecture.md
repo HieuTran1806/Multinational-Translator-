@@ -1,6 +1,6 @@
 # Kiến trúc
 
-> **Trạng thái tài liệu:** Mô tả kiến trúc/mã nguồn hiện có. Đặc tả nghiệp vụ đích đã chuyển sang website User online-only với Seller/QR theo `docs/requirements/Use_Case_Specification_Final_15_UC.md`. Các mô tả mobile/offline bên dưới là hiện trạng legacy, không được hiểu là phạm vi nghiệp vụ đích; cần thiết kế và triển khai migration riêng.
+> **Trạng thái tài liệu:** Mô tả kiến trúc/mã nguồn hiện có. Đặc tả nghiệp vụ đích đã chuyển sang ứng dụng User online-only với Seller/QR theo `docs/requirements/Use_Case_Specification_Final_15_UC.md`. Các mô tả mobile/offline bên dưới là hiện trạng legacy, không được hiểu là phạm vi nghiệp vụ đích; cần thiết kế và triển khai migration riêng.
 
 ## Tổng quan
 
@@ -209,8 +209,8 @@ Các mục sau là dữ liệu mục tiêu, chưa khẳng định schema hiện 
 - `service_package`: mã `DEMO_24H`, giá 1 VND, thời hạn 24 giờ, trạng thái bật/tắt.
 - `seller_transaction`: Seller, package, số tiền, phương thức, trạng thái, thời điểm tạo/hủy/xác nhận và tham chiếu thanh toán.
 - `payment_notification`: provider event/reference, kết quả xác minh chữ ký, idempotency và thời điểm nhận; chỉ lưu payload tối thiểu đã làm sạch.
-- `access_qr`: token hash, trạng thái, `redeemed_at`, `revoked_at`; không có hạn tự hết hiệu lực trước lần redeem đầu tiên, nhưng có thể bị thu hồi. UC12/luồng tạo QR ngoài MVP.
-- `user_access_grant`: transaction/QR, `activated_at`, `expires_at`, trạng thái và binding phiên/credential.
+- `access_qr`: token hash, trạng thái, `redeemed_at`, `revoked_at`; QR không tự hết hạn trước kích hoạt đầu tiên; Seller có thể thu hồi QR. Seller tạo/cấp QR sau thanh toán thành công; UC12/luồng tạo QR ngoài MVP.
+- `user_access_grant`: transaction/QR, `activated_at`, `expires_at`, trạng thái và binding với thiết bị đã kích hoạt; khôi phục chỉ trên cùng thiết bị trong thời hạn.
 - `usage_event`/`analytics_read_model`: loại sự kiện, POI, locale, timestamp và metadata tối thiểu.
 - `audit_record`: actor, action, resource, timestamp, outcome và metadata đã loại bỏ secret.
 
@@ -232,4 +232,4 @@ VNPAY Sandbox chỉ phục vụ demo/test. Các endpoint/entity trên là thiế
 - Mọi thực thể nghiệp vụ có thể xóa dùng soft delete (`deleted_at`, `deleted_by` hoặc tương đương); truy vấn mặc định loại bản ghi đã xóa. Không hard-delete qua UI/API thông thường; giữ khóa ngoại, lịch sử và audit. Khôi phục cần quyền riêng và audit event.
 - Audit log append-only; lưu tối thiểu 24 tháng theo mục tiêu hiện tại, backup hằng ngày và kiểm thử khôi phục định kỳ. Chính sách phải được rà soát trước production.
 - Locale được quản lý bằng bảng/cấu hình và khóa locale chuẩn, không enum cố định chỉ gồm `vi`/`en`; MVP chỉ bật hai locale này. Fallback là chính sách dữ liệu/tài nguyên, không phải nhánh hard-code theo từng ngôn ngữ.
-- Gói dịch vụ là dữ liệu cấu hình (mã, giá, currency, duration, trạng thái/phiên bản điều kiện); không hard-code một gói. UC12 và việc tạo QR nội bộ ngoài MVP.
+- Gói dịch vụ là dữ liệu cấu hình (mã, giá, currency, duration, trạng thái/phiên bản điều kiện); không hard-code một gói. UC12 và việc tạo QR nội bộ ngoài MVP; theo quy tắc đích Seller chỉ tạo/cấp QR sau thanh toán thành công.

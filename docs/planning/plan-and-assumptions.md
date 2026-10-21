@@ -14,15 +14,15 @@ Bản Penpot được chia sẻ ("Cu Chi Tunnels Tourism Guide") đã được m
 Mã màu là giá trị đọc từ SVG đã render (có thể lệch nhẹ so với token gốc):
 `#4F5D3A` olive · `#293526` deep forest · `#795548` earth brown · `#A65F3B` terracotta · `#A94738` error · `#F3EACD` warm sand · `#FFF9EE` old paper · `#292824` charcoal · `#777268` stone gray.
 
-**Nguồn nghiệp vụ hiện hành:** `docs/requirements/Use_Case_Specification_Final_15_UC.md` và `docs/requirements/BRD.md` (bản dự thảo v2.0, cập nhật 2026-10-20). Những giả định MVP cũ bên dưới không được ưu tiên hơn yêu cầu Seller/QR và website online-only mới.
+**Nguồn nghiệp vụ hiện hành:** `docs/requirements/Use_Case_Specification_Final_15_UC.md` và `docs/requirements/BRD.md` (bản dự thảo v2.0, cập nhật 2026-10-20). Những giả định MVP cũ bên dưới không được ưu tiên hơn yêu cầu Seller/QR và ứng dụng User React Native hoạt động online-only mới.
 
 ## 2. Khác biệt giữa thiết kế và phạm vi MVP được giao (đã tự quyết)
 
 | Điểm | Penpot / đặc tả | MVP này | Lý do |
 |---|---|---|---|
 | Truy cập User | Bản đặc tả cũ yêu cầu đăng nhập Tourist | QR dùng một lần kích hoạt quyền User có thời hạn; không có tài khoản Tourist | Quyết định nghiệp vụ 2026-10-20 |
-| Thanh toán/Seller | Chưa có trong phạm vi cũ | Seller do Admin tạo; tiền mặt xác nhận thủ công, chuyển khoản xác minh tự động qua tích hợp | Chi tiết tích hợp TBD |
-| Website online-only | Tài liệu cũ có offline pack | Không hỗ trợ offline map/data/audio hoặc tiếp tục dùng khi mất mạng | Quyết định nghiệp vụ 2026-10-20 |
+| Thanh toán/Seller | Chưa có trong phạm vi cũ | Seller chỉ do Admin tạo; Super Admin chỉ quản lý Admin. Quy trình thanh toán/QR thuộc UC12 ngoài MVP | Chi tiết tích hợp TBD |
+| Ứng dụng User React Native online-only | Tài liệu cũ có offline pack | Không hỗ trợ offline map/data/audio hoặc tiếp tục dùng khi mất mạng | Quyết định nghiệp vụ 2026-10-20 |
 | Auto Narration | Có trong đặc tả | Cần kiểm tra giới hạn Geolocation trên web và xác nhận ưu tiên | Chưa chốt thông số geofence |
 | Admin UC11–UC16 (SSE, RBAC động, analytics, audit) | Có | Backlog; chỉ có 2 vai trò tĩnh `ADMIN`, `SUPER_ADMIN` | Prompt |
 | Ngôn ngữ thứ 3 (日本語) | Có trong mockup | Chỉ `vi`, `en` (bảng `language` mở rộng được) | Dữ liệu mẫu |
@@ -62,7 +62,7 @@ Nguyên tắc: bản ổn định mới nhất phát hành trước ~2 tuần; g
 
 ## 5. Giả định đã tự quyết (chi tiết nhỏ)
 
-- User không có tài khoản Tourist; quyền truy cập được kích hoạt bằng QR dùng một lần do Seller cung cấp ngoài hệ thống trong MVP. UC12 không quản lý thanh toán/tạo QR nội bộ; Seller do Admin/Super Admin tạo tài khoản.
+- User không có tài khoản Tourist; mỗi khách hàng có QR riêng, chỉ kích hoạt một lần; Seller tạo/cấp QR sau khi thanh toán thành công. UC12 không quản lý thanh toán/tạo QR nội bộ trong MVP; Seller chỉ do Admin tạo tài khoản.
 - Công khai POI yêu cầu nội dung tiếng Anh hợp lệ và audio tiếng Anh hiện hành khớp phiên bản nội dung.
 - MVP chỉ bật `vi`/`en`; UI locale và audio locale độc lập, fallback hiển thị nhãn. Locale phải lấy từ bảng/cấu hình để có thể thêm ngôn ngữ mà không sửa logic lõi.
 - UI locale và audio locale được chọn độc lập (chỉ `vi`/`en`).
@@ -75,10 +75,10 @@ Nguyên tắc: bản ổn định mới nhất phát hành trước ~2 tuần; g
 ## Quyết định demo đã chốt — 2026-10-20
 
 - UC12 ngoài MVP; VNPAY Sandbox chỉ là lựa chọn tham khảo cho giai đoạn sau nếu được duyệt.
-- UC12 ngoài MVP; mô hình gói phải mở rộng được. `DEMO_24H` (1 VND/24 giờ từ redeem thành công) chỉ là cấu hình demo tham khảo cho giai đoạn sau, không phải tính năng bán gói MVP.
-- UC12 không triển khai trong MVP; phương thức thu tiền/cấp QR do Seller tự quyết định ngoài hệ thống. Chính sách hủy/hoàn tiền sẽ được chốt khi đưa UC12 vào phạm vi.
-- QR dùng một lần; grant gắn với phiên trình duyệt/credential. Mọi API User phải kiểm tra grant ở backend.
+- UC12 ngoài MVP; mô hình gói phải mở rộng được. `DEMO_24H` (1 VND/24 giờ kể từ lúc kích hoạt thành công) chỉ là cấu hình demo tham khảo cho giai đoạn sau, không phải tính năng bán gói MVP.
+- UC12 không triển khai trong MVP; Seller tạo/cấp QR riêng cho từng khách hàng sau khi thanh toán thành công. Chính sách thu tiền/hủy/hoàn tiền sẽ được chốt khi đưa UC12 vào phạm vi.
+- Mỗi khách hàng có QR riêng; QR chỉ kích hoạt một lần. Grant gắn với thiết bị đã kích hoạt, có hiệu lực 24 giờ từ kích hoạt thành công; ứng dụng có thể khôi phục phiên trên chính thiết bị đó sau khi đóng/mở lại, nhưng không hỗ trợ chuyển thiết bị hoặc khôi phục sang thiết bị khác.
 - Chỉ `vi`/`en`, UI/audio locale độc lập, fallback có nhãn. Publish POI cần English content và audio hiện hành. Gallery tối đa 6 ảnh.
-- RBAC chỉ `ADMIN`/`SUPER_ADMIN`; auto narration chỉ khi tab hoạt động và trình duyệt cho phép.
+- RBAC có hai vai trò `ADMIN`/`SUPER_ADMIN`: Super Admin quản lý Admin/RBAC/Audit Log nhưng không quản lý POI/Seller; Admin quản lý POI và Seller. Super Admin không tự thao tác lên tài khoản mình; thay đổi do Super Admin khác thực hiện và sau thao tác phải còn ít nhất một Super Admin hoạt động. Auto narration tuân theo giới hạn nền tảng.
 - Analytics/Audit/NFR theo BRD; ngưỡng định lượng là mục tiêu chưa đo kiểm.
 - Seller/payment/QR, Analytics/Audit chỉ được coi là triển khai sau khi xác minh code, schema/migration, OpenAPI và test. Tài liệu không tự chứng minh tính năng đã chạy.

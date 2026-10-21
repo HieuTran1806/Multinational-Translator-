@@ -3,11 +3,11 @@
 
 ## 1. Tóm tắt điều hành
 
-Hệ thống là website hướng dẫn tham quan đa ngôn ngữ, cho phép User khám phá bản đồ/POI và nghe thuyết minh sau khi kích hoạt quyền qua QR dùng một lần. Trong MVP, Seller tự quyết định phương thức thu tiền và cung cấp QR ngoài hệ thống; website không xử lý giao dịch hoặc tạo QR nội bộ.
+Hệ thống là ứng dụng User hướng dẫn tham quan đa ngôn ngữ, cho phép User khám phá bản đồ/POI và nghe thuyết minh sau khi kích hoạt quyền qua QR dùng một lần. UC12 (thanh toán/tạo QR nội bộ) ngoài MVP. QR phải riêng cho từng khách hàng; Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công. UC02 kích hoạt QR một lần và cấp quyền 24 giờ trên thiết bị đã kích hoạt.
 
-UC12 (thanh toán/quản lý giao dịch/tạo QR nội bộ) ngoài MVP. Seller tự quyết định phương thức thu tiền và cách cung cấp QR ngoài hệ thống. UC02 vẫn hỗ trợ User redeem QR hợp lệ được cung cấp; quyền bắt đầu tính thời hạn từ lúc redeem thành công. VNPAY Sandbox chỉ là phương án tham khảo cho giai đoạn sau.
+UC12 (thanh toán/quản lý giao dịch/tạo QR nội bộ) ngoài MVP. UC12 ngoài MVP; Seller tạo và cấp QR riêng cho từng khách hàng sau khi thanh toán thành công. UC02 kích hoạt QR một lần và cấp quyền 24 giờ kể từ khi kích hoạt thành công. VNPAY Sandbox chỉ là phương án tham khảo cho giai đoạn sau.
 
-Website là **online-only**. Khi mất mạng, người dùng không thể tiếp tục sử dụng các trang/tính năng phụ thuộc dịch vụ trực tuyến. Hệ thống phải hiển thị trạng thái kết nối/lỗi phù hợp và cho phép thử lại, không quảng bá hoặc cung cấp chức năng offline.
+Ứng dụng User React Native là **online-only**. Khi mất mạng, người dùng không thể tiếp tục sử dụng các trang/tính năng phụ thuộc dịch vụ trực tuyến. Hệ thống phải hiển thị trạng thái kết nối/lỗi phù hợp và cho phép thử lại, không quảng bá hoặc cung cấp chức năng offline.
 
 Khu vực quản trị cung cấp quản lý POI/audio, tài khoản Seller/Admin, RBAC, Analytics toàn hệ thống và Audit Log. Seller có báo cáo riêng về doanh thu, giao dịch và usage chỉ trong phạm vi dữ liệu của chính Seller.
 
@@ -28,7 +28,7 @@ Khách tham quan cần truy cập nhanh nội dung du lịch đa ngôn ngữ mà
 | ID | Mục tiêu | Kết quả mong đợi |
 |---|---|---|
 | BO-01 | Truy cập nhanh cho User | User quét QR hợp lệ, không cần tài khoản Tourist, và dùng chức năng trong thời hạn đã cấp |
-| BO-02 | Cấp quyền User | User redeem QR do Seller cung cấp ngoài hệ thống; quản lý giao dịch/thanh toán/tạo QR nội bộ (UC12) ngoài MVP |
+| BO-02 | Cấp quyền User | User kích hoạt QR riêng; Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công. Quản lý giao dịch/thanh toán/tạo QR nội bộ (UC12) ngoài MVP |
 | BO-03 | Kiểm soát tái sử dụng QR | Mỗi QR chỉ đổi thành công một lần; backend kiểm tra tính hợp lệ và thời hạn |
 | BO-04 | Hỗ trợ khám phá POI | User xem bản đồ, chi tiết POI và nội dung đa ngôn ngữ khi online |
 | BO-05 | Cung cấp thuyết minh | User phát audio thủ công hoặc dùng auto narration trong giới hạn trình duyệt |
@@ -45,14 +45,14 @@ Khách tham quan cần truy cập nhanh nội dung du lịch đa ngôn ngữ mà
 - Quét QR và kích hoạt quyền User có thời hạn.
 - Bản đồ trực tuyến, định vị trình duyệt, tìm/chọn POI.
 - Xem chi tiết POI, bản dịch và hình ảnh.
-- Phát audio trực tuyến và thuyết minh tự động theo vị trí khi trình duyệt cho phép.
+- Phát audio trực tuyến và thuyết minh tự động theo vị trí khi hệ điều hành và quyền vị trí cho phép.
 - Quản lý POI, bản dịch, hình ảnh/audio và tác vụ audio.
-- Admin/Super Admin tạo và quản lý tài khoản Seller.
-- Super Admin quản lý tài khoản Admin và RBAC.
-- Seller tự quyết định phương thức thu tiền và cung cấp QR ngoài hệ thống trong MVP; ứng dụng chỉ xác minh/redeem QR theo UC02.
-- QR dùng một lần; quyền User sau kích hoạt kéo dài theo thời hạn gói/dịch vụ.
+- Admin tạo và quản lý tài khoản Seller; Super Admin không có quyền quản lý Seller.
+- Super Admin là vai trò duy nhất được tạo/quản lý tài khoản Admin và quản lý RBAC.
+- UC12 và nghiệp vụ tạo QR nội bộ ngoài MVP. Mỗi khách hàng phải có QR riêng; Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công. UC02 chỉ kích hoạt QR một lần, cấp quyền 24 giờ gắn với thiết bị kích hoạt.
+- Mỗi khách hàng có QR riêng, chỉ kích hoạt một lần. Quyền có hiệu lực 24 giờ kể từ kích hoạt thành công và gắn với thiết bị đã kích hoạt.
 - Seller xem báo cáo doanh thu, giao dịch và usage của chính mình.
-- Admin/Super Admin xem Analytics toàn hệ thống theo quyền.
+- Admin và Super Admin xem Analytics toàn hệ thống; chỉ Super Admin xem Audit Log.
 - Super Admin xem Audit Log.
 
 ### 4.2 Ngoài phạm vi
@@ -65,7 +65,7 @@ Khách tham quan cần truy cập nhanh nội dung du lịch đa ngôn ngữ mà
 - Seller truy cập/sửa dữ liệu giao dịch hoặc báo cáo của Seller khác.
 - Tự động xác nhận tiền mặt; tiền mặt do Seller xác nhận.
 - Tự động xác nhận chuyển khoản nếu chưa tích hợp nguồn xác minh ngân hàng/đơn vị thanh toán đáng tin cậy.
-- Hoàn tiền, hủy giao dịch, xuất báo cáo và các nghiệp vụ tài chính nâng cao cho đến khi được xác nhận riêng.
+- Hoàn tiền, hủy giao dịch, xuất dữ liệu báo cáo và các nghiệp vụ tài chính nâng cao cho đến khi được xác nhận riêng.
 
 ## 5. Nhóm người dùng và quyền hạn
 
@@ -73,8 +73,8 @@ Khách tham quan cần truy cập nhanh nội dung du lịch đa ngôn ngữ mà
 |---|---|
 | User | Khách tham quan; kích hoạt quyền bằng QR dùng một lần và truy cập tính năng User trong thời hạn dịch vụ |
 | Seller | Tài khoản do Admin tạo; tạo giao dịch, xác nhận tiền mặt, theo dõi thanh toán, hiển thị QR và xem báo cáo dữ liệu của chính mình |
-| Admin | Quản lý POI/nội dung/audio, quản lý tài khoản Seller theo quyền và xem Analytics nếu được cấp quyền |
-| Super Admin | Quản lý tài khoản Admin, RBAC, các chức năng quản trị cấp cao và Audit Log |
+| Admin | Quản lý POI/nội dung/audio, tạo/quản lý Seller và xem Analytics |
+| Super Admin | Quản lý tài khoản Admin và RBAC, xem Audit Log toàn hệ thống; không quản lý POI hoặc Seller |
 | Ngân hàng/đơn vị thanh toán | Ngoài MVP; chỉ bổ sung khi UC12 được duyệt triển khai |
 | Chủ sản phẩm | Xác nhận quy tắc gói dịch vụ, thanh toán, thời hạn, báo cáo và tiêu chí nghiệm thu |
 
@@ -117,7 +117,7 @@ Chi tiết luồng chính, ngoại lệ, điều kiện tiên quyết và depend
 
 ### 7.2 Thanh toán và Seller
 
-- **BR-PAY-01:** Admin/Super Admin tạo và quản lý tài khoản Seller; Seller không tự đăng ký.
+- **BR-PAY-01:** Admin tạo và quản lý tài khoản Seller; Super Admin không có quyền quản lý Seller; Seller không tự đăng ký.
 - **BR-PAY-02:** Seller chỉ thao tác trên giao dịch và QR do chính Seller sở hữu.
 - **BR-PAY-03:** Với tiền mặt, Seller xác nhận đã nhận tiền; hệ thống ghi nhận người thao tác, thời điểm, số tiền và phương thức.
 - **BR-PAY-04:** Với chuyển khoản, hệ thống tự cập nhật thanh toán chỉ sau khi nhận xác nhận đáng tin cậy từ tích hợp ngân hàng/đơn vị thanh toán.
@@ -133,7 +133,7 @@ Chi tiết luồng chính, ngoại lệ, điều kiện tiên quyết và depend
 - **BR-REPORT-03:** Seller xem số QR tạo/đổi/chưa đổi/hết hạn/thu hồi nếu trạng thái tương ứng được hỗ trợ.
 - **BR-REPORT-04:** Seller xem usage theo các sự kiện đã được định nghĩa, ví dụ lượt truy cập, xem POI và phát audio.
 - **BR-REPORT-05:** Seller chỉ được xem dữ liệu của chính mình; backend thực thi ownership.
-- **BR-REPORT-06:** Admin/Super Admin có quyền xem Analytics toàn hệ thống, tách biệt khỏi báo cáo riêng của Seller.
+- **BR-REPORT-06:** Admin và Super Admin có thể xem Analytics toàn hệ thống; chỉ Super Admin được xem Audit Log, tách biệt khỏi báo cáo riêng của Seller.
 - **BR-REPORT-07:** Metric usage, múi giờ `Asia/Ho_Chi_Minh`, độ trễ mục tiêu 5 phút, event thô 90 ngày và tổng hợp 13 tháng; doanh thu chỉ có hiệu lực khi UC12 được triển khai.
 - **BR-REPORT-08:** Không hiển thị dữ liệu cá nhân nhạy cảm không cần thiết trong báo cáo.
 
@@ -157,16 +157,28 @@ Chi tiết luồng chính, ngoại lệ, điều kiện tiên quyết và depend
 - **BR-AUDIO-05:** Admin có thể theo dõi trạng thái tác vụ audio; điều khiển Pause/Resume/Cancel cần được chốt riêng.
 - **BR-WEB-01:** Website và chức năng nghiệp vụ phụ thuộc backend, bản đồ, nội dung và audio cần kết nối mạng.
 - **BR-WEB-02:** Khi mất mạng, hệ thống hiển thị trạng thái offline/lỗi và cung cấp thử lại khi kết nối phục hồi.
-- **BR-WEB-03:** Không cung cấp tính năng tải/quản lý offline pack, offline map, offline POI hoặc offline audio; không tuyên bố các chức năng đó hoạt động khi mất mạng.
+- **BR-WEB-03:** Ứng dụng User không cung cấp tính năng tải/quản lý offline pack, offline map, offline POI hoặc offline audio; không tuyên bố các chức năng đó hoạt động khi mất mạng.
 
 ### 7.6 Tài khoản quản trị và RBAC
+### Ma trận RBAC đã xác nhận
 
-- **BR-ADMIN-01:** Admin/Super Admin tạo, cập nhật và vô hiệu hóa tài khoản Seller theo quyền.
+| Quyền/chức năng | Super Admin | Admin | Seller |
+|---|---|---|---|
+| Quản lý POI, bản dịch, hình ảnh, audio và TTS | Không | Có | Không |
+| Tạo/quản lý tài khoản Admin | Có | Không | Không |
+| Tạo/quản lý tài khoản Seller | Không | Có | Không |
+| Quản lý RBAC/vai trò | Có | Không | Không |
+| Xem Analytics toàn hệ thống | Có | Có | Không |
+| Xem Audit Log toàn hệ thống | Có | Không | Không |
+
+Quy tắc bảo vệ tài khoản Super Admin: Super Admin không được tự thay đổi vai trò hoặc tự vô hiệu hóa chính mình. Thay đổi vai trò/trạng thái tài khoản Super Admin phải do Super Admin khác thực hiện; sau thao tác phải còn ít nhất một Super Admin đang hoạt động. Backend bắt buộc kiểm tra quyền và điều kiện này; ẩn nút trên giao diện không đủ.
+
+- **BR-ADMIN-01:** Chỉ Admin được tạo, cập nhật và vô hiệu hóa tài khoản Seller. Super Admin không được quản lý Seller.
 - **BR-ADMIN-02:** Super Admin quản lý tài khoản Admin.
 - **BR-RBAC-01:** Mọi thao tác quản trị phải được backend kiểm tra quyền.
 - **BR-RBAC-02:** Seller chỉ truy cập dữ liệu của mình; mọi endpoint giao dịch/báo cáo phải kiểm tra ownership.
-- **BR-RBAC-03:** Quy tắc role, permission registry và role mặc định phải được xác nhận.
-- **BR-RBAC-04:** Đề xuất bảo vệ Super Admin cuối cùng khỏi bị xóa/vô hiệu hóa/giáng quyền; cần chủ sản phẩm phê duyệt.
+- **BR-RBAC-03:** Chỉ Super Admin được tạo/quản lý Admin và cấu hình RBAC; chỉ Admin được tạo/quản lý Seller. Super Admin không quản lý POI hoặc Seller.
+- **BR-RBAC-04:** Super Admin không tự đổi vai trò hoặc tự vô hiệu hóa chính mình. Mọi thay đổi vai trò/trạng thái tài khoản Super Admin phải do Super Admin khác thực hiện và sau thao tác vẫn còn ít nhất một Super Admin khác đang hoạt động.
 
 ### 7.7 Audit Log
 
@@ -186,7 +198,7 @@ Chi tiết luồng chính, ngoại lệ, điều kiện tiên quyết và depend
 | RULE-05 | Tiền mặt do Seller xác nhận; chuyển khoản xác minh tự động qua tích hợp đáng tin cậy |
 | RULE-06 | Seller chỉ xem/thao tác dữ liệu của chính mình |
 | RULE-07 | Không cấp quyền khi QR/thanh toán không xác minh được |
-| RULE-08 | Website online-only; không có gói offline hoặc fallback offline |
+| RULE-08 | Ứng dụng User React Native online-only; không có gói offline hoặc fallback offline |
 | RULE-09 | Role/permission được kiểm tra phía backend |
 | RULE-10 | Audit sự kiện tài chính/QR và thay đổi quyền theo chính sách được chốt |
 
@@ -227,16 +239,16 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 | ID | Điều kiện nghiệm thu |
 |---|---|
 | AC-01 | User không cần đăng ký/đăng nhập/đăng xuất tài khoản cá nhân |
-| AC-02 | QR không hợp lệ, đã dùng hoặc bị thu hồi không cấp quyền; QR không tự hết hạn trước redeem. Xác minh thanh toán nội bộ thuộc UC12 ngoài MVP |
+| AC-02 | QR không hợp lệ, đã dùng hoặc bị thu hồi không cấp quyền; QR không tự hết hạn trước khi kích hoạt; vẫn có thể bị thu hồi. Xác minh thanh toán nội bộ thuộc UC12 ngoài MVP |
 | AC-03 | Hai yêu cầu đồng thời đổi cùng QR không thể cùng được cấp quyền |
-| AC-04 | QR hợp lệ chỉ redeem một lần; quyền demo có thời hạn 24 giờ từ redeem thành công theo cấu hình tham khảo; mô hình gói phải mở rộng được và bán gói thuộc UC12 ngoài MVP |
+| AC-04 | QR hợp lệ chỉ redeem một lần; quyền demo có thời hạn 24 giờ kể từ lúc kích hoạt thành công theo cấu hình tham khảo; mô hình gói phải mở rộng được và bán gói thuộc UC12 ngoài MVP |
 | AC-05 | UC12 ngoài MVP; không có yêu cầu nghiệm thu tích hợp VNPAY trong MVP |
 | AC-06 | Idempotency webhook là tiêu chí cho giai đoạn sau khi UC12 được đưa vào phạm vi, không phải tiêu chí nghiệm thu MVP |
 | AC-07 | Khi UC12/UC13 được triển khai, Seller A không thể xem/sửa dữ liệu giao dịch, QR hay báo cáo của Seller B bằng cách thay ID/request |
 | AC-08 | Báo cáo Seller chỉ hiển thị dữ liệu thuộc Seller đó; doanh thu/giao dịch chỉ khả dụng khi UC12 được triển khai, usage theo metric đã định nghĩa |
-| AC-09 | Admin/Super Admin quản lý Seller; Super Admin quản lý Admin/RBAC theo quyền |
-| AC-10 | User có thể khám phá bản đồ, xem POI và phát audio khi website online |
-| AC-11 | Khi mất mạng, website báo trạng thái phù hợp và không giả lập tính năng offline |
+| AC-09 | Admin quản lý Seller; Super Admin không quản lý Seller; Super Admin quản lý Admin/RBAC theo quyền |
+| AC-10 | User có thể khám phá bản đồ, xem POI và phát audio khi ứng dụng User online |
+| AC-11 | Khi mất mạng, ứng dụng User báo trạng thái phù hợp và không giả lập tính năng offline |
 | AC-12 | Analytics toàn hệ thống và báo cáo Seller có phạm vi dữ liệu riêng biệt |
 | AC-13 | Audit Log ghi nhận sự kiện trọng yếu đã chốt và không lộ token/credential nhạy cảm |
 | AC-14 | Các lỗi dịch vụ/thanh toán/QR có thông báo rõ; không cấp quyền hoặc báo thành công giả |
@@ -245,18 +257,18 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 
 ### 12.1 Giả định đã xác nhận
 - Không có đăng ký/đăng nhập/đăng xuất Tourist/User.
-- Admin/Super Admin tạo tài khoản Seller.
-- Thanh toán/tạo QR nội bộ không thuộc MVP; Seller tự quyết định cách thu tiền và cung cấp QR ngoài hệ thống.
-- QR cấp quyền cho các chức năng User sau khi đổi thành công; QR dùng một lần và quyền gắn với phiên trình duyệt/credential đã kích hoạt. Gói demo duy nhất giá 1 VND, thời hạn 24 giờ kể từ lúc đổi QR.
+- Chỉ Admin tạo tài khoản Seller.
+- Thanh toán/tạo QR nội bộ không thuộc MVP. Theo quy tắc nghiệp vụ đích, Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công; QR không tự hết hạn trước khi kích hoạt. UC12 vẫn ngoài MVP.
+- QR riêng cho từng khách hàng chỉ kích hoạt một lần; quyền gắn với thiết bị đã kích hoạt, có thể khôi phục trên chính thiết bị đó trong 24 giờ và không chuyển/khôi phục sang thiết bị khác. Gói `DEMO_24H` 1 VND chỉ là cấu hình demo tham khảo.
 - Seller chỉ xem/thao tác dữ liệu của chính mình.
-- Báo cáo Seller gồm doanh thu, giao dịch và usage.
-- Website online-only, không có chức năng offline.
+- Seller có thể xem/lọc số liệu doanh thu, giao dịch và usage trong phạm vi được phép; không có chức năng xuất báo cáo.
+- Ứng dụng User React Native online-only, không có chức năng offline.
 
 ### 12.2 Còn cần đặc tả/kiểm chứng trước nghiệm thu hoặc production
 1. UC12 ngoài MVP; khi được đưa vào phạm vi, mới chọn nhà cung cấp thanh toán và thiết kế xác minh callback/đối soát.
-2. Quy trình hỗ trợ mất phiên trình duyệt/credential và cấp lại quyền có kiểm soát; QR không hết hạn trước redeem nhưng có thể bị thu hồi. Gói 24 giờ là cấu hình demo tham khảo; UC12 ngoài MVP.
-3. Metric definitions: công thức, nguồn, múi giờ, deduplication, độ trễ và export.
-4. Permission registry, giới hạn quản trị Seller và bảo vệ Super Admin cuối cùng.
+2. Không hỗ trợ chuyển thiết bị hoặc khôi phục quyền sang thiết bị khác. QR không tự hết hạn trước khi kích hoạt; vẫn có thể bị thu hồi. Gói 24 giờ là cấu hình demo tham khảo; UC12 ngoài MVP.
+3. Metric definitions: công thức, nguồn, múi giờ, deduplication và độ trễ. Không có chức năng xuất báo cáo.
+4. Cách cấp QR cho từng khách hàng; retention/audit và chi tiết triển khai RBAC.
 5. Retention Audit Log, mức chống sửa đổi, backup và cách xử lý khi kho log lỗi.
 6. Đo kiểm các mục tiêu hiệu năng/khả dụng/RPO/RTO; hiện chưa có bằng chứng đã đạt.
 7. Danh sách trình duyệt/thiết bị hỗ trợ và giới hạn thực tế của Geolocation/autoplay.
@@ -319,9 +331,9 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 ## 17. Quyết định demo đã xác nhận (2026-10-20)
 
 - **Thanh toán:** UC12 ngoài MVP. VNPAY Sandbox chỉ là phương án tham khảo nếu tích hợp được duyệt trong tương lai; các yêu cầu xác minh chữ ký, trạng thái, số tiền, mã tham chiếu và idempotency sẽ áp dụng khi đó.
-- **Gói dịch vụ:** mô hình dữ liệu/cấu hình phải mở rộng được. `DEMO_24H` (1 VND/24 giờ từ redeem thành công) là cấu hình demo tham khảo, không phải luồng bán gói trong MVP; điều kiện thực tế do Seller/chủ sản phẩm quyết định khi UC12 được đưa vào phạm vi.
+- **Gói dịch vụ:** mô hình dữ liệu/cấu hình phải mở rộng được. `DEMO_24H` (1 VND/24 giờ kể từ lúc kích hoạt thành công) là cấu hình demo tham khảo, không phải luồng bán gói trong MVP; điều kiện thực tế do Seller/chủ sản phẩm quyết định khi UC12 được đưa vào phạm vi.
 - **Hủy/hoàn tiền:** cho phép hủy trước khi QR được đổi; chưa hỗ trợ hoàn tiền sau kích hoạt. Giao dịch sai lệch phải được đưa vào trạng thái cần kiểm tra, không tự động xác nhận.
-- **QR/grant:** QR chỉ đổi một lần; thao tác đổi phải nguyên tử. Grant gắn với phiên trình duyệt/credential đã kích hoạt, có `activated_at` và `expires_at`. Mọi API User yêu cầu grant hợp lệ ở backend, ngoại trừ luồng cần thiết để xem/đổi QR và xử lý lỗi. Trình duyệt web không chứng minh được danh tính thiết bị vật lý tuyệt đối.
+- **QR/grant:** QR chỉ đổi một lần; thao tác đổi phải nguyên tử. Grant gắn với thiết bị đã kích hoạt, có `activated_at` và `expires_at`; phiên có thể được khôi phục trên cùng thiết bị trong thời hạn. Mọi API User yêu cầu grant hợp lệ ở backend, ngoại trừ luồng cần thiết để xem/đổi QR và xử lý lỗi. Trình duyệt web không chứng minh được danh tính thiết bị vật lý tuyệt đối.
 - **Ngôn ngữ/POI:** chỉ hỗ trợ `vi` và `en`; UI locale và audio locale độc lập; fallback hiển thị nhãn ngôn ngữ. Publish POI yêu cầu nội dung tiếng Anh hợp lệ và audio tiếng Anh hiện hành khớp phiên bản nội dung.
 - **Ảnh:** tối đa 6 ảnh/POI, có sắp xếp và gallery.
 - **RBAC:** hai role cố định `ADMIN` và `SUPER_ADMIN`; RBAC động để giai đoạn sau.
@@ -340,7 +352,7 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 | DEC-03 | Gói demo ban đầu `DEMO_24H`, giá 1 VND/24 giờ từ lúc redeem; mô hình gói phải mở rộng được | Định hướng thiết kế; UC12 ngoài MVP, điều kiện thương mại do Seller/chủ sản phẩm quyết định |
 | DEC-04 | Thanh toán tự động | Ngoài MVP; VNPAY Sandbox chỉ là phương án tham khảo cho giai đoạn sau, không phải phạm vi triển khai hiện tại |
 | DEC-05 | Chính sách hủy/hoàn tiền | Ngoài MVP; Seller/chủ sản phẩm quyết định khi triển khai UC12 |
-| DEC-06 | QR một lần; grant gắn với phiên trình duyệt/credential | Đã chốt; mất cookie/đổi trình duyệt cần quy trình hỗ trợ |
+| DEC-06 | QR một lần; grant gắn với thiết bị đã kích hoạt | Đã chốt; không hỗ trợ chuyển thiết bị hoặc khôi phục grant sang thiết bị khác |
 | DEC-07 | Hai role cố định `ADMIN`/`SUPER_ADMIN` | Đã chốt; RBAC động để sau |
 | DEC-08 | MVP chỉ bật `vi`/`en`; UI locale/audio locale độc lập; fallback có nhãn | Đã chốt; mô hình dữ liệu/cấu hình phải mở rộng locale mà không đổi logic lõi |
 | DEC-09 | Auto narration chỉ khi tab hoạt động và trình duyệt cho phép | Đã chốt; cần test quyền vị trí/autoplay |
@@ -351,7 +363,7 @@ Schema chi tiết, retention, phân loại dữ liệu và quy tắc xóa phải
 
 ## 18. Quyết định bổ sung về phạm vi và dữ liệu
 
-- UC08 (Giám sát tiến độ tạo Audio) và UC12 (Quản lý thanh toán/tạo QR) không thực hiện trong MVP. UC12 không cung cấp luồng thanh toán/QR nội bộ; cách thu tiền và cấp QR do Seller tự quyết định ngoài hệ thống trong giai đoạn MVP.
-- UC02 vẫn mô tả việc redeem QR được cung cấp ngoài hệ thống: QR dùng một lần, không hết hạn trước lần redeem đầu tiên nhưng có thể bị thu hồi; grant bắt đầu thời hạn 24 giờ từ redeem thành công theo cấu hình demo hiện tại.
+- UC08 (Giám sát tiến độ tạo Audio) và UC12 (Quản lý thanh toán/tạo QR) không thực hiện trong MVP. UC12 không cung cấp luồng thanh toán/QR nội bộ trong MVP; theo quy tắc nghiệp vụ đích, Seller tạo và cấp QR riêng cho từng khách hàng sau khi thanh toán thành công. QR không tự hết hạn trước khi kích hoạt.
+- UC02 vẫn mô tả việc redeem QR được cung cấp ngoài hệ thống: QR dùng một lần; không tự hết hạn trước lần kích hoạt đầu tiên nhưng Seller có thể thu hồi; grant bắt đầu thời hạn 24 giờ kể từ lúc kích hoạt thành công theo cấu hình demo hiện tại.
 - Gói dịch vụ phải được mô hình hóa bằng dữ liệu/cấu hình mở rộng được; không hard-code `DEMO_24H` vào business logic. Điều kiện giá/thời lượng thực tế khi UC12 được triển khai phải được chốt lại.
 - Soft delete áp dụng toàn hệ thống cho thực thể nghiệp vụ có thể xóa; giữ lịch sử, quan hệ và audit. Audit log append-only, không xóa qua luồng nghiệp vụ thông thường.

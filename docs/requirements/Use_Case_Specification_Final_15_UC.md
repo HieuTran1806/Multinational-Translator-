@@ -44,7 +44,7 @@
 **User**
 
 ### 4. Summary
-User chọn ngôn ngữ giao diện và nội dung POI trong website.
+User chọn ngôn ngữ giao diện và nội dung POI trong ứng dụng User.
 
 ### 5. Preconditions
 - Website truy cập được và API/tài nguyên ngôn ngữ khả dụng.
@@ -58,7 +58,7 @@ User chọn ngôn ngữ giao diện và nội dung POI trong website.
 | 2 | User chọn ngôn ngữ đích. | Hệ thống tải tài nguyên giao diện và nội dung POI tương ứng qua mạng. **[E1, E2]** |
 | 3 | — | Hệ thống kiểm tra tài nguyên cần thiết và quy tắc fallback. **[A1, A2]** |
 | 4 | — | Khi tài nguyên cần thiết sẵn sàng, hệ thống áp dụng ngôn ngữ và cập nhật giao diện/nội dung. |
-| 5 | — | User tiếp tục sử dụng website bằng ngôn ngữ mới. |
+| 5 | — | User tiếp tục sử dụng ứng dụng User bằng ngôn ngữ mới. |
 
 ### 7. Alternative Paths
 - **A1 — Ngôn ngữ đã được áp dụng:** hệ thống dùng tài nguyên hiện có trong phiên và không tải lại không cần thiết.
@@ -91,19 +91,19 @@ User muốn chọn hoặc đổi ngôn ngữ.
 **User**; dịch vụ backend là tác nhân hỗ trợ.
 
 ### 4. Summary
-User quét QR do Seller cung cấp ngoài hệ thống trong MVP. Hệ thống xác minh QR dùng một lần và trạng thái thu hồi; nếu hợp lệ, cấp quyền User trong 24 giờ tính từ redeem thành công theo cấu hình demo. MVP không quản lý giao dịch/thanh toán hoặc tạo QR nội bộ (UC12 ngoài phạm vi). Không yêu cầu tài khoản Tourist.
+User quét QR riêng cho khách hàng để kích hoạt quyền. QR chỉ kích hoạt một lần và quyền gắn với thiết bị đã kích hoạt. Hệ thống xác minh QR dùng một lần và trạng thái thu hồi; nếu hợp lệ, cấp quyền User trong 24 giờ kể từ lúc kích hoạt thành công. MVP không quản lý giao dịch/thanh toán hoặc tạo QR nội bộ (UC12 ngoài phạm vi). Không yêu cầu tài khoản Tourist.
 
 ### 5. Preconditions
 - Website và backend đang truy cập được.
-- QR do Seller cung cấp; việc tạo/cấp QR và xác nhận thu tiền nằm ngoài hệ thống trong MVP. Khi UC12 được triển khai sau này, QR cần liên kết với giao dịch hợp lệ.
-- QR chưa được sử dụng và chưa bị thu hồi. QR không có thời hạn hết hiệu lực trước lần redeem đầu tiên; việc thu hồi vẫn có thể vô hiệu hóa QR.
-- Thời lượng quyền demo hiện tại là 24 giờ từ redeem thành công; thời lượng phải được lấy từ cấu hình để hỗ trợ gói khác trong tương lai.
+- Mỗi khách hàng có QR riêng. Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công. QR không tự hết hạn trước khi kích hoạt; Seller vẫn có thể thu hồi QR. UC12 và nghiệp vụ thanh toán/tạo QR nội bộ ngoài MVP.
+- QR chưa được sử dụng và chưa bị thu hồi. QR không tự hết hạn trước lần kích hoạt đầu tiên; Seller có thể thu hồi QR.
+- Thời lượng quyền demo hiện tại là 24 giờ kể từ lúc kích hoạt thành công; thời lượng phải được lấy từ cấu hình để hỗ trợ gói khác trong tương lai.
 
 ### 6. Basic Course of Events
 
 | Step | Actor Action | System Response |
 |---|---|---|
-| 1 | User mở website và chọn quét QR hoặc mở QR link bằng camera/thiết bị hỗ trợ. | Website hiển thị hướng dẫn quét/mở QR. |
+| 1 | User mở ứng dụng User và chọn quét QR hoặc mở QR link bằng camera/thiết bị hỗ trợ. | Website hiển thị hướng dẫn quét/mở QR. |
 | 2 | User quét QR hoặc mở URL được mã hóa trong QR. | Hệ thống nhận token QR; không tin cậy dữ liệu quyền truy cập chỉ dựa trên nội dung hiển thị trong QR. **[A2]** |
 | 3 | — | Backend kiểm tra token, trạng thái thu hồi và trạng thái chưa sử dụng của QR; không xác minh giao dịch thanh toán trong MVP vì UC12 nằm ngoài phạm vi. **[A1, E1, E3, E4, E5]** |
 | 4 | — | Nếu hợp lệ, backend nguyên tử đánh dấu QR đã sử dụng và tạo phiên/quyền truy cập có thời hạn. **[E2, E6]** |
@@ -111,24 +111,24 @@ User quét QR do Seller cung cấp ngoài hệ thống trong MVP. Hệ thống x
 | 6 | User chọn bản đồ, POI hoặc audio. | Hệ thống cho phép truy cập trong phạm vi và thời hạn đã cấp. |
 
 ### 7. Alternative Paths
-- **A1 — User đã có phiên quyền truy cập còn hiệu lực trên trình duyệt:** hệ thống tiếp tục phiên đó; QR mới vẫn tuân theo quy tắc dùng một lần nếu được gửi để đổi.
-- **A2 — QR được mở qua liên kết thay vì camera:** website xử lý URL/token theo cùng quy tắc xác minh như quét camera.
+- **A1 — User đã có phiên quyền truy cập còn hiệu lực trên thiết bị đã kích hoạt:** hệ thống tiếp tục phiên đó; QR mới vẫn tuân theo quy tắc dùng một lần nếu được gửi để đổi.
+- **A2 — QR được mở qua liên kết thay vì camera:** ứng dụng User xử lý URL/token theo cùng quy tắc xác minh như quét camera.
 ### 8. Exception Paths
 - **E1 — QR không hợp lệ hoặc bị sửa đổi:** từ chối kích hoạt, không cấp quyền và hiển thị thông báo chung.
 - **E2 — QR đã được sử dụng:** từ chối dùng lại; hướng dẫn liên hệ Seller nếu cần hỗ trợ. Không tự cấp quyền cho thiết bị khác.
 - **E3 — Token QR bị thu hồi hoặc không hợp lệ:** không cấp quyền. Trong MVP, hệ thống không có trạng thái thanh toán nội bộ để xác minh.
-- **E4 — QR bị thu hồi hoặc quyền/gói không còn hợp lệ:** từ chối kích hoạt. QR chưa redeem không hết hạn theo thời gian; quyền sau redeem có thời hạn theo gói đã áp dụng.
+- **E4 — QR bị thu hồi hoặc quyền/gói không còn hợp lệ:** từ chối kích hoạt. QR chưa kích hoạt không tự hết hạn; QR bị thu hồi hoặc không hợp lệ phải bị từ chối. Quyền sau kích hoạt có thời hạn theo gói đã áp dụng.
 - **E5 — Mất mạng/backend không phản hồi:** không cấp quyền khi chưa xác minh được; cho phép thử lại khi kết nối phục hồi.
 - **E6 — Lỗi ghi nhận dùng một lần:** giao dịch kích hoạt phải có tính nguyên tử để tránh hai thiết bị cùng đổi một QR thành công.
 ### 9. Trigger
-User đã thanh toán/được Seller cung cấp QR và muốn truy cập tính năng tham quan.
+User nhận được QR riêng của mình và muốn kích hoạt quyền truy cập tính năng tham quan. Seller tạo và cấp QR sau khi thanh toán thành công.
 
 ### 10. Business Rules
 - QR có thể được quét/đổi **một lần**; quyền truy cập sau đó duy trì theo thời hạn gói/dịch vụ.
 - QR cấp quyền sử dụng **các chức năng User trong phạm vi dịch vụ**, không tự động cấp quyền quản trị.
 - Token QR phải khó đoán, không chứa dữ liệu nhạy cảm dạng rõ, có thể bị thu hồi và không được ghi nguyên văn vào log.
-- QR không hết hạn trước lần redeem đầu tiên, nhưng có thể bị thu hồi. Quyền truy cập có thời hạn 24 giờ kể từ redeem thành công theo cấu hình gói demo hiện tại; kiến trúc phải cho phép cấu hình thời lượng gói trong tương lai.
-- Grant được ràng buộc với phiên/credential của trình duyệt đã redeem; không tự chuyển sang trình duyệt khác. Nếu mất cookie/credential, quy trình hỗ trợ phải xác minh quyền sở hữu và thu hồi credential cũ trước khi cấp lại; không cấp quyền mới chỉ dựa trên lời khai.
+- QR có thể bị thu hồi. QR không tự hết hạn trước khi kích hoạt; Seller có thể thu hồi QR. Quyền truy cập có thời hạn 24 giờ kể từ khi kích hoạt thành công theo cấu hình demo; kiến trúc phải cho phép cấu hình thời lượng gói trong tương lai.
+- Grant gắn với thiết bị đã kích hoạt và có hiệu lực 24 giờ. Khi ứng dụng đóng/mở lại, phiên chỉ được khôi phục trên cùng thiết bị trong thời hạn; không hỗ trợ chuyển thiết bị hoặc khôi phục grant sang thiết bị khác.
 
 ### 11. Postconditions
 - Thành công: QR được đánh dấu đã đổi; phiên/quyền User được cấp đến thời điểm hết hạn.
@@ -167,7 +167,7 @@ User xem bản đồ trực tuyến, khám phá POI, phóng to/thu nhỏ và ch�
 ### 7. Exception Paths
 - **E1 — Dịch vụ bản đồ không khả dụng:** hiển thị lỗi và thao tác thử lại; không chuyển sang offline map.
 - **E2 — API POI lỗi:** thông báo POI không tải được; cho phép thử lại.
-- **E3 — Mất mạng:** thông báo website cần kết nối mạng; các chức năng phụ thuộc mạng không được cam kết hoạt động.
+- **E3 — Mất mạng:** thông báo ứng dụng User cần kết nối mạng; các chức năng phụ thuộc mạng không được cam kết hoạt động.
 ### 8. Trigger
 User muốn khám phá địa điểm tham quan.
 
@@ -265,7 +265,7 @@ Trạng thái phát được phản ánh chính xác; sự kiện phát được
 **User**
 
 ### 3. Summary
-Website có thể phát thuyết minh tự động khi vị trí User đáp ứng điều kiện geofence và User đã cho phép định vị cũng như bật tính năng.
+Ứng dụng User có thể phát thuyết minh tự động khi vị trí User đáp ứng điều kiện geofence và User đã cho phép định vị cũng như bật tính năng.
 
 ### 4. Preconditions
 - User có quyền truy cập hợp lệ và kết nối mạng.
@@ -287,7 +287,7 @@ Website có thể phát thuyết minh tự động khi vị trí User đáp ứn
 - **E1 — Không cấp quyền vị trí:** không tự động phát; User vẫn có thể dùng bản đồ và phát thủ công nếu được cấp quyền.
 - **E2 — GPS không đủ chính xác:** không kích hoạt và chờ cập nhật vị trí.
 - **E3 — Audio không khả dụng/mất mạng:** không báo phát thành công; thông báo lỗi.
-- **E4 — Trình duyệt hạn chế Geolocation nền:** giải thích tính năng chỉ hoạt động khi website/trình duyệt cho phép theo dõi vị trí.
+- **E4 — Trình duyệt hạn chế Geolocation nền:** giải thích tính năng chỉ hoạt động khi ứng dụng User/trình duyệt cho phép theo dõi vị trí.
 ### 8. Business Rules
 - Geofence, debounce và cooldown phải là cấu hình, không hard-code. Giá trị mặc định đề xuất cho MVP: bán kính 100 m, vị trí phải ổn định ít nhất 10 giây (debounce), cooldown 10 phút cho cùng POI; điều chỉnh sau kiểm thử thực địa và ghi nhận trong cấu hình môi trường.
 - Trình duyệt web có thể giới hạn định vị nền; không cam kết auto narration khi tab đóng hoặc thiết bị khóa.
@@ -367,7 +367,7 @@ Admin theo dõi trạng thái tác vụ tạo/xử lý audio và xem kết quả
 - **E3 — Quyền không đủ**: từ chối truy cập.
 ### 8. Business Rules
 - Pause/Resume/Cancel không thuộc MVP; nếu triển khai ở giai đoạn sau, cần xác định riêng theo khả năng của backend/job runner.
-- Không dùng offline task queue cho User-facing website.
+- Không dùng offline task queue cho User-facing ứng dụng User.
 
 ### 9. Postconditions
 Admin xem được trạng thái tác vụ; thao tác xem không tự thay đổi trạng thái tác vụ.
@@ -406,7 +406,7 @@ Admin tạo và quản lý tài khoản Seller. Seller không tự đăng ký.
 - **E2 — Seller có dữ liệu liên quan**: dùng soft delete; giữ giao dịch, báo cáo và audit lịch sử, đồng thời chặn đăng nhập/tạo nghiệp vụ mới khi tài khoản đã bị xóa mềm.
 - **E3 — Actor không có quyền**: từ chối ở backend.
 ### 8. Business Rules
-- Tài khoản Seller do Admin/Super Admin tạo.
+- Tài khoản Seller chỉ do Admin tạo; Super Admin không được tạo hoặc quản lý Seller.
 - Seller chỉ xem/thao tác giao dịch, QR và báo cáo của chính mình.
 - Vô hiệu hóa Seller không tự động xóa giao dịch/audit đã phát sinh.
 
@@ -445,8 +445,8 @@ Super Admin tạo, cập nhật, vô hiệu hóa và quản lý tài khoản Adm
 - **E2 — Không cho phép xóa/vô hiệu hóa tài khoản theo cách làm mất Super Admin cuối cùng.**
 - **E3 — Thao tác thất bại**: không báo thành công giả.
 ### 8. Business Rules
-- Gán/đổi role thuộc UC11.
-- Bảo vệ Super Admin cuối cùng là yêu cầu an toàn đề xuất và phải được xác nhận.
+- Gán/đổi role thuộc UC11; không được tự đổi vai trò hoặc tự vô hiệu hóa tài khoản Super Admin nếu không còn Super Admin khác đang hoạt động.
+- Super Admin không được tự đổi vai trò hoặc tự vô hiệu hóa chính mình. Thay đổi vai trò/trạng thái tài khoản Super Admin phải do Super Admin khác thực hiện; sau thao tác phải còn ít nhất một Super Admin đang hoạt động.
 
 ### 9. Postconditions
 Tài khoản Admin được cập nhật theo thao tác hợp lệ.
@@ -496,7 +496,7 @@ Cấu hình role hợp lệ được lưu và có hiệu lực theo chính sách
 
 # UC12 — QUẢN LÝ THANH TOÁN VÀ TẠO QR TRUY CẬP
 
-> **Phạm vi:** KHÔNG THỰC HIỆN TRONG MVP. MVP không triển khai luồng thanh toán, quản lý giao dịch hoặc tạo QR trong hệ thống. Cách thu tiền, phương thức thanh toán và quy trình cung cấp QR do Seller tự quyết định ngoài hệ thống. Nội dung bên dưới là định hướng cho giai đoạn sau, không phải cam kết triển khai MVP.
+> **Phạm vi:** KHÔNG THỰC HIỆN TRONG MVP. MVP không triển khai luồng thanh toán, quản lý giao dịch hoặc tạo QR trong hệ thống. Sau khi xác nhận thanh toán thành công, Seller tạo và cấp QR riêng cho User. QR không tự hết hạn trước khi kích hoạt nhưng có thể bị thu hồi. Nội dung bên dưới là định hướng cho giai đoạn sau, không phải cam kết triển khai MVP.
 
 ### 1. Use Case Number
 **UC12**
@@ -508,7 +508,7 @@ Cấu hình role hợp lệ được lưu và có hiệu lực theo chính sách
 **Seller**; hệ thống ngân hàng/đơn vị thanh toán là tác nhân hỗ trợ đối với chuyển khoản.
 
 ### 4. Summary
-Seller tạo giao dịch cho khách, ghi nhận thanh toán tiền mặt hoặc chờ xác nhận chuyển khoản tự động. Khi giao dịch được xác nhận đã thanh toán, hệ thống tạo QR dùng một lần để User kích hoạt quyền truy cập toàn bộ chức năng User trong thời hạn gói/dịch vụ. Seller chỉ xem và thao tác trên giao dịch của chính mình.
+Seller tạo giao dịch cho khách và ghi nhận/xác nhận thanh toán theo phương thức được hỗ trợ. Chỉ sau khi thanh toán thành công, Seller tạo và cấp QR riêng, dùng một lần, để User kích hoạt quyền truy cập trong thời hạn gói/dịch vụ. QR chưa kích hoạt không tự hết hạn nhưng có thể bị Seller thu hồi. Seller chỉ xem và thao tác trên giao dịch của chính mình.
 
 ### 5. Preconditions
 - Seller đã đăng nhập và tài khoản đang hoạt động.
@@ -584,7 +584,7 @@ Seller xem thống kê và báo cáo chỉ thuộc dữ liệu của chính Sell
 ### 6. Alternative Paths
 - **A1 — Chưa có dữ liệu:** hiển thị trạng thái rỗng và khoảng thời gian được chọn.
 - **A2 — Thay đổi bộ lọc/ngày:** hệ thống tải lại báo cáo theo điều kiện mới.
-- **A3 — Xuất báo cáo:** chưa nằm trong phạm vi đã xác nhận; chỉ bổ sung nếu được duyệt riêng.
+- **A3 — Yêu cầu xuất báo cáo:** không được hỗ trợ; hệ thống chỉ cung cấp xem và lọc trên giao diện.
 ### 7. Exception Paths
 - **E1 — Nguồn báo cáo không khả dụng**: hiển thị lỗi và cho phép thử lại.
 - **E2 — Actor cố truy cập dữ liệu Seller khác**: backend từ chối.
@@ -592,7 +592,7 @@ Seller xem thống kê và báo cáo chỉ thuộc dữ liệu của chính Sell
 ### 8. Business Rules
 - Phạm vi Seller là **dữ liệu của chính Seller**.
 - Doanh thu phải phân biệt tổng tiền thu, giao dịch thất bại/hủy và hoàn tiền nếu tính năng hoàn tiền được hỗ trợ.
-- Tất cả timestamp lưu theo UTC và hiển thị theo múi giờ `Asia/Ho_Chi_Minh`; dashboard ghi rõ thời điểm cập nhật, mục tiêu độ trễ tối đa 5 phút. Định nghĩa metric: `poi_view` là lượt xem chi tiết POI sau khi tải thành công; `audio_play` là lần người dùng nhấn Play và audio bắt đầu phát; `session_start` là lần đầu grant hợp lệ được sử dụng trong một phiên trình duyệt. Khử trùng lặp theo event ID; lưu event thô tối đa 90 ngày và số liệu tổng hợp 13 tháng. Export CSV cơ bản thuộc MVP của báo cáo Seller nếu UC13 được triển khai; các metric tài chính chỉ xuất hiện khi có dữ liệu giao dịch hợp lệ.
+- Tất cả timestamp lưu theo UTC và hiển thị theo múi giờ `Asia/Ho_Chi_Minh`; dashboard ghi rõ thời điểm cập nhật, mục tiêu độ trễ tối đa 5 phút. Định nghĩa metric: `poi_view` là lượt xem chi tiết POI sau khi tải thành công; `audio_play` là lần người dùng nhấn Play và audio bắt đầu phát; `session_start` là lần đầu grant hợp lệ được sử dụng trên thiết bị đã kích hoạt. Khử trùng lặp theo event ID; lưu event thô tối đa 90 ngày và số liệu tổng hợp 13 tháng. Không hỗ trợ xuất báo cáo ra CSV, Excel, PDF hoặc định dạng tệp khác; dashboard chỉ hỗ trợ xem và lọc. Các metric tài chính chỉ xuất hiện khi có dữ liệu giao dịch hợp lệ.
 - Không hiển thị thông tin cá nhân nhạy cảm của User trong báo cáo nếu không cần thiết.
 
 ### 9. Postconditions
@@ -632,7 +632,7 @@ Admin/Super Admin có quyền xem số liệu vận hành toàn hệ thống, t�
 ### 8. Business Rules
 - UC14 là analytics toàn hệ thống; UC13 là báo cáo Seller của chính mình.
 - Metric, công thức, múi giờ, consent, retention và phạm vi lọc phải được định nghĩa thống nhất.
-- Export/drill-down nâng cao không thuộc MVP; MVP chỉ cần dashboard tổng hợp, bộ lọc ngày và POI/locale phù hợp. Metric dùng chung định nghĩa với UC13; timestamp lưu UTC, hiển thị `Asia/Ho_Chi_Minh`, độ trễ mục tiêu tối đa 5 phút, event thô 90 ngày và số liệu tổng hợp 13 tháng.
+- Dashboard chỉ hỗ trợ xem số liệu tổng hợp và lọc theo ngày/POI/locale phù hợp; không có chức năng xuất báo cáo hoặc drill-down xuất file. Metric dùng chung định nghĩa với UC13; timestamp lưu UTC, hiển thị `Asia/Ho_Chi_Minh`, độ trễ mục tiêu tối đa 5 phút, event thô 90 ngày và số liệu tổng hợp 13 tháng.
 
 ### 9. Postconditions
 Dashboard được hiển thị theo quyền; thao tác xem không thay đổi dữ liệu nghiệp vụ.
@@ -648,7 +648,7 @@ Dashboard được hiển thị theo quyền; thao tác xem không thay đổi d
 **Super Admin**
 
 ### 3. Summary
-Super Admin tra cứu các sự kiện quản trị và nghiệp vụ quan trọng đã được ghi nhận, bao gồm quản lý Seller, thay đổi giao dịch/thanh toán, tạo/đổi QR, RBAC và tài khoản.
+Chỉ Super Admin được tra cứu Audit Log toàn hệ thống, gồm sự kiện quản trị và nghiệp vụ quan trọng. Admin và Seller không được xem Audit Log toàn hệ thống.
 
 ### 4. Preconditions
 - Super Admin có quyền `audit:read`.
@@ -696,24 +696,24 @@ Audit records được hiển thị; thao tác xem không sửa/xóa log.
 ## Các quyết định đã chốt
 
 1. Không yêu cầu Tourist/User đăng ký, đăng nhập hoặc đăng xuất bằng tài khoản cá nhân.
-2. Seller account do Admin/Super Admin tạo.
-3. UC12 (thanh toán/giao dịch/tạo QR nội bộ) ngoài MVP; Seller tự quyết định cách thu tiền và cung cấp QR ngoài hệ thống. VNPAY Sandbox chỉ là phương án tham khảo cho giai đoạn sau.
+2. Seller account chỉ do Admin tạo; Super Admin không được tạo hoặc quản lý Seller.
+3. UC12 (thanh toán/giao dịch/tạo QR nội bộ) ngoài MVP. Mỗi khách hàng có QR riêng; Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công. VNPAY Sandbox chỉ là phương án tham khảo cho giai đoạn sau.
 4. User phải redeem QR hợp lệ trước khi dùng chức năng User yêu cầu grant; kiểm tra quyền ở backend.
-5. QR redeem một lần, không hết hạn trước lần redeem đầu tiên nhưng có thể bị thu hồi; quyền demo có thời hạn 24 giờ từ redeem thành công. Mô hình gói phải mở rộng được; `DEMO_24H` chỉ là cấu hình demo tham khảo, UC12 ngoài MVP.
-6. Grant gắn với phiên trình duyệt/credential đã kích hoạt; mất cookie/đổi trình duyệt cần quy trình hỗ trợ rõ ràng.
+5. QR kích hoạt một lần; QR không tự hết hạn trước khi kích hoạt nhưng có thể bị thu hồi; quyền demo có thời hạn 24 giờ kể từ lúc kích hoạt thành công. Mô hình gói phải mở rộng được; `DEMO_24H` chỉ là cấu hình demo tham khảo, UC12 ngoài MVP.
+6. Grant gắn với thiết bị đã kích hoạt; phiên có thể được khôi phục trên cùng thiết bị trong 24 giờ; không hỗ trợ chuyển thiết bị/khôi phục sang thiết bị khác.
 7. Seller chỉ xem và thao tác dữ liệu của chính mình; nghiệp vụ giao dịch/thanh toán/tạo QR thuộc UC12 ngoài MVP.
-8. Website online-only; không có quản lý/tải offline pack, offline map hoặc offline audio.
+8. Ứng dụng User React Native online-only; không có quản lý/tải offline pack, offline map hoặc offline audio.
 9. Chỉ `vi`/`en`; UI locale và audio locale độc lập, fallback hiển thị nhãn ngôn ngữ.
 10. Publish POI yêu cầu English content hợp lệ và audio tiếng Anh hiện hành khớp phiên bản nội dung; tối đa 6 ảnh có thứ tự/gallery.
-11. Auto narration chỉ khi tab hoạt động và trình duyệt cho phép.
+11. Auto narration chỉ khi ứng dụng đang hoạt động và hệ điều hành cho phép.
 12. Chỉ có hai role `ADMIN` và `SUPER_ADMIN`; RBAC động để sau.
 13. Analytics/Audit theo các định nghĩa ở UC13–UC15; mục tiêu NFR theo BRD chưa được đo kiểm. UC08/UC12 ngoài MVP.
 
 ## Các điểm còn cần đặc tả/kiểm chứng
 
 - Tích hợp thanh toán/QR tự động thuộc giai đoạn sau MVP; VNPAY Sandbox chỉ là lựa chọn tham khảo nếu được duyệt.
-- Kết quả kiểm thử quy trình mất cookie/credential và cấp lại quyền có kiểm soát; QR không hết hạn trước redeem nhưng có thể bị thu hồi.
-- Kiểm chứng nguồn dữ liệu và độ chính xác của metric đã định nghĩa tại UC13/UC14; CSV cơ bản ở UC13 và export/drill-down nâng cao của UC14 không mặc định cùng phạm vi.
+- Kết quả kiểm thử khôi phục phiên trên cùng thiết bị trong 24 giờ; không hỗ trợ chuyển thiết bị. QR không tự hết hạn trước khi kích hoạt; Seller có thể thu hồi QR.
+- Kiểm chứng nguồn dữ liệu và độ chính xác của metric đã định nghĩa tại UC13/UC14; Không có chức năng xuất báo cáo ở UC13 hoặc UC14; chỉ kiểm chứng nguồn dữ liệu và độ chính xác của metric.
 - Kiểm chứng cấu hình retention 24 tháng, backup hằng ngày, khả năng khôi phục và fail-closed cho thao tác nhạy cảm.
 - Danh sách trình duyệt hỗ trợ và kết quả đo NFR.
 - Mọi quyết định chuyển sang production.
