@@ -1,7 +1,0 @@
-target/
-data/
-*.iml
-.idea/
-.env
-*.json.key
-gcp-*.json
