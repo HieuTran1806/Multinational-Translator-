@@ -17,20 +17,20 @@ public class LanguageService {
         }
     }
 
-    private final LanguageRepository repo;
+    private final LanguageStore repo;
 
-    public LanguageService(LanguageRepository repo) {
+    public LanguageService(LanguageStore repo) {
         this.repo = repo;
     }
 
     @Transactional(readOnly = true)
     public List<LanguageResponse> listEnabled() {
-        return repo.findByEnabledTrueOrderBySortOrderAsc().stream().map(LanguageResponse::from).toList();
+        return repo.listEnabled().stream().map(LanguageResponse::from).toList();
     }
 
     @Transactional(readOnly = true)
     public Language requireEnabled(String code) {
-        return repo.findById(code == null ? "" : code)
+        return repo.findByCode(code == null ? "" : code)
                 .filter(Language::isEnabled)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Ngôn ngữ '" + code + "' không được hỗ trợ"));
     }

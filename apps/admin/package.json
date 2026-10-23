@@ -11,7 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:e2e": "node scripts/verify-e2e.mjs"
   },
   "dependencies": {
     "react": "19.2.3",

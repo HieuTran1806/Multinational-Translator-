@@ -53,7 +53,9 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        // UC07: POI/content/media management belongs to ADMIN. SUPER_ADMIN manages accounts/RBAC/audit
+                        // (not implemented yet) and must never author POI content; it gets 403 here, not just a hidden UI.
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/auth/**").authenticated()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().denyAll())

@@ -1,43 +1,70 @@
-# CI/CD
+# CI/CD — Multitional Translator
 
-## CI — `.github/workflows/ci.yml`
+## Trạng thái
 
-Chạy khi có pull request và khi push vào `main`. **Chỉ kiểm tra và build, không deploy.**
+- **CI đang được cấu hình:** GitHub Actions workflow `/.github/workflows/ci.yml`.
+- **CD chưa kích hoạt:** không có workflow nào tự triển khai lên staging hoặc production. Các tệp trong `cd-templates/` chỉ là mẫu tham khảo.
+- **Mobile CI/CD:** chưa có trong workflow vì ứng dụng mobile chưa nằm trong nhánh hiện tại.
 
-| Job | Bước |
+## Quy trình CI
+
+Workflow chạy khi push lên bất kỳ branch nào và khi mở/cập nhật Pull Request. Các job độc lập:
+
+| Job | Kiểm tra |
 |---|---|
-| `backend` | JDK 21 (Temurin) + cache Maven → `./mvnw -B verify`: unit test (surefire) + integration test (failsafe) với service container PostgreSQL 16. Flyway chạy toàn bộ migration lên DB trống, Hibernate `validate` kiểm tra entity khớp schema. Upload JAR; upload báo cáo test khi lỗi |
-| `backend-docker` | Build image từ `services/backend/Dockerfile` bằng Buildx (không push), cache GHA |
-| `admin` | `npm ci` → lint → vitest → `vite build` → upload `dist` |
-| `mobile-js` | `npm ci` (áp dụng patch) → ESLint → `tsc --noEmit` → Jest |
-| `mobile-android` | (sau `mobile-js`) JDK 17 + Gradle cache → `./gradlew assembleDebug` (2 ABI) → upload APK debug. Timeout 60 phút |
+| Contract documentation | Tài liệu baseline bắt buộc tồn tại; `git diff --check` |
+| Backend unit tests | Java 21 + Maven Wrapper, `./mvnw clean test` |
+| Admin quality checks | Node.js 22, `npm ci`, `npm run lint`, `npm test`, `npm run build` |
 
-Nguyên tắc đã áp dụng:
+CI không cần credentials của production. Dependencies được cài từ lockfile/wrapper; job có timeout, quyền `contents: read` và concurrency cancellation.
 
-- `permissions: contents: read`; không dùng secret; không phụ thuộc Google Cloud hay DB production (TTS dùng provider giả lập trong test).
-- Không dùng `pull_request_target`; không có `continue-on-error`.
-- `concurrency` huỷ lần chạy cũ của cùng nhánh; mỗi job có `timeout-minutes`.
-- Action được ghim theo tag phiên bản cụ thể (ví dụ `actions/checkout@v7.0.1`). Có thể tăng cường bằng cách ghim theo commit SHA (Dependabot/Renovate hỗ trợ cập nhật).
+### Các kiểm tra hiện chưa chạy trong CI
 
-> **Chưa chạy trên GitHub.** File YAML đã được kiểm tra cú pháp; các bước tương ứng đã chạy cục bộ ở mức có thể (xem `verification-report.md`). Lần chạy đầu tiên trên GitHub cần được theo dõi.
+- Backend integration tests (`mvnw verify`) cần PostgreSQL và database test riêng.
+- Admin end-to-end (`npm run verify:e2e`) cần backend, database và tài khoản kiểm thử.
+- Kiểm thử credentials thật của Google Cloud Text-to-Speech.
+- Deployment, smoke test sau deploy, backup/restore và kiểm thử thiết bị mobile.
 
-## Bật branch protection (nhóm tự làm — chưa được bật)
+Không báo cáo những kiểm tra này là PASS chỉ dựa vào CI hiện tại. Trước khi thêm integration test vào CI, hãy dùng service PostgreSQL riêng cho từng run, cung cấp cấu hình test qua biến môi trường, không tái sử dụng dữ liệu local/production.
 
-GitHub → Settings → Branches (hoặc Rules → Rulesets) → nhánh `main`:
+## Quy trình đề xuất cho nhóm
 
-1. *Require a pull request before merging* (≥ 1 review).
-2. *Require status checks to pass* → chọn sau khi CI đã chạy ít nhất một lần:
-   `Backend (Java 21 / Maven)`, `Backend Docker image builds`, `Web admin (lint, test, build)`, `Mobile (lint, typecheck, unit tests)`, `Mobile Android debug APK`.
-3. *Require branches to be up to date before merging*.
-4. *Block force pushes*, không cho xoá nhánh.
+1. Tạo branch theo công việc; không commit trực tiếp lên `main`.
+2. Mở Pull Request nhỏ, mô tả thay đổi và cách kiểm thử.
+3. Chờ tất cả CI checks thành công; review thay đổi API/schema và bảo mật.
+4. Chỉ merge khi đã review và các checks bắt buộc đạt.
+5. Sau khi merge, CD chỉ được bật khi đã chọn nhà cung cấp, thiết lập secrets/environments và xác minh rollback/smoke tests.
 
-## CD — chưa kích hoạt
+## Thiết lập bảo vệ nhánh GitHub
 
-Mẫu nằm ở `docs/operations/cd-templates/` (cố ý không đặt trong `.github/workflows/`):
+Trong **Settings → Rules → Rulesets** (hoặc Branches/branch protection), cấu hình cho `main`:
 
-- `deploy-backend-render.yml`: chạy bằng `workflow_run` **chỉ khi CI thành công** trên `main` (sự kiện push), gọi Render Deploy Hook (secret `RENDER_DEPLOY_HOOK_URL`).
-- `deploy-admin-vercel.yml`: checkout đúng commit đã qua CI, `vercel build` + `vercel deploy --prebuilt --prod`.
+- Bắt buộc Pull Request.
+- Bắt buộc các status checks từ workflow CI thành công.
+- Chặn force push và xóa nhánh.
+- Yêu cầu review ít nhất một người nếu quy mô nhóm cho phép.
 
-Kích hoạt: tạo hosting + secrets + GitHub Environment `production`, **tắt auto-deploy** phía hosting, rồi copy file vào `.github/workflows/`. Xem `deployment.md` mục 7.
+Tên check có thể thay đổi theo tên job trong workflow. Chạy workflow ít nhất một lần để GitHub hiển thị check names rồi chọn đúng các checks.
 
-Tóm lại: **CI kiểm tra/build; CD chỉ triển khai khi đã cấu hình hosting và secrets.**
+## Bảo mật workflow
+
+- Giữ quyền token tối thiểu; không cấp `contents: write` cho CI thông thường.
+- Không cung cấp secrets cho workflow chạy code từ fork/PR không đáng tin cậy.
+- Không dùng dữ liệu production trong unit/integration test.
+- Không ghi token, mật khẩu hoặc nội dung service-account vào log.
+- Khi thay đổi GitHub Actions, kiểm tra phiên bản, quyền và nguồn của action; với môi trường yêu cầu kiểm soát supply chain nghiêm ngặt, pin action theo commit SHA đã xác minh.
+- Không lưu bí mật trong `VITE_*`: các biến này được nhúng vào bundle frontend.
+
+## CD / triển khai
+
+Chưa có deployment tự động. Xem [deployment.md](deployment.md) để tham khảo cấu hình Vercel cho Admin và Render/VPS/Docker cho backend. Chọn duy nhất một cơ chế triển khai (hosting tự deploy hoặc GitHub Actions) để tránh triển khai hai lần.
+
+Trước khi bật CD cần hoàn tất tối thiểu:
+
+- Hosting và domain đã chọn, HTTPS hoạt động.
+- Secrets nằm trong hosting/GitHub Environments, không nằm trong repository.
+- PostgreSQL production có backup và kế hoạch khôi phục.
+- Media lưu tại volume/bucket bền vững.
+- CORS chỉ cho phép origin Admin hợp lệ.
+- Health/smoke test sau deploy và quy trình rollback.
+- Environment production có bảo vệ/phê duyệt; không deploy từ pull request.

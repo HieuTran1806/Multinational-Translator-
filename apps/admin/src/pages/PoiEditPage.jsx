@@ -27,7 +27,7 @@ export default function PoiEditPage() {
   const [saving, setSaving] = useState(false);
   const [statusBusy, setStatusBusy] = useState(false);
   const [message, setMessage] = useState(null);
-  const [activeLang, setActiveLang] = useState('vi');
+  const [activeLang, setActiveLang] = useState(null);
   const [imageItems, setImageItems] = useState([]);
   const [imageBusy, setImageBusy] = useState(false);
 
@@ -45,6 +45,8 @@ export default function PoiEditPage() {
         const [langs, tts] = await Promise.all([languageApi.list(), ttsApi.status()]);
         if (cancelled) return;
         setLanguages(langs);
+        // Language codes come from the backend; never assume 'vi'/'en' exist.
+        setActiveLang((current) => (langs.some((l) => l.code === current) ? current : langs[0]?.code ?? null));
         setTtsStatus(tts);
         if (!isNew) await refresh();
       } catch (e) {
@@ -234,7 +236,7 @@ export default function PoiEditPage() {
           <Link to="/pois" className="text-sm text-olive hover:underline">
             ‹ Quay lại
           </Link>
-          <h1 className="text-3xl font-bold text-forest">{isNew ? 'Tạo POI' : poi.defaultName}</h1>
+          <h1 className="text-[26px] font-bold text-forest">{isNew ? 'Tạo POI' : poi.defaultName}</h1>
           {!isNew && (
             <div className="mt-1 flex items-center gap-2 text-sm text-stone">
               <PoiStatusBadge status={poi.status} /> <span>{poi.code}</span>

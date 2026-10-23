@@ -2,6 +2,8 @@ package vn.edu.thuyetminh.tts;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +22,12 @@ public class TtsJobWorker {
     public TtsJobWorker(TtsJobService service, AppProperties props) {
         this.service = service;
         this.props = props;
+    }
+
+    /** Startup adapter: recover jobs interrupted by a previous process. */
+    @EventListener(ApplicationReadyEvent.class)
+    public void recoverOnStartup() {
+        service.recoverOnStartup();
     }
 
     @Scheduled(fixedDelayString = "PT2S", initialDelayString = "PT10S")

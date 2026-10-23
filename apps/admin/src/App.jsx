@@ -12,6 +12,21 @@ function RequireAuth({ children }) {
   return children;
 }
 
+/** UC07 actor is ADMIN only: SUPER_ADMIN manages accounts/RBAC/audit, never POI content. Backend enforces this too. */
+function RequirePoiAdmin({ children }) {
+  const { account } = useAuth();
+  if (account?.role === 'ADMIN') return children;
+  return (
+    <div className="mx-auto max-w-2xl rounded-2xl bg-white p-6 ring-1 ring-stone/15">
+      <h1 className="text-xl font-bold text-forest">Không đủ quyền truy cập</h1>
+      <p className="mt-2 text-sm text-stone">
+        Tài khoản {account?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'hiện tại'} không có quyền quản lý POI. Chỉ tài
+        khoản Admin mới được tạo, sửa nội dung và quản lý hình ảnh/audio.
+      </p>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <Routes>
@@ -24,9 +39,30 @@ export default function App() {
         }
       >
         <Route index element={<Navigate to="/pois" replace />} />
-        <Route path="/pois" element={<PoiListPage />} />
-        <Route path="/pois/new" element={<PoiEditPage />} />
-        <Route path="/pois/:id" element={<PoiEditPage />} />
+        <Route
+          path="/pois"
+          element={
+            <RequirePoiAdmin>
+              <PoiListPage />
+            </RequirePoiAdmin>
+          }
+        />
+        <Route
+          path="/pois/new"
+          element={
+            <RequirePoiAdmin>
+              <PoiEditPage />
+            </RequirePoiAdmin>
+          }
+        />
+        <Route
+          path="/pois/:id"
+          element={
+            <RequirePoiAdmin>
+              <PoiEditPage />
+            </RequirePoiAdmin>
+          }
+        />
         <Route path="*" element={<p className="text-stone">Không tìm thấy trang.</p>} />
       </Route>
     </Routes>

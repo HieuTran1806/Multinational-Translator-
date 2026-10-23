@@ -3,7 +3,6 @@ import { Link, useSearchParams } from 'react-router';
 import { poiApi } from '../api/endpoints.js';
 import Pagination from '../components/Pagination.jsx';
 import { Alert, AudioBadge, Button, Card, PoiStatusBadge, Spinner, inputClass } from '../components/ui.jsx';
-import { LANGUAGE_LABELS } from '../config.js';
 
 const PAGE_SIZE = 10;
 
@@ -41,14 +40,9 @@ export default function PoiListPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-forest">Quản lý POI</h1>
-          <p className="text-sm text-stone">Địa điểm, nội dung theo ngôn ngữ và trạng thái audio</p>
-        </div>
-        <Link to="/pois/new">
-          <Button>+ Thêm POI</Button>
-        </Link>
+      <header>
+        <h1 className="text-[26px] font-bold text-forest">Quản lý POI</h1>
+        <p className="text-sm text-stone">Địa điểm, nội dung theo ngôn ngữ và trạng thái audio</p>
       </header>
 
       <Card>
@@ -76,7 +70,7 @@ export default function PoiListPage() {
             <option value="PUBLISHED">Công khai</option>
             <option value="DRAFT">Nháp</option>
           </select>
-          <label className="flex items-center gap-2 text-sm text-stone">
+          <label className="flex items-center gap-2 whitespace-nowrap text-sm text-stone">
             <span>Kích thước trang</span>
             <select
               aria-label="Kích thước trang"
@@ -153,7 +147,9 @@ export default function PoiListPage() {
                         <ul className="space-y-1">
                           {p.languages.map((l) => (
                             <li key={l.languageCode} className="flex items-center gap-2">
-                              <span className="w-20 text-xs">{LANGUAGE_LABELS[l.languageCode] ?? l.languageCode}</span>
+                              <span className="w-20 text-xs uppercase" title={l.languageCode}>
+                                {l.languageCode}
+                              </span>
                               <AudioBadge status={l.audio} />
                             </li>
                           ))}

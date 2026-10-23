@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../config.js';
+import { loadSession } from '../auth/session.js';
 
 /** Error with the backend's uniform shape: { code, message, status, fieldErrors }. */
 export class ApiError extends Error {
@@ -16,12 +17,12 @@ export class ApiError extends Error {
   }
 }
 
-let tokenProvider = () => null;
+// The token is read from the stored session on every request, so requests fired by a child effect during the
+// first render already carry it (a provider effect would run too late).
 let onUnauthorized = () => {};
 
-export function configureAuth({ getToken, handleUnauthorized }) {
-  tokenProvider = getToken;
-  onUnauthorized = handleUnauthorized;
+export function setUnauthorizedHandler(handler) {
+  onUnauthorized = handler;
 }
 
 export function apiUrl(path) {
@@ -65,7 +66,7 @@ export async function request(path, { method = 'GET', body, formData, signal, ra
     return mock.mockRequest(path, { method, body, formData, signal, raw });
   }
   const headers = { Accept: raw ? '*/*' : 'application/json' };
-  const token = tokenProvider();
+  const token = loadSession()?.accessToken ?? null;
   if (token) headers.Authorization = `Bearer ${token}`;
   let payload;
   if (formData) {

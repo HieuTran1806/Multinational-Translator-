@@ -1,5 +1,5 @@
-# GitHub Workflows
+# Quy trình tự động GitHub Actions
 
-Chứa workflow tự động hóa như build, test, lint, kiểm tra chất lượng và deployment khi được cấu hình.
+Nhánh này giữ quy trình kiểm tra tài liệu/hợp đồng tại `.github/workflows/ci.yml`. Quy trình kiểm tra tài liệu nền tảng, lỗi khoảng trắng và chạy unit test backend bằng Maven Wrapper/Java 21. Integration test cần PostgreSQL vẫn chạy riêng qua `mvnw verify`; workflow không triển khai ứng dụng.
 
-Mỗi workflow cần trigger/permissions rõ ràng, dùng secret an toàn, báo lỗi đáng tin cậy và tránh triển khai production từ nhánh không được phép. Cập nhật `docs/operations/ci-cd.md` khi pipeline thay đổi.
+Áp dụng quyền tối thiểu, trigger đáng tin cậy, giới hạn thời gian, kiểm soát chạy đồng thời và quản lý bí mật an toàn. Cập nhật `docs/operations/ci-cd.md` mỗi khi workflow thay đổi. Các mẫu triển khai trong `docs/operations/cd-templates/` chỉ để tham khảo, hiện không hoạt động.

@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import vn.edu.thuyetminh.common.Hashing;
 import vn.edu.thuyetminh.common.config.AppProperties;
@@ -26,6 +25,7 @@ import vn.edu.thuyetminh.common.error.ApiException;
 import vn.edu.thuyetminh.common.error.ErrorCode;
 import vn.edu.thuyetminh.media.DetectedMedia;
 import vn.edu.thuyetminh.media.MediaStorage;
+import vn.edu.thuyetminh.media.UploadedFile;
 import vn.edu.thuyetminh.poi.PoiTranslation;
 
 /** Stores audio bytes in {@link MediaStorage} and metadata in {@code audio_asset}. */
@@ -34,11 +34,11 @@ public class AudioService {
 
     private static final Logger log = LoggerFactory.getLogger(AudioService.class);
 
-    private final AudioAssetRepository assets;
+    private final AudioAssetStore assets;
     private final MediaStorage storage;
     private final AppProperties props;
 
-    public AudioService(AudioAssetRepository assets, MediaStorage storage, AppProperties props) {
+    public AudioService(AudioAssetStore assets, MediaStorage storage, AppProperties props) {
         this.assets = assets;
         this.storage = storage;
         this.props = props;
@@ -47,8 +47,7 @@ public class AudioService {
     /** The only audio that may be played for this translation, if any. */
     @Transactional(readOnly = true)
     public Optional<AudioAsset> currentAudio(PoiTranslation t) {
-        return assets.findFirstByTranslationIdAndContentVersionAndStatusOrderByIdDesc(
-                t.getId(), t.getContentVersion(), AudioAssetStatus.READY);
+        return assets.findCurrent(t.getId(), t.getContentVersion());
     }
 
     /** translationId -> current audio, for list views. */
@@ -59,7 +58,7 @@ public class AudioService {
         }
         Map<Long, Integer> versions = translations.stream()
                 .collect(Collectors.toMap(PoiTranslation::getId, PoiTranslation::getContentVersion));
-        return assets.findByTranslationIdInAndStatus(versions.keySet(), AudioAssetStatus.READY).stream()
+        return assets.findReadyForTranslations(versions.keySet()).stream()
                 .filter(a -> versions.get(a.getTranslationId()) == a.getContentVersion())
                 .collect(Collectors.toMap(AudioAsset::getTranslationId, Function.identity(),
                         (a, b) -> a.getId() > b.getId() ? a : b));
@@ -67,7 +66,7 @@ public class AudioService {
 
     @Transactional(readOnly = true)
     public List<AudioAsset> history(Long translationId) {
-        return assets.findTop10ByTranslationIdOrderByIdDesc(translationId);
+        return assets.findLatest(translationId);
     }
 
     @Transactional
@@ -80,16 +79,16 @@ public class AudioService {
 
     /** Validates and stores an uploaded file for the translation's current content version. */
     @Transactional
-    public AudioAsset storeUpload(PoiTranslation t, MultipartFile file) {
+    public AudioAsset storeUpload(PoiTranslation t, UploadedFile file) {
         if (file == null || file.isEmpty()) {
             throw new ApiException(ErrorCode.BAD_REQUEST, "Vui lòng chọn file audio");
         }
-        if (file.getSize() > props.upload().maxAudioBytes()) {
+        if (file.size() > props.upload().maxAudioBytes()) {
             throw new ApiException(ErrorCode.PAYLOAD_TOO_LARGE, "File audio vượt quá "
                     + (props.upload().maxAudioBytes() / (1024 * 1024)) + " MB");
         }
         DetectedMedia type;
-        try (InputStream in = file.getInputStream()) {
+        try (InputStream in = file.openStream()) {
             type = DetectedMedia.detect(in.readNBytes(12));
         } catch (IOException e) {
             throw new ApiException(ErrorCode.BAD_REQUEST, "Không đọc được file tải lên");
@@ -99,17 +98,17 @@ public class AudioService {
         }
         String key = newKey(type);
         String sha;
-        try (InputStream in = file.getInputStream()) {
+        try (InputStream in = file.openStream()) {
             MessageDigest md = Hashing.sha256Digest();
-            storage.put(key, new DigestInputStream(in, md), file.getSize(), type.mimeType());
+            storage.put(key, new DigestInputStream(in, md), file.size(), type.mimeType());
             sha = HexFormat.of().formatHex(md.digest());
         } catch (IOException e) {
             log.error("Failed to store uploaded audio", e);
             throw new ApiException(ErrorCode.INTERNAL_ERROR, "Không lưu được file audio");
         }
         AudioAsset asset = assets.save(new AudioAsset(t.getId(), t.getContentVersion(), key, AudioSource.UPLOAD,
-                type.extension(), type.mimeType(), file.getSize(), sha, null, null,
-                safeFilename(file.getOriginalFilename())));
+                type.extension(), type.mimeType(), file.size(), sha, null, null,
+                safeFilename(file.originalFilename())));
         assets.markOthersStale(t.getId(), asset.getId());
         return asset;
     }
@@ -155,8 +154,7 @@ public class AudioService {
     }
 
     public Optional<AudioAsset> findReadyByContentHash(Long translationId, String contentHash) {
-        return assets.findFirstByTranslationIdAndContentHashAndStatusOrderByIdDesc(
-                translationId, contentHash, AudioAssetStatus.READY);
+        return assets.findReadyByContentHash(translationId, contentHash);
     }
 
     public Optional<AudioAsset> findById(Long id) {

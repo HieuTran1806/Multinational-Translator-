@@ -12,6 +12,8 @@
   --color-stone: #777268;
   --color-white: #ffffff;
   --color-olive-dark: #3f4a2e;
-  --color-sidebar: #2e2620;
-  --color-sidebar-active: #5a4536;
+  --color-shell: #f7f7f2;
+  --color-shell-border: #e5e0d3;
+  --color-nav-active: #eef3e9;
+  --color-muted: #8c877b;
 }

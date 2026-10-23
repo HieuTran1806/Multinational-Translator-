@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { configureAuth } from '../api/client.js';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { setUnauthorizedHandler } from '../api/client.js';
 import { authApi } from '../api/endpoints.js';
 import { clearSession, loadSession, saveSession } from './session.js';
 
@@ -7,22 +7,14 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => loadSession());
-  const sessionRef = useRef(session);
-  useEffect(() => {
-    sessionRef.current = session;
-  }, [session]);
 
   const dropSession = useCallback(() => {
     clearSession();
     setSession(null);
   }, []);
 
-  useEffect(() => {
-    configureAuth({
-      getToken: () => sessionRef.current?.accessToken ?? null,
-      handleUnauthorized: dropSession,
-    });
-  }, [dropSession]);
+  // A 401 from any request drops the local session and returns the UI to the login screen.
+  useEffect(() => setUnauthorizedHandler(dropSession), [dropSession]);
 
   // Expire locally at the server-given time
   useEffect(() => {
@@ -35,7 +27,6 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (username, password) => {
     const res = await authApi.login(username, password);
     const s = { accessToken: res.accessToken, expiresAt: res.expiresAt, account: res.account };
-    sessionRef.current = s;
     saveSession(s);
     setSession(s);
     return s;
