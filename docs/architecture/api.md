@@ -46,11 +46,35 @@ Tham số truy vấn `page` (bắt đầu từ 0), `size` (1..100). Phản hồi
 | POST | `/auth/logout` | Thu hồi token hiện tại → 204 |
 | GET | `/auth/me` | Thông tin tài khoản |
 
-## API công khai (khách không đăng nhập)
+## Truy cập User bằng QR (UC02, đã triển khai)
+
+User không có tài khoản. User quét QR dùng một lần → nhận grant có thời hạn gắn với thiết bị → gửi kèm mọi request API User:
+
+```
+Authorization: Bearer <accessToken từ /public/access/redeem>
+X-Device-Id: <mã thiết bị ngẫu nhiên do app tự sinh một lần, 16–128 ký tự [A-Za-z0-9_-]>
+```
+
+| Phương thức | Đường dẫn | Quyền | Mô tả |
+|---|---|---|---|
+| POST | `/public/access/redeem` | mở | `{qrToken, deviceId}` → `{accessToken, tokenType, expiresAt, packageCode}`. 400 `ACCESS_QR_INVALID` (sai/giả/bị thu hồi), 409 `ACCESS_QR_ALREADY_USED` |
+| GET | `/public/access/me` | grant | `{grantId, packageCode, expiresAt, remainingSeconds}` — app gọi khi mở lại để khôi phục phiên (A1) |
+| POST | `/admin/access-qrs` | ADMIN | `{packageCode?, note?}` → 201, có `qrToken` + `activationUrl` **chỉ trả đúng lần này** |
+| GET | `/admin/access-qrs?page&size&status` | ADMIN | Danh sách QR, mới nhất trước (không có token) |
+| POST | `/admin/access-qrs/{id}/revoke` | ADMIN | Thu hồi; nếu QR đã đổi thì grant tương ứng cũng hết hiệu lực |
+
+- Đổi QR là nguyên tử (`UPDATE ... WHERE status='ISSUED'` + `UNIQUE(access_grant.qr_id)`): nhiều thiết bị đổi cùng lúc chỉ một thành công.
+- Thời hạn grant lấy từ bảng `access_package` (`DEMO_24H` = 1440 phút), tính từ lúc đổi thành công.
+- DB chỉ lưu SHA-256 của token QR, token grant và mã thiết bị; không log token.
+- Tạm thời **Admin** tạo QR vì UC12 (Seller) ngoài MVP. URL trong QR cấu hình bằng `APP_ACCESS_ACTIVATION_URL`.
+
+## API User (cần grant UC02, trừ `/public/languages`)
+
+`<audio>`/`<img>` không gửi được header: app User phải tải media bằng `fetch` kèm header rồi dùng object URL (như `fetchMediaObjectUrl` của Admin). Thiếu/sai grant → 401 `ACCESS_REQUIRED`.
 
 | Phương thức | Đường dẫn | Mô tả |
 |---|---|---|
-| GET | `/public/languages` | Ngôn ngữ đang bật |
+| GET | `/public/languages` | Ngôn ngữ đang bật (**không** cần grant, dùng cho màn hình quét QR) |
 | GET | `/public/pois?page&size&lang` | POI công khai |
 | GET | `/public/pois/{id}?lang=en` | Chi tiết theo ngôn ngữ + `audio` hiện hành (hoặc `null`); `fallback=true` nếu thiếu ngôn ngữ yêu cầu |
 | GET | `/public/pois/{id}/offline-manifest` | Nội dung mọi ngôn ngữ + audio (`sha256`, `sizeBytes`, `contentVersion`) + `manifestVersion` |
@@ -99,8 +123,8 @@ Tham số truy vấn `page` (bắt đầu từ 0), `size` (1..100). Phản hồi
 | GET | `/seller/transactions/{id}` | Định hướng giai đoạn sau; kiểm tra quyền sở hữu ở backend, không lộ secret. |
 | POST | `/payments/vnpay/return` | Điều hướng trình duyệt; không coi chuyển hướng trình duyệt là bằng chứng thanh toán. |
 | POST | `/payments/vnpay/ipn` | Xác minh chữ ký, mã tham chiếu, số tiền/trạng thái; xử lý idempotent; sai lệch chuyển sang cần kiểm tra. |
-| POST | `/public/access/redeem` | Định hướng giai đoạn sau khi tích hợp tạo/cấp QR; QR do Seller cấp sau khi thanh toán thành công, chỉ kích hoạt một lần; không tự hết hạn trước khi kích hoạt nhưng có thể bị thu hồi; quyền truy cập có hiệu lực 24 giờ kể từ khi kích hoạt thành công, gắn với thiết bị đã kích hoạt. |
-| GET | `/public/access/me` | Kiểm tra grant hiện tại và thời hạn ở backend. |
+
+`/public/access/redeem` và `/public/access/me` đã được triển khai (xem mục "Truy cập User bằng QR"). Khi làm UC12, Seller tạo QR qua `AccessQrAdminService` sau khi thanh toán được xác nhận, thay cho Admin.
 
 ### Quy tắc tích hợp VNPAY Sandbox
 
@@ -115,4 +139,4 @@ Tham số truy vấn `page` (bắt đầu từ 0), `size` (1..100). Phản hồi
 
 Tất cả API User yêu cầu quyền truy cập hợp lệ ở backend, ngoại trừ điểm cuối API tối thiểu cần thiết để xem/đổi QR và xử lý lỗi. QR riêng cho từng khách hàng, chỉ kích hoạt một lần; grant gắn với thiết bị đã kích hoạt. Phiên có thể được khôi phục trên cùng thiết bị trong 24 giờ; không hỗ trợ chuyển thiết bị hoặc cấp lại grant sang thiết bị khác.
 
-Các endpoint ở bảng trên là hợp đồng đề xuất; cần đối chiếu bộ điều khiển, SecurityConfig, migration/schema và kiểm thử tích hợp trước khi công bố là khả dụng. API hiện tại cho phép truy cập công khai cần được rà soát theo điều kiện grant mới.
+Đã thực thi trong `SecurityConfig`: `GET /api/v1/public/**` yêu cầu `ROLE_VISITOR`, chỉ trừ `/public/languages` và `POST /public/access/redeem`. Kiểm thử: `AccessFlowIT`, `AccessGrantServiceTest`. Các endpoint Seller/thanh toán ở bảng trên vẫn là hợp đồng đề xuất.

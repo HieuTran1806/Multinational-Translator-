@@ -11,6 +11,11 @@ public enum ErrorCode {
     TTS_TEXT_TOO_LONG(HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(HttpStatus.UNAUTHORIZED),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED),
+    /** User endpoint called without a valid, unexpired grant for this device (UC02). */
+    ACCESS_REQUIRED(HttpStatus.UNAUTHORIZED),
+    /** Unknown, tampered or revoked QR — one generic code so callers cannot probe QR states. */
+    ACCESS_QR_INVALID(HttpStatus.BAD_REQUEST),
+    ACCESS_QR_ALREADY_USED(HttpStatus.CONFLICT),
     FORBIDDEN(HttpStatus.FORBIDDEN),
     NOT_FOUND(HttpStatus.NOT_FOUND),
     CONFLICT(HttpStatus.CONFLICT),

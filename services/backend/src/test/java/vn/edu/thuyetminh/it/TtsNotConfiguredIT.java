@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import vn.edu.thuyetminh.support.AbstractIntegrationTest;
 import vn.edu.thuyetminh.support.AudioFixtures;
@@ -18,6 +19,7 @@ class TtsNotConfiguredIT extends AbstractIntegrationTest {
     @Test
     void ttsReportsNotConfiguredButUploadFlowWorks() throws Exception {
         String token = login();
+        RequestPostProcessor visitor = visitor();
         mvc.perform(get("/api/v1/admin/tts/status").header("Authorization", bearer(token)))
                 .andExpect(jsonPath("$.configured").value(false));
 
@@ -30,7 +32,7 @@ class TtsNotConfiguredIT extends AbstractIntegrationTest {
                         .file(new MockMultipartFile("file", "vi.wav", "audio/wav", AudioFixtures.wav("vi")))
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isCreated());
-        mvc.perform(get("/api/v1/public/pois/" + id).param("lang", "vi"))
+        mvc.perform(get("/api/v1/public/pois/" + id).with(visitor).param("lang", "vi"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.audio.source").value("UPLOAD"));
     }

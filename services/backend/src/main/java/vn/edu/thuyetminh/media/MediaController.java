@@ -95,7 +95,8 @@ public class MediaController {
         } catch (MediaNotFoundException | IllegalArgumentException e) {
             throw ApiException.notFound("File");
         }
-        CacheControl cc = publicCache ? CacheControl.maxAge(Duration.ofMinutes(10)).cachePublic()
+        // User media now requires a grant (UC02), so only the browser may cache it — never a shared proxy/CDN.
+        CacheControl cc = publicCache ? CacheControl.maxAge(Duration.ofMinutes(10)).cachePrivate()
                 : CacheControl.noStore();
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(mime == null ? "application/octet-stream" : mime))

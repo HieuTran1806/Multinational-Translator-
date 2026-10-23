@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.jayway.jsonpath.JsonPath;
 
@@ -90,6 +91,7 @@ class TtsIT extends AbstractIntegrationTest {
     @Test
     void successfulJobAttachesAudioAndIdenticalRequestIsDeduplicated() throws Exception {
         String token = login();
+        RequestPostProcessor visitor = visitor();
         long id = createPoiWithContent(token, "TTS-1", true);
         String job = requestTts(token, id, "en", 202);
         assertThat((String) JsonPath.read(job, "$.status")).isEqualTo("QUEUED");
@@ -102,7 +104,7 @@ class TtsIT extends AbstractIntegrationTest {
         mvc.perform(get("/api/v1/admin/tts/jobs/" + jobId).header("Authorization", bearer(token)))
                 .andExpect(jsonPath("$.status").value("SUCCEEDED"))
                 .andExpect(jsonPath("$.audio.source").value("TTS"));
-        mvc.perform(get("/api/v1/public/pois/" + id).param("lang", "en"))
+        mvc.perform(get("/api/v1/public/pois/" + id).with(visitor).param("lang", "en"))
                 .andExpect(jsonPath("$.audio.source").value("TTS"));
 
         // same text + language + voice -> no new provider call
@@ -114,6 +116,7 @@ class TtsIT extends AbstractIntegrationTest {
     @Test
     void failedTtsKeepsPoiAndReportsFailure() throws Exception {
         String token = login();
+        RequestPostProcessor visitor = visitor();
         long id = createPoiWithContent(token, "TTS-FAIL", true);
         fake.mode = Mode.FAIL_PERMANENT;
         int jobId = JsonPath.read(requestTts(token, id, "vi", 202), "$.id");
@@ -122,7 +125,7 @@ class TtsIT extends AbstractIntegrationTest {
         mvc.perform(get("/api/v1/admin/tts/jobs/" + jobId).header("Authorization", bearer(token)))
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.errorCode").value("GOOGLE_INVALID_ARGUMENT"));
-        mvc.perform(get("/api/v1/public/pois/" + id).param("lang", "vi"))
+        mvc.perform(get("/api/v1/public/pois/" + id).with(visitor).param("lang", "vi"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Tên tiếng Việt"));
         mvc.perform(get("/api/v1/admin/pois").header("Authorization", bearer(token)))

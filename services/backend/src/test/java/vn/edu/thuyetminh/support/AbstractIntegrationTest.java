@@ -14,6 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -46,8 +47,8 @@ public abstract class AbstractIntegrationTest {
     @BeforeEach
     void setUpBase() {
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-        jdbc.execute("TRUNCATE audio_generation_job, audio_asset, poi_translation, poi, auth_session, account "
-                + "RESTART IDENTITY CASCADE");
+        jdbc.execute("TRUNCATE access_grant, access_qr, audio_generation_job, audio_asset, poi_translation, poi, "
+                + "auth_session, account RESTART IDENTITY CASCADE");
         jdbc.update("INSERT INTO account (username, password_hash, display_name, role) VALUES (?, ?, ?, 'ADMIN')",
                 ADMIN_USER, encoder.encode(ADMIN_PASS), "IT Admin");
     }
@@ -62,6 +63,39 @@ public abstract class AbstractIntegrationTest {
 
     protected static String bearer(String token) {
         return "Bearer " + token;
+    }
+
+    /** Issues a QR as Admin and returns its plaintext token (shown only in the issue response). */
+    protected String issueQr() throws Exception {
+        String body = mvc.perform(post("/api/v1/admin/access-qrs").header("Authorization", bearer(login()))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(body, "$.qrToken");
+    }
+
+    /** Redeems a QR on {@code deviceId} and returns the grant token. */
+    protected String redeem(String qrToken, String deviceId) throws Exception {
+        String body = mvc.perform(post("/api/v1/public/access/redeem").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"qrToken\":\"" + qrToken + "\",\"deviceId\":\"" + deviceId + "\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(body, "$.accessToken");
+    }
+
+    /** Adds the headers a User app sends once its QR is redeemed. */
+    protected static RequestPostProcessor asVisitor(String grantToken, String deviceId) {
+        return req -> {
+            req.addHeader("Authorization", bearer(grantToken));
+            req.addHeader("X-Device-Id", deviceId);
+            return req;
+        };
+    }
+
+    /** A fresh, valid User grant (UC02), for tests that exercise the User API. */
+    protected RequestPostProcessor visitor() throws Exception {
+        String deviceId = "it-device-" + java.util.UUID.randomUUID();
+        return asVisitor(redeem(issueQr(), deviceId), deviceId);
     }
 
     /** Creates a POI with vi + en content and returns its id. */
