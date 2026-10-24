@@ -17,9 +17,16 @@ public record AppProperties(
         @DefaultValue Bootstrap bootstrapAdmin,
         @DefaultValue Storage storage,
         @DefaultValue Upload upload,
-        @DefaultValue Tts tts) {
+        @DefaultValue Tts tts,
+        @DefaultValue Access access) {
 
     public record Cors(@DefaultValue List<String> allowedOrigins) {
+    }
+
+    /** UC02 access QR: package used when none is given, and the User-app URL encoded into each QR. */
+    public record Access(
+            @DefaultValue("DEMO_24H") String defaultPackage,
+            @DefaultValue("http://localhost:5174/activate") String activationUrl) {
     }
 
     public record Auth(@DefaultValue("8h") Duration sessionTtl) {

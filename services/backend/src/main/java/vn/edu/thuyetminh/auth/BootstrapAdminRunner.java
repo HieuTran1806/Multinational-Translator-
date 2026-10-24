@@ -23,10 +23,10 @@ public class BootstrapAdminRunner implements ApplicationRunner {
     static final int MIN_PASSWORD_LENGTH = 12;
 
     private final AppProperties props;
-    private final AccountRepository accounts;
+    private final AccountStore accounts;
     private final PasswordEncoder encoder;
 
-    public BootstrapAdminRunner(AppProperties props, AccountRepository accounts, PasswordEncoder encoder) {
+    public BootstrapAdminRunner(AppProperties props, AccountStore accounts, PasswordEncoder encoder) {
         this.props = props;
         this.accounts = accounts;
         this.encoder = encoder;

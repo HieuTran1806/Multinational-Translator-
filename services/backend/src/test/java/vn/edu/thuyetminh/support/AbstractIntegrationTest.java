@@ -1,5 +1,6 @@
 package vn.edu.thuyetminh.support;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -9,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -44,8 +47,8 @@ public abstract class AbstractIntegrationTest {
     @BeforeEach
     void setUpBase() {
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-        jdbc.execute("TRUNCATE audio_generation_job, audio_asset, poi_translation, poi, auth_session, account "
-                + "RESTART IDENTITY CASCADE");
+        jdbc.execute("TRUNCATE access_grant, access_qr, audio_generation_job, audio_asset, poi_translation, poi, "
+                + "auth_session, account RESTART IDENTITY CASCADE");
         jdbc.update("INSERT INTO account (username, password_hash, display_name, role) VALUES (?, ?, ?, 'ADMIN')",
                 ADMIN_USER, encoder.encode(ADMIN_PASS), "IT Admin");
     }
@@ -62,6 +65,39 @@ public abstract class AbstractIntegrationTest {
         return "Bearer " + token;
     }
 
+    /** Issues a QR as Admin and returns its plaintext token (shown only in the issue response). */
+    protected String issueQr() throws Exception {
+        String body = mvc.perform(post("/api/v1/admin/access-qrs").header("Authorization", bearer(login()))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(body, "$.qrToken");
+    }
+
+    /** Redeems a QR on {@code deviceId} and returns the grant token. */
+    protected String redeem(String qrToken, String deviceId) throws Exception {
+        String body = mvc.perform(post("/api/v1/public/access/redeem").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"qrToken\":\"" + qrToken + "\",\"deviceId\":\"" + deviceId + "\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(body, "$.accessToken");
+    }
+
+    /** Adds the headers a User app sends once its QR is redeemed. */
+    protected static RequestPostProcessor asVisitor(String grantToken, String deviceId) {
+        return req -> {
+            req.addHeader("Authorization", bearer(grantToken));
+            req.addHeader("X-Device-Id", deviceId);
+            return req;
+        };
+    }
+
+    /** A fresh, valid User grant (UC02), for tests that exercise the User API. */
+    protected RequestPostProcessor visitor() throws Exception {
+        String deviceId = "it-device-" + java.util.UUID.randomUUID();
+        return asVisitor(redeem(issueQr(), deviceId), deviceId);
+    }
+
     /** Creates a POI with vi + en content and returns its id. */
     protected long createPoiWithContent(String token, String code, boolean publish) throws Exception {
         String created = mvc.perform(post("/api/v1/admin/pois").header("Authorization", bearer(token))
@@ -74,10 +110,23 @@ public abstract class AbstractIntegrationTest {
         putTranslation(token, id, "vi", "Tên tiếng Việt", "Thuyết minh tiếng Việt");
         putTranslation(token, id, "en", "English name", "English narration");
         if (publish) {
-            mvc.perform(post("/api/v1/admin/pois/" + id + "/publish").header("Authorization", bearer(token)))
-                    .andExpect(status().isOk());
+            publishWithEnglishAudio(token, id);
         }
         return id;
+    }
+
+    /**
+     * Publishing requires ready English audio for the current content version, so this uploads a valid
+     * English file before calling /publish. The production readiness rule is never bypassed or mocked.
+     */
+    protected void publishWithEnglishAudio(String token, long poiId) throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "narration-en.wav", "audio/wav",
+                AudioFixtures.wav("en"));
+        mvc.perform(multipart("/api/v1/admin/pois/" + poiId + "/translations/en/audio")
+                        .file(file).header("Authorization", bearer(token)))
+                .andExpect(status().isCreated());
+        mvc.perform(post("/api/v1/admin/pois/" + poiId + "/publish").header("Authorization", bearer(token)))
+                .andExpect(status().isOk());
     }
 
     protected void putTranslation(String token, long poiId, String lang, String name, String narration)

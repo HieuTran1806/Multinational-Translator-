@@ -6,7 +6,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,14 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import vn.edu.thuyetminh.audio.AudioAsset;
-import vn.edu.thuyetminh.audio.AudioAssetStatus;
 import vn.edu.thuyetminh.audio.AudioService;
+import vn.edu.thuyetminh.audio.PublicAudioQueryService;
 import vn.edu.thuyetminh.common.error.ApiException;
 import vn.edu.thuyetminh.poi.Poi;
-import vn.edu.thuyetminh.poi.PoiAdminService;
+import vn.edu.thuyetminh.poi.PoiImage;
+import vn.edu.thuyetminh.poi.PoiMediaService;
 import vn.edu.thuyetminh.poi.PoiPublicService;
-import vn.edu.thuyetminh.poi.PoiTranslation;
-import vn.edu.thuyetminh.poi.PoiTranslationRepository;
 
 /**
  * Streams audio and images. Spring MVC handles HTTP Range requests for {@link Resource} bodies,
@@ -32,32 +30,24 @@ import vn.edu.thuyetminh.poi.PoiTranslationRepository;
 public class MediaController {
 
     private final AudioService audioService;
-    private final PoiTranslationRepository translations;
+    private final PublicAudioQueryService publicAudioQueryService;
     private final PoiPublicService publicService;
-    private final PoiAdminService adminService;
+    private final PoiMediaService poiMediaService;
     private final MediaStorage storage;
 
-    public MediaController(AudioService audioService, PoiTranslationRepository translations,
-                           PoiPublicService publicService, PoiAdminService adminService, MediaStorage storage) {
+    public MediaController(AudioService audioService, PublicAudioQueryService publicAudioQueryService,
+                           PoiPublicService publicService, PoiMediaService poiMediaService, MediaStorage storage) {
         this.audioService = audioService;
-        this.translations = translations;
+        this.publicAudioQueryService = publicAudioQueryService;
         this.publicService = publicService;
-        this.adminService = adminService;
+        this.poiMediaService = poiMediaService;
         this.storage = storage;
     }
 
     @GetMapping("/api/v1/public/audio/{assetId}")
     @Operation(summary = "Phát/tải audio hiện hành của POI đã công khai")
-    @Transactional(readOnly = true)
     public ResponseEntity<Resource> publicAudio(@PathVariable Long assetId) {
-        AudioAsset a = audioService.findById(assetId).orElseThrow(() -> ApiException.notFound("Audio"));
-        PoiTranslation t = translations.findById(a.getTranslationId())
-                .orElseThrow(() -> ApiException.notFound("Audio"));
-        // Only the current audio of a published POI is public; stale versions are never served.
-        if (a.getStatus() != AudioAssetStatus.READY || a.getContentVersion() != t.getContentVersion()
-                || !t.getPoi().isPublished()) {
-            throw ApiException.notFound("Audio");
-        }
+        AudioAsset a = publicAudioQueryService.requirePublicAudio(assetId);
         return stream(a.getStorageKey(), a.getMimeType(), true);
     }
 
@@ -66,6 +56,12 @@ public class MediaController {
     public ResponseEntity<Resource> adminAudio(@PathVariable Long assetId) {
         AudioAsset a = audioService.findById(assetId).orElseThrow(() -> ApiException.notFound("Audio"));
         return stream(a.getStorageKey(), a.getMimeType(), false);
+    }
+
+    @GetMapping("/api/v1/public/pois/{poiId}/images/{imageId}")
+    public ResponseEntity<Resource> publicPoiImage(@PathVariable Long poiId, @PathVariable Long imageId) {
+        PoiImage image = publicService.requirePublishedImage(poiId, imageId);
+        return stream(image.getStorageKey(), image.getMimeType(), true);
     }
 
     @GetMapping("/api/v1/public/pois/{poiId}/image")
@@ -77,9 +73,15 @@ public class MediaController {
         return stream(p.getCoverImageKey(), p.getCoverImageType(), true);
     }
 
+    @GetMapping("/api/v1/admin/pois/{poiId}/images/{imageId}")
+    public ResponseEntity<Resource> adminPoiImage(@PathVariable Long poiId, @PathVariable Long imageId) {
+        PoiImage image = poiMediaService.requireImageEntity(poiId, imageId);
+        return stream(image.getStorageKey(), image.getMimeType(), false);
+    }
+
     @GetMapping("/api/v1/admin/pois/{poiId}/image")
     public ResponseEntity<Resource> adminImage(@PathVariable Long poiId) {
-        Poi p = adminService.requireEntity(poiId);
+        Poi p = poiMediaService.requireEntity(poiId);
         if (p.getCoverImageKey() == null) {
             throw ApiException.notFound("Ảnh");
         }
@@ -93,7 +95,8 @@ public class MediaController {
         } catch (MediaNotFoundException | IllegalArgumentException e) {
             throw ApiException.notFound("File");
         }
-        CacheControl cc = publicCache ? CacheControl.maxAge(Duration.ofMinutes(10)).cachePublic()
+        // User media now requires a grant (UC02), so only the browser may cache it — never a shared proxy/CDN.
+        CacheControl cc = publicCache ? CacheControl.maxAge(Duration.ofMinutes(10)).cachePrivate()
                 : CacheControl.noStore();
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(mime == null ? "application/octet-stream" : mime))

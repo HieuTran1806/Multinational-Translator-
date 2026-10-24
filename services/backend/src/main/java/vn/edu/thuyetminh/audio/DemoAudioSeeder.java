@@ -12,8 +12,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import vn.edu.thuyetminh.poi.PoiRepository;
-import vn.edu.thuyetminh.poi.PoiTranslationRepository;
+import vn.edu.thuyetminh.poi.PoiStore;
+import vn.edu.thuyetminh.poi.PoiTranslationStore;
 
 /**
  * DEV PROFILE ONLY. Attaches the bundled demo WAV fixtures (simple tones, NOT speech) to the
@@ -26,11 +26,11 @@ public class DemoAudioSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DemoAudioSeeder.class);
 
-    private final PoiRepository pois;
-    private final PoiTranslationRepository translations;
+    private final PoiStore pois;
+    private final PoiTranslationStore translations;
     private final AudioService audioService;
 
-    public DemoAudioSeeder(PoiRepository pois, PoiTranslationRepository translations, AudioService audioService) {
+    public DemoAudioSeeder(PoiStore pois, PoiTranslationStore translations, AudioService audioService) {
         this.pois = pois;
         this.translations = translations;
         this.audioService = audioService;
@@ -39,8 +39,8 @@ public class DemoAudioSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        pois.findAll().stream().filter(p -> p.isDemo() && p.isPublished()).forEach(p ->
-                translations.findByPoiIdOrderByLanguageCodeAsc(p.getId()).forEach(t -> {
+        pois.findDemoPublished().forEach(p ->
+                translations.listByPoi(p.getId()).forEach(t -> {
                     if (audioService.currentAudio(t).isPresent()) {
                         return;
                     }

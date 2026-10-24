@@ -14,6 +14,7 @@ export const poiApi = {
     return request(`/api/v1/admin/pois?${params}`);
   },
   get: (id) => request(`/api/v1/admin/pois/${id}`),
+  remove: (id) => request(`/api/v1/admin/pois/${id}`, { method: 'DELETE' }),
   create: (data) => request('/api/v1/admin/pois', { method: 'POST', body: data }),
   update: (id, data) => request(`/api/v1/admin/pois/${id}`, { method: 'PUT', body: data }),
   publish: (id) => request(`/api/v1/admin/pois/${id}/publish`, { method: 'POST' }),
@@ -30,12 +31,25 @@ export const poiApi = {
     fd.append('file', file);
     return request(`/api/v1/admin/pois/${id}/image`, { method: 'POST', formData: fd });
   },
+  deleteImage: (id, imageId) => request(`/api/v1/admin/pois/${id}/images/${imageId}`, { method: 'DELETE' }),
+  reorderImages: (id, imageIds) => request(`/api/v1/admin/pois/${id}/images/order`, { method: 'PUT', body: imageIds }),
 };
 
 export const ttsApi = {
   status: () => request('/api/v1/admin/tts/status'),
   generate: (id, lang) => request(`/api/v1/admin/pois/${id}/translations/${lang}/tts`, { method: 'POST' }),
   job: (jobId) => request(`/api/v1/admin/tts/jobs/${jobId}`),
+};
+
+/** UC02 access QR codes (issued by Admin while UC12/Seller is out of the MVP). */
+export const accessQrApi = {
+  list: ({ page = 0, size = 20, status } = {}) => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (status) params.set('status', status);
+    return request(`/api/v1/admin/access-qrs?${params}`);
+  },
+  issue: ({ note, packageCode } = {}) => request('/api/v1/admin/access-qrs', { method: 'POST', body: { note, packageCode } }),
+  revoke: (id) => request(`/api/v1/admin/access-qrs/${id}/revoke`, { method: 'POST' }),
 };
 
 export const languageApi = {

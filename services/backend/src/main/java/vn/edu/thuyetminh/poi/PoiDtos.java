@@ -35,6 +35,10 @@ public final class PoiDtos {
             @DecimalMin(value = "-180.0", message = "Kinh độ phải trong khoảng -180..180")
             @DecimalMax(value = "180.0", message = "Kinh độ phải trong khoảng -180..180")
             Double longitude,
+            @Size(max = 100, message = "Danh mục tối đa 100 ký tự") String category,
+            @DecimalMin(value = "1.0", message = "Bán kính kích hoạt phải từ 1 đến 5000 mét")
+            @DecimalMax(value = "5000.0", message = "Bán kính kích hoạt phải từ 1 đến 5000 mét")
+            Double triggerRadius,
             /** Optional optimistic-lock token from the last read; mismatch returns 409. */
             Long rowVersion) {
     }
@@ -55,7 +59,7 @@ public final class PoiDtos {
     }
 
     public record AdminPoiSummary(Long id, String code, String defaultName, double latitude, double longitude,
-                                  PoiStatus status, boolean demo, Instant updatedAt,
+                                  String category, double triggerRadius, PoiStatus status, boolean demo, Instant updatedAt,
                                   List<LanguageReadiness> languages) {
     }
 
@@ -64,8 +68,11 @@ public final class PoiDtos {
                                        TtsJobView latestJob) {
     }
 
+    public record AdminPoiImage(Long id, String url, String mimeType, int sortOrder) { }
+
     public record AdminPoiDetail(Long id, String code, String defaultName, double latitude, double longitude,
-                                 PoiStatus status, boolean demo, String imageUrl, Instant publishedAt,
+                                 String category, double triggerRadius, PoiStatus status, boolean demo, String imageUrl,
+                                 List<AdminPoiImage> images, Instant publishedAt,
                                  Instant createdAt, Instant updatedAt, long rowVersion,
                                  List<AdminTranslationView> translations) {
     }
@@ -73,13 +80,15 @@ public final class PoiDtos {
     // ---------- Public responses ----------
 
     public record PublicPoiSummary(Long id, String code, String name, double latitude, double longitude,
-                                   String imageUrl, List<String> languages, Instant updatedAt) {
+                                   String imageUrl, String category, double triggerRadius,
+                                   List<String> languages, Instant updatedAt) {
     }
 
     public record PublicPoiDetail(Long id, String code, String requestedLanguage, String language,
                                   boolean fallback, List<String> availableLanguages, String name,
                                   String description, String narrationText, int contentVersion, AudioView audio,
-                                  String imageUrl, double latitude, double longitude, Instant updatedAt) {
+                                  String imageUrl, List<String> images, String category, double triggerRadius,
+                                  double latitude, double longitude, Instant updatedAt) {
     }
 
     public record OfflineTranslation(String languageCode, String name, String description, String narrationText,
@@ -89,7 +98,7 @@ public final class PoiDtos {
     /** Everything the mobile app needs to use one POI offline. URLs are relative to the API base. */
     public record OfflineManifest(Long poiId, String code, String manifestVersion, Instant generatedAt,
                                   String defaultName, double latitude, double longitude, String imageUrl,
-                                  String imageMimeType, Instant updatedAt,
+                                  String imageMimeType, String category, double triggerRadius, Instant updatedAt,
                                   List<OfflineTranslation> translations) {
     }
 }

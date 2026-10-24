@@ -18,6 +18,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import vn.edu.thuyetminh.access.AccessGrantService;
+import vn.edu.thuyetminh.access.VisitorGrantAuthenticationFilter;
 import vn.edu.thuyetminh.common.config.AppProperties;
 import vn.edu.thuyetminh.common.error.ErrorCode;
 
@@ -27,6 +29,9 @@ import vn.edu.thuyetminh.common.error.ErrorCode;
  *   <li>Stateless HTTP: no server-side HttpSession, no auth cookies.</li>
  *   <li>Admin requests carry {@code Authorization: Bearer <opaque token>}; tokens are stored hashed in
  *       {@code auth_session} and can be revoked (real logout).</li>
+ *   <li>User (UC02) requests carry {@code Authorization: Bearer <grant token>} plus {@code X-Device-Id}; the grant
+ *       comes from redeeming a single-use QR, is stored hashed in {@code access_grant} and maps to
+ *       {@code ROLE_VISITOR}. Users have no account.</li>
  *   <li>CSRF protection is not needed because browsers never attach the Authorization header
  *       automatically (CSRF exploits ambient credentials such as cookies). If cookies are introduced later,
  *       CSRF protection MUST be enabled.</li>
@@ -36,7 +41,8 @@ import vn.edu.thuyetminh.common.error.ErrorCode;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, AuthService authService) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, AuthService authService,
+                                            AccessGrantService accessGrantService) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable) // bearer-token API without cookies; see class javadoc
                 .cors(Customizer.withDefaults())
@@ -52,19 +58,35 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                        .requestMatchers("/api/v1/auth/**").authenticated()
+                        // UC02: only what a User needs before activation is open — language list (UC01 on the
+                        // scan screen) and the QR redeem itself. Every other User API requires a valid grant.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/public/languages").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/public/access/redeem").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/public/**").hasRole("VISITOR")
+                        // UC07: POI/content/media management belongs to ADMIN. SUPER_ADMIN manages accounts/RBAC/audit
+                        // (not implemented yet) and must never author POI content; it gets 403 here, not just a hidden UI.
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        // Account endpoints: a visitor grant is not an account, so it must not reach /auth/me.
+                        .requestMatchers("/api/v1/auth/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers("/error").permitAll()
                         .anyRequest().denyAll())
                 .exceptionHandling(e -> e
-                        .authenticationEntryPoint((req, res, ex) -> JsonSecurityHandlers.write(res,
-                                ErrorCode.UNAUTHENTICATED, "Bạn cần đăng nhập", req.getRequestURI()))
+                        .authenticationEntryPoint((req, res, ex) -> {
+                            if (req.getRequestURI().startsWith("/api/v1/public/")) {
+                                JsonSecurityHandlers.write(res, ErrorCode.ACCESS_REQUIRED,
+                                        "Vui lòng quét mã QR hợp lệ để sử dụng chức năng này", req.getRequestURI());
+                            } else {
+                                JsonSecurityHandlers.write(res, ErrorCode.UNAUTHENTICATED, "Bạn cần đăng nhập",
+                                        req.getRequestURI());
+                            }
+                        })
                         .accessDeniedHandler((req, res, ex) -> JsonSecurityHandlers.write(res,
                                 ErrorCode.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này",
                                 req.getRequestURI())))
                 .addFilterBefore(new BearerTokenAuthenticationFilter(authService),
-                        UsernamePasswordAuthenticationFilter.class);
+                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new VisitorGrantAuthenticationFilter(accessGrantService),
+                        BearerTokenAuthenticationFilter.class);
         return http.build();
     }
 
@@ -85,7 +107,8 @@ public class SecurityConfig {
         cfg.setAllowedOrigins(props.cors().allowedOrigins().stream().map(String::trim)
                 .filter(s -> !s.isEmpty()).toList());
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Range"));
+        cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Range",
+                VisitorGrantAuthenticationFilter.DEVICE_HEADER));
         cfg.setExposedHeaders(List.of("Content-Disposition", "Content-Length", "Content-Range", "Accept-Ranges"));
         cfg.setAllowCredentials(false); // no cookies are used
         cfg.setMaxAge(3600L);

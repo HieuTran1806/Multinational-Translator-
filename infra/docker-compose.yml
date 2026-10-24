@@ -1,6 +1,6 @@
-# Local development stack: PostgreSQL + backend (dev profile, demo data).
-# Usage (from repo root):  cp infra/.env.example infra/.env  &&  docker compose -f infra/docker-compose.yml --env-file infra/.env up --build
-name: thuyet-minh
+# Local development stack for services present on this branch.
+# From repository root, copy infra/.env.example to infra/.env and set a local password.
+name: multitional-translator
 
 services:
   postgres:
@@ -14,16 +14,17 @@ services:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./postgres/init-test-db.sql:/docker-entrypoint-initdb.d/10-init-test-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 20
+      start_period: 5s
 
   backend:
     build:
       context: ../services/backend
+      dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
       postgres:
@@ -32,20 +33,24 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-thuyetminh}
       DB_USERNAME: ${POSTGRES_USER:-thuyetminh}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in infra/.env}
+      PORT: 8080
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      APP_AUTH_SESSION_TTL: ${APP_AUTH_SESSION_TTL:-8h}
+      # UC02: page each access QR opens. Use the LAN IP (http://<IP>:5174/activate) to test with a real phone.
+      APP_ACCESS_ACTIVATION_URL: ${APP_ACCESS_ACTIVATION_URL:-http://localhost:5174/activate}
+      APP_STORAGE_LOCAL_ROOT: /app/data/media
       APP_BOOTSTRAP_ADMIN_ENABLED: ${APP_BOOTSTRAP_ADMIN_ENABLED:-false}
       APP_BOOTSTRAP_ADMIN_USERNAME: ${APP_BOOTSTRAP_ADMIN_USERNAME:-}
       APP_BOOTSTRAP_ADMIN_PASSWORD: ${APP_BOOTSTRAP_ADMIN_PASSWORD:-}
       APP_TTS_PROVIDER: ${APP_TTS_PROVIDER:-none}
-      # Only used when APP_TTS_PROVIDER=google: path INSIDE the container of the mounted key file
-      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS_IN_CONTAINER:-}
+      APP_TTS_MAX_INPUT_BYTES: ${APP_TTS_MAX_INPUT_BYTES:-4500}
+      APP_TTS_REQUEST_TIMEOUT: ${APP_TTS_REQUEST_TIMEOUT:-30s}
+      APP_TTS_MAX_ATTEMPTS: ${APP_TTS_MAX_ATTEMPTS:-3}
     ports:
-      - "${BACKEND_PORT:-8080}:8080"   # exposed on LAN so a physical phone can reach it in dev
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
     volumes:
       - media:/app/data/media
-      # Uncomment to use Google Cloud TTS (file stays outside the repo):
-      # - ${GOOGLE_CREDENTIALS_FILE_ON_HOST}:/run/secrets/gcp-tts.json:ro
 
 volumes:
   pgdata:

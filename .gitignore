@@ -31,3 +31,29 @@ services/backend/data/
 .vscode/*
 !.vscode/extensions.json
 *.iml
+# ---- Tooling and test artifacts ----
+**/.gradle/
+**/.expo/
+**/.turbo/
+**/.cache/
+**/.eslintcache
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+**/playwright-report/
+**/test-results/
+**/android/local.properties
+**/ios/Pods/
+**/ios/build/
+**/.swiftpm/
+**/DerivedData/
+
+# ---- Local application configuration ----
+**/application-local.yml
+**/application-local.yaml
+**/application-*.local.yml
+**/application-*.local.yaml
+**/*.local.properties
+**/*.local.json
+infra/postgres/data/

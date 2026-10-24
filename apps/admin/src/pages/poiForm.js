@@ -8,5 +8,8 @@ export function validatePoiForm(f) {
   if (f.latitude === '' || Number.isNaN(lat) || lat < -90 || lat > 90) e.latitude = 'Vĩ độ phải trong khoảng -90..90';
   if (f.longitude === '' || Number.isNaN(lng) || lng < -180 || lng > 180)
     e.longitude = 'Kinh độ phải trong khoảng -180..180';
+  const radius = Number(f.triggerRadius ?? 50);
+  if (f.triggerRadius !== undefined && (f.triggerRadius === '' || !Number.isFinite(radius) || radius < 1 || radius > 5000))
+    e.triggerRadius = 'Bán kính kích hoạt phải từ 1 đến 5000 mét';
   return e;
 }

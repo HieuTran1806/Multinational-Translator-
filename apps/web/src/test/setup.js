@@ -1,0 +1,12 @@
+import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
+import { resetGrantStoreForTests } from '../access/grantStore.js';
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  sessionStorage.clear();
+  localStorage.clear();
+  resetGrantStoreForTests();
+});

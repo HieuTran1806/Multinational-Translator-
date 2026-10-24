@@ -3,7 +3,6 @@ import { Link, useSearchParams } from 'react-router';
 import { poiApi } from '../api/endpoints.js';
 import Pagination from '../components/Pagination.jsx';
 import { Alert, AudioBadge, Button, Card, PoiStatusBadge, Spinner, inputClass } from '../components/ui.jsx';
-import { LANGUAGE_LABELS } from '../config.js';
 
 const PAGE_SIZE = 10;
 
@@ -12,21 +11,23 @@ export default function PoiListPage() {
   const page = Math.max(0, Number(params.get('page') || 0));
   const status = params.get('status') || '';
   const q = params.get('q') || '';
+  const requestedSize = Number(params.get('size') || PAGE_SIZE);
+  const size = [10, 20, 50, 100].includes(requestedSize) ? requestedSize : PAGE_SIZE;
   const [search, setSearch] = useState(q);
   const [reloadToken, setReloadToken] = useState(0);
-  const key = `${page}|${status}|${q}|${reloadToken}`;
+  const key = `${page}|${size}|${status}|${q}|${reloadToken}`;
   const [result, setResult] = useState({ key: null, data: null, error: null });
 
   useEffect(() => {
     let cancelled = false;
     poiApi
-      .list({ page, size: PAGE_SIZE, status: status || undefined, q: q || undefined })
+      .list({ page, size, status: status || undefined, q: q || undefined })
       .then((data) => !cancelled && setResult({ key, data, error: null }))
       .catch((error) => !cancelled && setResult({ key, data: null, error }));
     return () => {
       cancelled = true;
     };
-  }, [key, page, status, q]);
+  }, [key, page, size, status, q]);
 
   const state = { loading: result.key !== key, data: result.data, error: result.error };
   const load = () => setReloadToken((n) => n + 1);
@@ -39,14 +40,9 @@ export default function PoiListPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-forest">Quản lý POI</h1>
-          <p className="text-sm text-stone">Địa điểm, nội dung theo ngôn ngữ và trạng thái audio</p>
-        </div>
-        <Link to="/pois/new">
-          <Button>+ Thêm POI</Button>
-        </Link>
+      <header>
+        <h1 className="text-[26px] font-bold text-forest">Quản lý POI</h1>
+        <p className="text-sm text-stone">Địa điểm, nội dung theo ngôn ngữ và trạng thái audio</p>
       </header>
 
       <Card>
@@ -74,6 +70,20 @@ export default function PoiListPage() {
             <option value="PUBLISHED">Công khai</option>
             <option value="DRAFT">Nháp</option>
           </select>
+          <label className="flex items-center gap-2 whitespace-nowrap text-sm text-stone">
+            <span>Kích thước trang</span>
+            <select
+              aria-label="Kích thước trang"
+              className={`${inputClass} w-auto min-w-[5rem]`}
+              value={String(size)}
+              onChange={(e) => update({ size: e.target.value, page: 0 })}
+            >
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
           <Button type="submit" variant="secondary">
             Tìm
           </Button>
@@ -137,7 +147,9 @@ export default function PoiListPage() {
                         <ul className="space-y-1">
                           {p.languages.map((l) => (
                             <li key={l.languageCode} className="flex items-center gap-2">
-                              <span className="w-20 text-xs">{LANGUAGE_LABELS[l.languageCode] ?? l.languageCode}</span>
+                              <span className="w-20 text-xs uppercase" title={l.languageCode}>
+                                {l.languageCode}
+                              </span>
                               <AudioBadge status={l.audio} />
                             </li>
                           ))}

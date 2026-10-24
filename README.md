@@ -1,210 +1,199 @@
+# Multitional Translator
 
+Nền tảng thuyết minh đa ngôn ngữ cho các điểm tham quan (POI). Repository hiện có backend REST API bằng Spring Boot, giao diện quản trị web và giao diện người dùng (khám phá bản đồ, chi tiết POI, thuyết minh audio) bằng React/Vite, tài liệu hợp đồng và cấu hình Docker phục vụ phát triển cục bộ.
 
-# Tính năng chính
+> **Trạng thái hiện tại:** Admin web, web User (UC03–UC05) và backend được triển khai trên nhánh này. Ứng dụng mobile chưa có trong nhánh này. Seller/QR, thanh toán và một số màn hình/luồng nâng cao không được xem là đã triển khai chỉ vì có trong tài liệu thiết kế. CI kiểm tra mã nguồn; **CD/production deployment chưa được kích hoạt**.
 
---
---
+## Thành phần chính
 
-# Demo
-
-### Màn hình chính
-
-### Nghe thuyết minh
-
----
-
-## Tech Stack
-
-| Layer | Công nghệ |
-|-------|-----------|
-| **Mobile** | React Native (Expo) + TypeScript |
-| **Web Admin** | ReactJS + Vite + TailwindCSS |
-| **Backend** | Java 17 + Spring Boot |
-| **Database** | PostgreSQL |
-| **Bản đồ** | Google Maps SDK / react-native-maps |
-| **TTS** | Google Cloud TTS + react-native-tts (offline) |
-| **CI/CD** | GitHub Actions |
-| **Deploy** | Vercel (web) + Render/VPS (BE) |
-
----
-
-## Mô tả hệ thống theo 3 mức General -> Specific -> Diagram 
-### General 
-### Specific 
-### Diagram 
-
-
-
-## Kiến trúc hệ thống
-
-
-
-## Cấu trúc thư mục
-
-
------------------------------------------
-
-# Thuyết minh đa ngôn ngữ — MVP
-
-Ứng dụng hướng dẫn tham quan có thuyết minh nhiều ngôn ngữ, bối cảnh ban đầu là **Địa đạo Củ Chi**.
-
-Luồng MVP: Admin đăng nhập → tạo địa điểm (POI) → nhập nội dung tiếng Việt/tiếng Anh → tải audio lên hoặc tạo bằng Google Cloud TTS → công khai → ứng dụng di động xem POI → chọn ngôn ngữ → phát thuyết minh (online, offline hoặc giọng thiết bị).
-
-> Trạng thái kiểm chứng của từng phần được ghi tại [`docs/verification-report.md`](docs/verification-report.md). Đọc file đó trước khi demo.
-
-## Cấu trúc monorepo
-
-| Thư mục | Nội dung |
+| Đường dẫn | Vai trò |
 |---|---|
-| `apps/mobile` | React Native CLI 0.87 + TypeScript (Android trước, iOS chuẩn bị sẵn) |
-| `apps/admin` | Web quản trị React (JavaScript) + Vite + Tailwind CSS |
-| `services/backend` | Spring Boot 4.1 (Java 21, Maven Wrapper), monolith chia module theo chức năng |
-| `infra` | Docker Compose (PostgreSQL + backend), script tạo audio demo, fixture |
-| `docs` | Kiến trúc, ERD, API, triển khai, CI/CD, Google TTS/Maps, backlog, báo cáo kiểm chứng |
-| `.github/workflows` | CI (chỉ kiểm tra/build, không deploy) |
+| `apps/admin/` | React 19 + Vite: đăng nhập, quản lý POI, bản dịch, hình ảnh/audio và các thao tác TTS được hỗ trợ bởi backend |
+| `apps/web/` | React 19 + Vite: web User UC03–UC05 — bản đồ POI (Leaflet), tìm kiếm địa điểm, chi tiết POI theo ngôn ngữ và trình phát thuyết minh audio |
+| `services/backend/` | Java 21, Spring Boot, Maven Wrapper, REST API, Spring Security, JPA, Flyway |
+| `infra/` | Docker Compose cho PostgreSQL và backend |
+| `design-system/tokens.json` | Design tokens dùng chung |
+| `docs/requirements/` | Yêu cầu nghiệp vụ và Use Case |
+| `docs/architecture/` | Kiến trúc, cấu trúc và hợp đồng API |
+| `docs/development/` | Quy ước phát triển và kiểm thử |
+| `docs/operations/` | Hướng dẫn vận hành, CI/CD và kế hoạch triển khai |
+| `.github/workflows/ci.yml` | Tự động kiểm tra tài liệu, unit test backend và chất lượng Admin/Web |
+
+Tài liệu nên đọc:
+- [Use Case](docs/requirements/Use_Case_Specification_Final_15_UC.md)
+- [Kiến trúc](docs/architecture/architecture.md)
+- [API contract](docs/architecture/api.md)
+- [Kiến trúc backend](services/backend/ARCHITECTURE.md)
+- [Báo cáo kiểm chứng Admin](docs/reports/admin-module-verification.md)
+- [CI/CD](docs/operations/ci-cd.md)
+- [Chuẩn bị triển khai — chưa phải deployment đang hoạt động](docs/operations/deployment.md)
 
 ## Yêu cầu môi trường
 
-| Công cụ | Phiên bản | Dùng cho |
-|---|---|---|
-| JDK | 21 (Temurin khuyến nghị) | backend |
-| JDK | 17 | build Android (theo khuyến nghị React Native) |
-| Node.js | 22 LTS (≥ 22.11) + npm ≥ 10 | admin, mobile |
-| Docker + Docker Compose v2 | mới | PostgreSQL, chạy backend bằng container |
-| Android Studio; Android SDK Platform 37 (compileSdk), Build-Tools 37.0.0, NDK 27.1.12297006 — đúng theo `apps/mobile/android/build.gradle` của template RN 0.87 | — | mobile Android |
-| macOS + Xcode + CocoaPods | — | mobile iOS (**chưa kiểm chứng**) |
+- Git
+- Docker Desktop có Docker Compose v2
+- Node.js **22.11 trở lên** (khuyến nghị Node 22 LTS) và npm
+- Java **21** nếu chạy backend trực tiếp ngoài Docker
+- Kết nối Internet lần đầu để tải image/dependencies
 
-Phiên bản chi tiết và lý do chọn: [`docs/plan-and-assumptions.md`](docs/plan-and-assumptions.md).
+Kiểm tra phiên bản:
 
-## Chạy nhanh (demo không cần Google Cloud)
-
-### 1. Database + backend bằng Docker
-
-```bash
-cp infra/.env.example infra/.env
-# Sửa infra/.env: đặt POSTGRES_PASSWORD; để tạo admin lần đầu đặt
-#   APP_BOOTSTRAP_ADMIN_ENABLED=true, APP_BOOTSTRAP_ADMIN_USERNAME=admin,
-#   APP_BOOTSTRAP_ADMIN_PASSWORD=<mật khẩu riêng ≥ 12 ký tự>
-docker compose -f infra/docker-compose.yml --env-file infra/.env up --build
+```powershell
+git --version
+node --version
+npm --version
+docker --version
+docker compose version
+java -version
 ```
 
-- Health check: <http://localhost:8080/actuator/health>
-- Swagger UI (chỉ dev): <http://localhost:8080/swagger-ui.html>
-- Profile `dev` nạp **2 POI demo công khai + 1 POI nháp** (tên có nhãn `[DEMO]`) và gắn **audio demo dạng tiếng bíp** (không phải giọng đọc) để mobile phát được ngay.
-- Sau khi admin đã được tạo, đặt lại `APP_BOOTSTRAP_ADMIN_ENABLED=false`.
+## Chạy toàn bộ backend + PostgreSQL và Admin trên Windows
 
-### 2. Backend không dùng Docker (tuỳ chọn)
+Các lệnh dưới đây chạy trong **PowerShell tại thư mục gốc repository**.
 
-```bash
-docker compose -f infra/docker-compose.yml --env-file infra/.env up -d postgres
-cd services/backend
-export SPRING_PROFILES_ACTIVE=dev DB_PASSWORD=<như POSTGRES_PASSWORD>
-export APP_BOOTSTRAP_ADMIN_ENABLED=true APP_BOOTSTRAP_ADMIN_USERNAME=admin APP_BOOTSTRAP_ADMIN_PASSWORD='<≥12 ký tự>'
-./mvnw spring-boot:run          # Windows: mvnw.cmd spring-boot:run
+### 1. Cấu hình môi trường cục bộ
+
+```powershell
+if (-not (Test-Path infra/.env)) { Copy-Item infra/.env.example infra/.env }
+notepad infra/.env
 ```
 
-Biến môi trường đầy đủ: `services/backend/.env.example`.
+Đổi `POSTGRES_PASSWORD` thành mật khẩu riêng cho máy local. Không commit `infra/.env`. Nếu cần tạo tài khoản Admin đầu tiên cho môi trường phát triển, cấu hình `APP_BOOTSTRAP_ADMIN_ENABLED=true`, `APP_BOOTSTRAP_ADMIN_USERNAME` và `APP_BOOTSTRAP_ADMIN_PASSWORD` trong tệp này trước khi khởi động. Chỉ dùng mật khẩu local, không dùng lại mật khẩu thật.
 
-### 3. Web admin
+### 2. Khởi động PostgreSQL và backend
 
-```bash
-cd apps/admin
-cp .env.example .env            # VITE_API_BASE_URL=http://localhost:8080
+```powershell
+docker compose --env-file infra/.env -f infra/docker-compose.yml config
+docker compose --env-file infra/.env -f infra/docker-compose.yml up --build -d
+docker compose --env-file infra/.env -f infra/docker-compose.yml ps
+docker compose --env-file infra/.env -f infra/docker-compose.yml logs -f backend
+```
+
+Đợi backend khởi động xong rồi mở endpoint kiểm tra sức khỏe:
+
+- Backend: http://localhost:8080
+- Health: http://localhost:8080/actuator/health
+- Readiness: http://localhost:8080/actuator/health/readiness
+- OpenAPI UI (dev): http://localhost:8080/swagger-ui.html
+
+Profile `dev` chạy Flyway migration và nạp dữ liệu demo. Sau khi tài khoản Admin đầu tiên đã được tạo, hãy tắt lại `APP_BOOTSTRAP_ADMIN_ENABLED=false` rồi khởi động lại backend. Không bật bootstrap admin trên production một cách thường trực.
+
+### 3. Khởi động Admin web
+
+Mở **một cửa sổ PowerShell khác** ở thư mục gốc:
+
+```powershell
+Set-Location apps/admin
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 npm ci
-npm run dev                     # http://localhost:5173
+npm run dev
 ```
 
-### 4. Mobile (Android)
+Mở URL Vite được in ra trong terminal, thông thường là http://localhost:5173. `apps/admin/.env` mặc định trỏ API tới `http://localhost:8080`.
 
-```bash
-cd apps/mobile
-cp .env.example .env            # tuỳ chọn: API_BASE_URL, GOOGLE_MAPS_ANDROID_API_KEY
+Nếu backend chạy ở địa chỉ khác, sửa `VITE_API_BASE_URL` trong `apps/admin/.env` rồi khởi động lại Vite. Biến có tiền tố `VITE_` được đóng gói vào frontend và **không được chứa bí mật**.
+
+### Chạy riêng giao diện bằng mock API
+
+Để xem UI mà không cần backend hoặc PostgreSQL, đặt `VITE_USE_MOCK=true` trong `apps/admin/.env`, sau đó chạy `npm run dev`. Chế độ này dùng dữ liệu giả lập, không kiểm chứng API thật; đặt lại `false` khi kiểm thử tích hợp.
+
+### 4. Khởi động web User (UC03–UC05)
+
+Mở **một cửa sổ PowerShell khác** ở thư mục gốc:
+
+```powershell
+Set-Location apps/web
 npm ci
-npm start                       # Metro
-npm run android                 # terminal khác, cần emulator hoặc máy thật
+npm run dev
 ```
 
-- **Android emulator**: mặc định gọi `http://10.0.2.2:8080` (địa chỉ máy host).
-- **Điện thoại thật**: `localhost` là chính điện thoại. Dùng IP LAN của máy chạy backend, ví dụ `http://192.168.1.20:8080`, đặt trong `.env` (`API_BASE_URL`) hoặc trong app: **Cài đặt → Địa chỉ máy chủ**. Máy và điện thoại phải cùng mạng; firewall phải mở cổng 8080.
-- Bản debug cho phép HTTP; bản release yêu cầu HTTPS.
-- Chưa có Maps key → tab Bản đồ hiển thị "chưa cấu hình", tab Địa điểm vẫn dùng bình thường.
+Mở http://localhost:5174. Dev server tự proxy `/api` sang `http://localhost:8080` nên không cần cấu hình CORS khi chạy local theo hướng dẫn ở trên.
 
-Chi tiết: [`docs/mobile.md`](docs/mobile.md).
+Xem không cần backend: `$env:VITE_USE_MOCK = "true"; npm run dev` (dữ liệu demo gồm cả audio dựng sẵn). Chi tiết trong [apps/web/README.md](apps/web/README.md).
 
-## Tạo tài khoản admin local
+## Chạy backend trực tiếp (không chạy backend trong Compose)
 
-Không có mật khẩu mặc định. Có 2 cách:
+Nếu chỉ muốn dùng Docker cho PostgreSQL, khởi động riêng database:
 
-1. **Biến môi trường (khuyến nghị)**: `APP_BOOTSTRAP_ADMIN_ENABLED=true` + `APP_BOOTSTRAP_ADMIN_USERNAME` + `APP_BOOTSTRAP_ADMIN_PASSWORD` (≥ 12 ký tự). Khi khởi động, nếu username chưa tồn tại, backend tạo tài khoản `SUPER_ADMIN` với mật khẩu băm BCrypt. Không bao giờ ghi đè mật khẩu cũ. Tắt lại cờ sau khi tạo.
-2. **SQL thủ công**: tạo hash BCrypt (ví dụ `htpasswd -bnBC 10 "" '<mật khẩu>' | tr -d ':\n'`) rồi
-   `INSERT INTO account (username, password_hash, display_name, role) VALUES ('admin', '<hash>', 'Admin', 'SUPER_ADMIN');`
-
-Production dùng cùng cơ chế với secret của nền tảng hosting, chỉ bật một lần.
-
-## Biến môi trường chính
-
-| Biến | Thành phần | Mô tả |
-|---|---|---|
-| `SPRING_PROFILES_ACTIVE` | backend | `dev` (dữ liệu demo), `test`, `prod`. Docker image mặc định `prod` |
-| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | backend | Kết nối PostgreSQL |
-| `APP_CORS_ALLOWED_ORIGINS` | backend | Danh sách origin, phân tách bằng dấu phẩy |
-| `APP_AUTH_SESSION_TTL` | backend | Thời hạn phiên đăng nhập (mặc định `8h`) |
-| `APP_BOOTSTRAP_ADMIN_*` | backend | Tạo admin đầu tiên (xem trên) |
-| `APP_STORAGE_LOCAL_ROOT` | backend | Thư mục lưu audio/ảnh (volume Docker) |
-| `APP_TTS_PROVIDER` | backend | `none` (mặc định) hoặc `google` |
-| `GOOGLE_APPLICATION_CREDENTIALS` | backend | Đường dẫn file service account (khi `google`) |
-| `VITE_API_BASE_URL` | admin | URL backend (public, nhúng vào bundle) |
-| `API_BASE_URL`, `GOOGLE_MAPS_ANDROID_API_KEY`, `GOOGLE_MAPS_IOS_API_KEY` | mobile | Trong `apps/mobile/.env` (không phải bí mật) |
-
-## Chạy test
-
-```bash
-# Backend — unit test (không cần DB)
-cd services/backend && ./mvnw test
-# Backend — unit + integration test (cần PostgreSQL có DB thuyetminh_test;
-# docker compose ở trên tự tạo DB này lần đầu khởi tạo volume)
-export TEST_DB_URL=jdbc:postgresql://localhost:5432/thuyetminh_test TEST_DB_USERNAME=thuyetminh TEST_DB_PASSWORD=<POSTGRES_PASSWORD>
-./mvnw verify
-
-# Admin
-cd apps/admin && npm run lint && npm test && npm run build
-
-# Mobile
-cd apps/mobile && npm run lint && npm run typecheck && npm test
-cd apps/mobile/android && ./gradlew assembleDebug
+```powershell
+docker compose --env-file infra/.env -f infra/docker-compose.yml up -d postgres
 ```
 
-Những gì các test kiểm tra: [`docs/testing.md`](docs/testing.md).
+Trong PowerShell, đặt biến môi trường cho tiến trình backend:
 
-## Google Cloud TTS và Google Maps
+```powershell
+$env:SPRING_PROFILES_ACTIVE = "dev"
+$env:DB_URL = "jdbc:postgresql://localhost:5432/thuyetminh"
+$env:DB_USERNAME = "thuyetminh"
+$env:DB_PASSWORD = "<mật-khẩu-POSTGRES_PASSWORD-trong-infra/.env>"
+Set-Location services/backend
+.\mvnw.cmd spring-boot:run
+```
 
-- TTS (chỉ backend gọi): [`docs/google-tts.md`](docs/google-tts.md)
-- Maps (Android/iOS, giới hạn key): [`docs/google-maps.md`](docs/google-maps.md)
+Thay giá trị mật khẩu bằng mật khẩu local đã cấu hình; không đưa mật khẩu vào source code. Không chạy đồng thời backend local và backend Compose trên cùng cổng 8080.
 
-## Giới hạn MVP
+## Lệnh kiểm tra
 
-- Khách xem/nghe **không cần đăng nhập** — đây là *giả định cần đối chiếu đặc tả* (Penpot có UC01–UC03 đăng ký/đăng nhập cho khách).
-- Nội dung từng ngôn ngữ nhập tay; Google TTS không dịch.
-- Không có bản đồ offline; offline chỉ gồm nội dung + audio đã tải.
-- Không có thuyết minh tự động theo vị trí, không thu thập vị trí nền.
-- Vai trò tĩnh `ADMIN`/`SUPER_ADMIN` (không có RBAC động).
-- Lưu trữ file local (volume). Production cần object storage hoặc đĩa bền vững.
-- Trạng thái TTS dùng polling (không SSE).
+### Admin
 
-Backlog đầy đủ: [`docs/backlog.md`](docs/backlog.md). Kiến trúc và ERD: [`docs/architecture.md`](docs/architecture.md). API: [`docs/api.md`](docs/api.md). Triển khai: [`docs/deployment.md`](docs/deployment.md). CI/CD: [`docs/ci-cd.md`](docs/ci-cd.md).
+```powershell
+Set-Location apps/admin
+npm ci
+npm run lint
+npm test
+npm run build
+```
 
-# Giới thiệu
-Ứng dụng web/mobile giúp **khách du lịch** khám phá địa điểm và **nghe thuyết minh tự động** theo vị trí GPS, hỗ trợ **đa ngôn ngữ**, hoạt động cả **online và offline**. Hệ thống có trang **admin** để quản lý địa điểm và nội dung thuyết minh.
+Tùy chọn: `npm run verify:e2e` chạy kiểm tra end-to-end qua backend và database **đang hoạt động**. Cần cấu hình `E2E_BASE_URL`, `E2E_ADMIN_USERNAME`, `E2E_ADMIN_PASSWORD`; xem phần đầu của `apps/admin/scripts/verify-e2e.mjs`. Không chạy E2E trên môi trường production.
 
-# Thành viên nhóm 
-3124560031 - Trần Viết Hiếu
-- 
-- 
+### Web User
 
-### 🎯 Mục tiêu
-- Tự động phát thuyết minh khi khách đến gần địa điểm (geofencing)
-- Hỗ trợ nhiều ngôn ngữ qua Google Cloud TTS
-- Hoạt động offline với audio cache sẵn
-- CI/CD tự động hóa build & deploy
+```powershell
+Set-Location apps/web
+npm ci
+npm run lint
+npm test
+npm run build
+```
 
----
+### Backend
+
+```powershell
+Set-Location services/backend
+.\mvnw.cmd clean test
+```
+
+Unit test không cần PostgreSQL. Integration test được đặt tên `*IT.java`, cần một PostgreSQL **riêng cho kiểm thử** và profile `test`; không trỏ integration test vào database phát triển hoặc production.
+
+Ví dụ sau khi đã khởi động một database kiểm thử riêng và thiết lập biến môi trường `TEST_DB_URL`, `TEST_DB_USERNAME`, `TEST_DB_PASSWORD`:
+
+```powershell
+$env:TEST_DB_URL = "jdbc:postgresql://localhost:5432/thuyetminh_test"
+$env:TEST_DB_USERNAME = "thuyetminh"
+$env:TEST_DB_PASSWORD = "<mật-khẩu-test>"
+.\mvnw.cmd verify
+```
+
+Profile test có thể chạy Flyway migration/clean trên database kiểm thử. **Chỉ dùng database test có thể xóa dữ liệu**, không dùng database local cần giữ hoặc database production.
+
+## CI/CD
+
+GitHub Actions workflow tại `.github/workflows/ci.yml` tự chạy khi push hoặc mở/cập nhật Pull Request. Nó kiểm tra tài liệu nền tảng, whitespace, unit test backend và lint/test/build của Admin. Integration test phụ thuộc PostgreSQL và E2E chưa được đưa vào workflow hiện tại.
+
+**CI có; CD chưa bật.** Không có deployment production tự động. Xem [hướng dẫn CI/CD](docs/operations/ci-cd.md) và [ghi chú triển khai](docs/operations/deployment.md) trước khi cấu hình hosting, secrets, database production, HTTPS và lưu trữ media.
+
+## Dừng dịch vụ local
+
+```powershell
+docker compose --env-file infra/.env -f infra/docker-compose.yml down
+```
+
+Lệnh trên giữ lại named volumes. **Không thêm `-v`** trừ khi chủ động muốn xóa dữ liệu PostgreSQL và media local.
+
+## Bảo mật
+
+- Không commit `.env`, mật khẩu, token hoặc tệp Google service-account.
+- Không đặt bí mật trong biến frontend `VITE_*`.
+- Dùng PostgreSQL riêng cho integration test.
+- Chỉ bật bootstrap Admin khi khởi tạo môi trường local, sau đó tắt.
+- Không coi cấu hình Compose local là cấu hình production.

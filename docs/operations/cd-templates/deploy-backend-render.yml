@@ -1,0 +1,35 @@
+# TEMPLATE — NOT ACTIVE. Copy to .github/workflows/ only after Render + secrets are configured.
+# Deploys ONLY a commit that already passed the "CI" workflow on main (workflow_run + conclusion check).
+# Prerequisites (see docs/operations/deployment.md):
+#   - Render Web Service (Docker) with "Auto-Deploy" set to OFF (avoid double deploys)
+#   - Repository secret RENDER_DEPLOY_HOOK_URL (Render → Settings → Deploy Hook)
+#   - GitHub Environment "production" (optional approval rule)
+name: Deploy backend (Render)
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Trigger Render deploy of the verified commit
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          test -n "$HOOK" || { echo "RENDER_DEPLOY_HOOK_URL is not configured"; exit 1; }
+          # NOTE: a deploy hook deploys the latest commit of the configured branch. If commits can land on
+          # main faster than CI finishes, deploy a pre-built image tagged with $SHA instead (see deployment.md).
+          curl -fsS -X POST "$HOOK" > /dev/null
+          echo "Deploy requested after CI passed for ${SHA}"
+      # Recommended: poll https://<backend>/actuator/health until UP and fail the job otherwise.

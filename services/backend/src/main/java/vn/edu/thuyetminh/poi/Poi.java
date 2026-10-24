@@ -28,6 +28,15 @@ public class Poi {
     @Column(name = "default_name", nullable = false, length = 200)
     private String defaultName;
 
+    @Column(length = 100)
+    private String category;
+
+    @Column(name = "trigger_radius", nullable = false)
+    private double triggerRadius = 50.0;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Column(nullable = false)
     private double latitude;
 
@@ -91,6 +100,27 @@ public class Poi {
         this.latitude = latitude;
         this.longitude = longitude;
     }
+
+    public void updateAdminFields(String category, double triggerRadius) {
+        this.category = category;
+        this.triggerRadius = triggerRadius;
+    }
+
+    public void softDelete(Instant now) {
+        this.status = PoiStatus.DRAFT;
+        this.deletedAt = now;
+        this.publishedAt = null;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    public String getCategory() { return category; }
+
+    public double getTriggerRadius() { return triggerRadius; }
+
+    public Instant getDeletedAt() { return deletedAt; }
 
     public void publish(Instant now) {
         status = PoiStatus.PUBLISHED;
