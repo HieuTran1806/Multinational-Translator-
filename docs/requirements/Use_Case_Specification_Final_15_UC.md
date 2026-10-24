@@ -719,7 +719,7 @@ Audit records được hiển thị; thao tác xem không sửa/xóa log.
 - Mọi quyết định chuyển sang production.
 
 ---
-**Author(s):** Product Owner / nhóm dự án  
+**Author(s):** Product Owner / nhóm dự án$2
 **Trạng thái phê duyệt:** Bản cập nhật theo các quyết định MVP ngày 2026-10-20; UC08 và UC12 ngoài phạm vi MVP. Các mục còn mở được liệt kê trong phần Open Decisions; chưa phải phê duyệt nghiệm thu triển khai.
 
 ## Quy tắc toàn hệ thống: soft delete
