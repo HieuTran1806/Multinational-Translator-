@@ -1,5 +1,5 @@
 import { StrictMode } from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
@@ -105,6 +105,21 @@ describe('Activation (UC02 steps 3–5)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Bắt đầu khám phá' }));
     expect(await screen.findByTestId('explore')).toBeInTheDocument();
+  });
+
+  it('the header countdown starts at activation, not when the scan screen was opened', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      renderAt('/welcome');
+      await act(() => vi.advanceTimersByTimeAsync(10 * 60_000)); // visitor reads the instructions for 10 min
+      redeemMock.mockImplementation(async () => GRANT()); // 24 h from *now*
+      await user.type(screen.getByLabelText('Mã QR hoặc đường link kích hoạt'), 'DEMO-QR-0003');
+      await user.click(screen.getByRole('button', { name: 'Kích hoạt' }));
+      expect(await screen.findByText(/^Còn (23 giờ 59 phút|24 giờ 0 phút)$/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('A2: opening the QR link activates and removes the token from the address bar', async () => {
