@@ -1,14 +1,15 @@
 # Multitional Translator
 
-Nền tảng thuyết minh đa ngôn ngữ cho các điểm tham quan (POI). Repository hiện có backend REST API bằng Spring Boot, giao diện quản trị web bằng React/Vite, tài liệu hợp đồng và cấu hình Docker phục vụ phát triển cục bộ.
+Nền tảng thuyết minh đa ngôn ngữ cho các điểm tham quan (POI). Repository hiện có backend REST API bằng Spring Boot, giao diện quản trị web và giao diện người dùng (khám phá bản đồ, chi tiết POI, thuyết minh audio) bằng React/Vite, tài liệu hợp đồng và cấu hình Docker phục vụ phát triển cục bộ.
 
-> **Trạng thái hiện tại:** Admin web và backend được khôi phục trên nhánh `feat(admin)`. Ứng dụng mobile chưa có trong nhánh này. Seller/QR, thanh toán và một số màn hình/luồng nâng cao không được xem là đã triển khai chỉ vì có trong tài liệu thiết kế. CI kiểm tra mã nguồn; **CD/production deployment chưa được kích hoạt**.
+> **Trạng thái hiện tại:** Admin web, web User (UC03–UC05) và backend được triển khai trên nhánh này. Ứng dụng mobile chưa có trong nhánh này. Seller/QR, thanh toán và một số màn hình/luồng nâng cao không được xem là đã triển khai chỉ vì có trong tài liệu thiết kế. CI kiểm tra mã nguồn; **CD/production deployment chưa được kích hoạt**.
 
 ## Thành phần chính
 
 | Đường dẫn | Vai trò |
 |---|---|
 | `apps/admin/` | React 19 + Vite: đăng nhập, quản lý POI, bản dịch, hình ảnh/audio và các thao tác TTS được hỗ trợ bởi backend |
+| `apps/web/` | React 19 + Vite: web User UC03–UC05 — bản đồ POI (Leaflet), tìm kiếm địa điểm, chi tiết POI theo ngôn ngữ và trình phát thuyết minh audio |
 | `services/backend/` | Java 21, Spring Boot, Maven Wrapper, REST API, Spring Security, JPA, Flyway |
 | `infra/` | Docker Compose cho PostgreSQL và backend |
 | `design-system/tokens.json` | Design tokens dùng chung |
@@ -16,7 +17,7 @@ Nền tảng thuyết minh đa ngôn ngữ cho các điểm tham quan (POI). Rep
 | `docs/architecture/` | Kiến trúc, cấu trúc và hợp đồng API |
 | `docs/development/` | Quy ước phát triển và kiểm thử |
 | `docs/operations/` | Hướng dẫn vận hành, CI/CD và kế hoạch triển khai |
-| `.github/workflows/ci.yml` | Tự động kiểm tra tài liệu, unit test backend và chất lượng Admin |
+| `.github/workflows/ci.yml` | Tự động kiểm tra tài liệu, unit test backend và chất lượng Admin/Web |
 
 Tài liệu nên đọc:
 - [Use Case](docs/requirements/Use_Case_Specification_Final_15_UC.md)
@@ -96,6 +97,20 @@ Nếu backend chạy ở địa chỉ khác, sửa `VITE_API_BASE_URL` trong `ap
 
 Để xem UI mà không cần backend hoặc PostgreSQL, đặt `VITE_USE_MOCK=true` trong `apps/admin/.env`, sau đó chạy `npm run dev`. Chế độ này dùng dữ liệu giả lập, không kiểm chứng API thật; đặt lại `false` khi kiểm thử tích hợp.
 
+### 4. Khởi động web User (UC03–UC05)
+
+Mở **một cửa sổ PowerShell khác** ở thư mục gốc:
+
+```powershell
+Set-Location apps/web
+npm ci
+npm run dev
+```
+
+Mở http://localhost:5174. Dev server tự proxy `/api` sang `http://localhost:8080` nên không cần cấu hình CORS khi chạy local theo hướng dẫn ở trên.
+
+Xem không cần backend: `$env:VITE_USE_MOCK = "true"; npm run dev` (dữ liệu demo gồm cả audio dựng sẵn). Chi tiết trong [apps/web/README.md](apps/web/README.md).
+
 ## Chạy backend trực tiếp (không chạy backend trong Compose)
 
 Nếu chỉ muốn dùng Docker cho PostgreSQL, khởi động riêng database:
@@ -130,6 +145,16 @@ npm run build
 ```
 
 Tùy chọn: `npm run verify:e2e` chạy kiểm tra end-to-end qua backend và database **đang hoạt động**. Cần cấu hình `E2E_BASE_URL`, `E2E_ADMIN_USERNAME`, `E2E_ADMIN_PASSWORD`; xem phần đầu của `apps/admin/scripts/verify-e2e.mjs`. Không chạy E2E trên môi trường production.
+
+### Web User
+
+```powershell
+Set-Location apps/web
+npm ci
+npm run lint
+npm test
+npm run build
+```
 
 ### Backend
 
