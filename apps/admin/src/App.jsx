@@ -4,6 +4,7 @@ import Layout from './components/Layout.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import PoiListPage from './pages/PoiListPage.jsx';
 import PoiEditPage from './pages/PoiEditPage.jsx';
+import AccessQrPage from './pages/AccessQrPage.jsx';
 
 function RequireAuth({ children }) {
   const { isAuthenticated } = useAuth();
@@ -12,7 +13,10 @@ function RequireAuth({ children }) {
   return children;
 }
 
-/** UC07 actor is ADMIN only: SUPER_ADMIN manages accounts/RBAC/audit, never POI content. Backend enforces this too. */
+/**
+ * UC07 actor is ADMIN only: SUPER_ADMIN manages accounts/RBAC/audit, never POI content. Backend enforces this too.
+ * The UC02 access-QR page reuses the guard: the whole /api/v1/admin/** API is ADMIN-only.
+ */
 function RequirePoiAdmin({ children }) {
   const { account } = useAuth();
   if (account?.role === 'ADMIN') return children;
@@ -60,6 +64,14 @@ export default function App() {
           element={
             <RequirePoiAdmin>
               <PoiEditPage />
+            </RequirePoiAdmin>
+          }
+        />
+        <Route
+          path="/access-qrs"
+          element={
+            <RequirePoiAdmin>
+              <AccessQrPage />
             </RequirePoiAdmin>
           }
         />

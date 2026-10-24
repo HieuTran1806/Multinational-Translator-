@@ -41,6 +41,17 @@ export const ttsApi = {
   job: (jobId) => request(`/api/v1/admin/tts/jobs/${jobId}`),
 };
 
+/** UC02 access QR codes (issued by Admin while UC12/Seller is out of the MVP). */
+export const accessQrApi = {
+  list: ({ page = 0, size = 20, status } = {}) => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (status) params.set('status', status);
+    return request(`/api/v1/admin/access-qrs?${params}`);
+  },
+  issue: ({ note, packageCode } = {}) => request('/api/v1/admin/access-qrs', { method: 'POST', body: { note, packageCode } }),
+  revoke: (id) => request(`/api/v1/admin/access-qrs/${id}/revoke`, { method: 'POST' }),
+};
+
 export const languageApi = {
   list: () => request('/api/v1/admin/languages'),
 };

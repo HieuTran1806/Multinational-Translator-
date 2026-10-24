@@ -14,6 +14,22 @@ function MapPinIcon() {
   );
 }
 
+function QrIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <rect x="4" y="4" width="6" height="6" rx="1" />
+      <rect x="14" y="4" width="6" height="6" rx="1" />
+      <rect x="4" y="14" width="6" height="6" rx="1" />
+      <path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+const navClass = ({ isActive }) =>
+  `flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13px] font-semibold ${
+    isActive ? 'bg-nav-active text-olive' : 'text-charcoal hover:bg-sand/40'
+  }`;
+
 function initials(name = '') {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return (parts[0]?.[0] ?? 'A') + (parts[1]?.[0] ?? '');
@@ -23,6 +39,7 @@ const CRUMBS = [
   [/^\/pois$/, 'Quản lý POI'],
   [/^\/pois\/new$/, 'Tạo POI'],
   [/^\/pois\/\d+$/, 'Chi tiết & chỉnh sửa POI'],
+  [/^\/access-qrs$/, 'QR truy cập'],
 ];
 
 export default function Layout() {
@@ -48,20 +65,26 @@ export default function Layout() {
         <nav className="flex gap-1 px-3 py-2 md:flex-col">
           {/* Only ADMIN owns POI content (UC07); other roles have no implemented page yet. */}
           {isAdmin && (
-            <NavLink
-              to="/pois"
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13px] font-semibold ${
-                  isActive ? 'bg-nav-active text-olive' : 'text-charcoal hover:bg-sand/40'
-                }`
-              }
-            >
+            <NavLink to="/pois" className={navClass}>
               {({ isActive }) => (
                 <>
                   <span aria-hidden="true" className={isActive ? 'text-olive' : 'text-muted'}>
                     <MapPinIcon />
                   </span>
                   Quản lý POI
+                </>
+              )}
+            </NavLink>
+          )}
+          {/* UC02: Admin issues visitor QR codes until the Seller flow (UC12) exists. */}
+          {isAdmin && (
+            <NavLink to="/access-qrs" className={navClass}>
+              {({ isActive }) => (
+                <>
+                  <span aria-hidden="true" className={isActive ? 'text-olive' : 'text-muted'}>
+                    <QrIcon />
+                  </span>
+                  QR truy cập
                 </>
               )}
             </NavLink>
@@ -96,7 +119,7 @@ export default function Layout() {
             Admin
             {crumb && <span className="text-charcoal"> / {crumb}</span>}
           </p>
-          {isAdmin && pathname !== '/pois/new' && (
+          {isAdmin && pathname.startsWith('/pois') && pathname !== '/pois/new' && (
             <NavLink
               to="/pois/new"
               className="inline-flex items-center gap-2 rounded-lg bg-olive px-4 py-2 text-[13px] font-semibold text-paper hover:bg-olive-dark"

@@ -178,6 +178,49 @@ on('GET', '/api/v1/auth/me', () => ACCOUNT);
 on('GET', '/api/v1/admin/languages', () => LANGUAGES);
 on('GET', '/api/v1/admin/tts/status', () => TTS_STATUS);
 
+// ---------- UC02 access QR codes ----------
+
+const qrSummary = ({ token: _t, ...qr }) => qr;
+const qrList = () => (db.accessQrs ??= []);
+
+on('GET', '/api/v1/admin/access-qrs', ({ query }) => {
+  const page = Number(query.get('page') || 0);
+  const size = Number(query.get('size') || 20);
+  const status = query.get('status');
+  const items = qrList().filter((q) => !status || q.status === status).slice().reverse();
+  return {
+    items: items.slice(page * size, page * size + size).map(qrSummary),
+    page,
+    size,
+    totalItems: items.length,
+    totalPages: Math.ceil(items.length / size),
+  };
+});
+
+on('POST', '/api/v1/admin/access-qrs', ({ body }) => {
+  const token = `MOCK-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
+  const qr = {
+    id: nextId(),
+    status: 'ISSUED',
+    packageCode: 'DEMO_24H',
+    durationMinutes: 1440,
+    note: body?.note?.trim() || null,
+    createdAt: now(),
+    redeemedAt: null,
+    revokedAt: null,
+    token,
+  };
+  qrList().push(qr);
+  return { ...qrSummary(qr), qrToken: token, activationUrl: `http://localhost:5174/activate?t=${token}` };
+});
+
+on('POST', '/api/v1/admin/access-qrs/:id/revoke', ({ params }) => {
+  const qr = qrList().find((q) => q.id === Number(params.id));
+  if (!qr) throw fail(404, 'NOT_FOUND', 'Mã QR không tồn tại');
+  if (qr.status !== 'REVOKED') Object.assign(qr, { status: 'REVOKED', revokedAt: now() });
+  return qrSummary(qr);
+});
+
 // ---------- POI ----------
 
 on('GET', '/api/v1/admin/pois', ({ query }) => {
