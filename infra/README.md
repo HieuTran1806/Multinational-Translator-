@@ -21,8 +21,8 @@ docker compose --env-file infra/.env -f infra/docker-compose.yml up --build -d
 docker compose --env-file infra/.env -f infra/docker-compose.yml ps
 ```
 
-Backend: http://localhost:8080  
-Health: http://localhost:8080/actuator/health  
+Backend: http://localhost:8080
+Health: http://localhost:8080/actuator/health
 Readiness: http://localhost:8080/actuator/health/readiness
 
 Profile `dev` chạy Flyway migrations và nạp dữ liệu demo. Để chạy Admin, xem [README gốc](../README.md#3-khởi-động-admin-web).

@@ -110,4 +110,3 @@ describe('NarrationPlayer (UC05 UI)', () => {
     expect(audio().currentTime).toBe(42);
   });
 });
-
