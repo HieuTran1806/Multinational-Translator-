@@ -4,6 +4,7 @@ import 'leaflet.markercluster';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import { useT } from '../../i18n/LanguageContext.jsx';
 
 /** Centered on the demo area; re-fit to the actual markers as soon as they load. */
 const INITIAL_VIEW = { center: [11.13, 106.48], zoom: 12 };
@@ -32,13 +33,13 @@ const pinIcon = () =>
     popupAnchor: [0, -30],
   });
 
-function popupNode(poi, onOpen) {
+function popupNode(poi, onOpen, detailsLabel) {
   const div = document.createElement('div');
   div.className = 'tm-popup';
   div.innerHTML =
     `<strong class="tm-popup-name">${escapeHtml(poi.name)}</strong>` +
     (poi.category ? `<div class="tm-popup-meta">${escapeHtml(poi.category)}</div>` : '') +
-    '<button type="button" class="tm-popup-btn">Xem chi tiết</button>';
+    `<button type="button" class="tm-popup-btn">${escapeHtml(detailsLabel)}</button>`;
   div.querySelector('button').addEventListener('click', () => onOpen?.(poi));
   return div;
 }
@@ -49,6 +50,8 @@ function popupNode(poi, onOpen) {
  * (A1 — denial keeps the map usable) and tile-failure detection with retry (E1).
  */
 export default function PoiMap({ pois, onOpen }) {
+  const t = useT();
+  const tRef = useRef(t);
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const clusterRef = useRef(null);
@@ -62,7 +65,8 @@ export default function PoiMap({ pois, onOpen }) {
 
   useEffect(() => {
     onOpenRef.current = onOpen;
-  }, [onOpen]);
+    tRef.current = t;
+  }, [onOpen, t]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -113,7 +117,7 @@ export default function PoiMap({ pois, onOpen }) {
     cluster.clearLayers();
     for (const poi of pois) {
       const marker = L.marker([poi.latitude, poi.longitude], { title: poi.name, icon: pinIcon() });
-      marker.bindPopup(() => popupNode(poi, (p) => onOpenRef.current?.(p)), { closeButton: false, minWidth: 180 });
+      marker.bindPopup(() => popupNode(poi, (p) => onOpenRef.current?.(p), tRef.current('map.details')), { closeButton: false, minWidth: 180 });
       cluster.addLayer(marker);
     }
     if (pois.length > 0) {
@@ -135,7 +139,7 @@ export default function PoiMap({ pois, onOpen }) {
     if (!map) return;
     setGeoNotice(null);
     if (!navigator.geolocation) {
-      setGeoNotice('Thiết bị không hỗ trợ định vị vị trí. Bạn vẫn có thể khám phá bản đồ thủ công.');
+      setGeoNotice(t('map.geoUnsupported'));
       return;
     }
     setGeoBusy(true);
@@ -153,7 +157,7 @@ export default function PoiMap({ pois, onOpen }) {
       () => {
         // A1 — permission denied or unavailable: keep exploring from the current/default center.
         setGeoBusy(false);
-        setGeoNotice('Không xác định được vị trí của bạn. Bạn vẫn có thể khám phá bản đồ thủ công.');
+        setGeoNotice(t('map.geoFailed'));
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 },
     );
@@ -166,7 +170,7 @@ export default function PoiMap({ pois, onOpen }) {
 
   return (
     <div className="relative h-full w-full">
-      <div ref={containerRef} className="h-full w-full" role="application" aria-label="Bản đồ các điểm tham quan" />
+      <div ref={containerRef} className="h-full w-full" role="application" aria-label={t('map.aria')} />
 
       <div className="absolute right-3 top-3 z-[1000] flex flex-col items-end gap-2">
         <button
@@ -175,7 +179,7 @@ export default function PoiMap({ pois, onOpen }) {
           disabled={geoBusy}
           className="inline-flex items-center gap-2 rounded-lg border border-stone/30 bg-white px-3 py-2 text-sm font-semibold text-charcoal shadow hover:bg-sand/60 disabled:opacity-60"
         >
-          {geoBusy ? 'Đang định vị…' : 'Vị trí của tôi'}
+          {geoBusy ? t('map.locating') : t('map.myLocation')}
         </button>
         {pois.length > 0 && (
           <button
@@ -183,7 +187,7 @@ export default function PoiMap({ pois, onOpen }) {
             onClick={fitToPois}
             className="inline-flex items-center gap-2 rounded-lg border border-olive/40 bg-white px-3 py-2 text-sm font-semibold text-olive shadow hover:bg-sand/60"
           >
-            Về khu vực địa điểm
+            {t('map.backToPois')}
           </button>
         )}
       </div>
@@ -202,13 +206,13 @@ export default function PoiMap({ pois, onOpen }) {
           role="alert"
           className="absolute inset-x-3 top-3 z-[1000] flex items-center justify-between gap-3 rounded-lg border border-danger/40 bg-white px-3 py-2 text-sm text-danger shadow"
         >
-          <span>Dịch vụ bản đồ hiện không khả dụng. Vui lòng thử lại.</span>
+          <span>{t('map.tilesFailed')}</span>
           <button
             type="button"
             onClick={retryMap}
             className="shrink-0 rounded-md bg-danger px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90"
           >
-            Tải lại bản đồ
+            {t('map.reload')}
           </button>
         </div>
       )}

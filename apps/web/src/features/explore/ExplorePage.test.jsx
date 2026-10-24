@@ -3,12 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { LanguageProvider } from '../../i18n/LanguageContext.jsx';
+import { AccessProvider } from '../../access/AccessContext.jsx';
 import Layout from '../../components/Layout.jsx';
 import ExplorePage from './ExplorePage.jsx';
 
 vi.mock('./PoiMap.jsx', () => ({ default: () => <div data-testid="poi-map" /> }));
 vi.mock('../../api/endpoints.js', () => ({
   publicApi: { languages: vi.fn(), pois: vi.fn() },
+  accessApi: { me: vi.fn(), redeem: vi.fn() },
 }));
 import { publicApi } from '../../api/endpoints.js';
 
@@ -38,14 +40,16 @@ function LocationProbe() {
 function renderExplore() {
   return render(
     <LanguageProvider>
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<ExplorePage />} />
-          </Route>
-          <Route path="/pois/:id" element={<LocationProbe />} />
-        </Routes>
-      </MemoryRouter>
+      <AccessProvider>
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<ExplorePage />} />
+            </Route>
+            <Route path="/pois/:id" element={<LocationProbe />} />
+          </Routes>
+        </MemoryRouter>
+      </AccessProvider>
     </LanguageProvider>,
   );
 }
@@ -116,7 +120,7 @@ describe('ExplorePage (UC03 + search)', () => {
     renderExplore();
     await screen.findByText('Địa đạo Bến Dược');
 
-    await user.selectOptions(screen.getByLabelText('Ngôn ngữ thuyết minh'), 'en');
+    await user.selectOptions(screen.getByLabelText('Ngôn ngữ'), 'en');
     await waitFor(() => expect(poisMock).toHaveBeenCalledWith(expect.objectContaining({ lang: 'en' })));
   });
 });

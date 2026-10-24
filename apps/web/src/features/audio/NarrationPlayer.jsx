@@ -1,5 +1,6 @@
 import { useNarrationPlayer, formatTime } from './useNarrationPlayer.js';
 import { Alert, Button } from '../../components/ui.jsx';
+import { useT } from '../../i18n/LanguageContext.jsx';
 
 /**
  * UC05 player UI: play / pause / resume / stop, seek bar with progress, and explicit error + retry
@@ -7,17 +8,24 @@ import { Alert, Button } from '../../components/ui.jsx';
  * handled by the detail page (A2).
  */
 export default function NarrationPlayer({ audioUrl }) {
+  const t = useT();
   const { status, position, duration, error, play, pause, stop, seekTo, retry } = useNarrationPlayer(audioUrl);
 
   const ready = status !== 'idle' || position > 0;
   const mainLabel =
-    status === 'playing' ? 'Tạm dừng' : status === 'paused' ? 'Tiếp tục' : status === 'ended' ? 'Phát lại' : 'Phát';
+    status === 'playing'
+      ? t('player.pause')
+      : status === 'paused'
+        ? t('player.resume')
+        : status === 'ended'
+          ? t('player.replay')
+          : t('player.play');
   const mainAction = status === 'playing' ? pause : play;
 
   return (
     <div
       role="group"
-      aria-label="Trình phát thuyết minh"
+      aria-label={t('player.group')}
       className="rounded-xl border border-stone/25 bg-white p-4 shadow-sm"
     >
       <div className="flex items-center gap-3">
@@ -46,8 +54,8 @@ export default function NarrationPlayer({ audioUrl }) {
           className="!h-11 !w-11 !rounded-full !p-0"
           onClick={stop}
           disabled={status === 'idle' || status === 'loading'}
-          aria-label="Dừng"
-          title="Dừng"
+          aria-label={t('player.stop')}
+          title={t('player.stop')}
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
             <rect x="6" y="6" width="12" height="12" rx="1.5" />
@@ -56,7 +64,7 @@ export default function NarrationPlayer({ audioUrl }) {
 
         <div className="min-w-0 flex-1">
           <label htmlFor="narration-seek" className="sr-only">
-            Vị trí phát
+            {t('player.seek')}
           </label>
           <input
             id="narration-seek"
@@ -78,30 +86,30 @@ export default function NarrationPlayer({ audioUrl }) {
 
         <span className="sr-only" role="status">
           {status === 'playing'
-            ? 'Đang phát'
+            ? t('player.s.playing')
             : status === 'paused'
-              ? 'Đã tạm dừng'
+              ? t('player.s.paused')
               : status === 'ended'
-                ? 'Đã phát xong'
+                ? t('player.s.ended')
                 : status === 'loading'
-                  ? 'Đang tải audio'
-                  : 'Sẵn sàng phát'}
+                  ? t('player.s.loading')
+                  : t('player.s.ready')}
         </span>
       </div>
 
       {status === 'ended' && (
         <p className="mt-2 text-xs font-medium text-forest" role="status">
-          Đã phát xong đoạn thuyết minh.
+          {t('player.endedNote')}
         </p>
       )}
 
       {error && (
         <Alert
           kind="error"
-          title="Không phát được thuyết minh"
+          title={t('player.errorTitle')}
           action={
             <Button variant="secondary" onClick={retry}>
-              Thử lại
+              {t('common.retry')}
             </Button>
           }
           className="mt-3"
@@ -111,7 +119,7 @@ export default function NarrationPlayer({ audioUrl }) {
       )}
 
       {!error && !ready && (
-        <p className="mt-2 text-xs text-stone">Bấm phát để nghe thuyết minh theo ngôn ngữ đã chọn.</p>
+        <p className="mt-2 text-xs text-stone">{t('player.hint')}</p>
       )}
     </div>
   );

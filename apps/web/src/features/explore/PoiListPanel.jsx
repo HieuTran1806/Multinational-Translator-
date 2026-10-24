@@ -1,4 +1,5 @@
-import { mediaUrl } from '../../api/client.js';
+import ProtectedImage from '../../components/ProtectedImage.jsx';
+import { useT } from '../../i18n/LanguageContext.jsx';
 import { languageLabel } from '../../i18n/languages.js';
 import { Alert, Badge, Button, Skeleton } from '../../components/ui.jsx';
 
@@ -7,11 +8,12 @@ import { Alert, Badge, Button, Skeleton } from '../../components/ui.jsx';
  * driven by the same filtered result set). API failures surface here with a retry action (E2).
  */
 export default function PoiListPanel({ pois, results, query, onQuery, loading, error, onRetry, onOpen, languages }) {
+  const t = useT();
   return (
-    <section aria-label="Danh sách địa điểm" className="flex min-h-0 w-full flex-col border-stone/20 bg-shell md:w-96 md:border-r">
+    <section aria-label={t('list.region')} className="flex min-h-0 w-full flex-col border-stone/20 bg-shell md:w-96 md:border-r">
       <div className="shrink-0 space-y-2 border-b border-shell-border bg-white/80 p-3">
         <label htmlFor="poi-search" className="sr-only">
-          Tìm kiếm địa điểm
+          {t('list.searchLabel')}
         </label>
         <div className="relative">
           <svg
@@ -30,13 +32,13 @@ export default function PoiListPanel({ pois, results, query, onQuery, loading, e
             type="search"
             value={query}
             onChange={(e) => onQuery(e.target.value)}
-            placeholder="Tìm theo tên, danh mục… (vd: ben duoc)"
+            placeholder={t('list.searchPlaceholder')}
             className="w-full rounded-lg border border-stone/40 bg-white py-2 pl-9 pr-3 text-sm focus:border-olive focus:outline-none focus:ring-2 focus:ring-olive/30"
             autoComplete="off"
           />
         </div>
         <p className="text-xs text-stone" role="status">
-          {loading ? 'Đang tải địa điểm…' : `${results.length}/${pois.length} địa điểm`}
+          {loading ? t('list.loading') : t('list.count', { shown: results.length, total: pois.length })}
         </p>
       </div>
 
@@ -44,17 +46,17 @@ export default function PoiListPanel({ pois, results, query, onQuery, loading, e
         {error ? (
           <Alert
             kind="error"
-            title="Không tải được danh sách địa điểm"
+            title={t('list.loadFailed')}
             action={
               <Button variant="secondary" onClick={onRetry}>
-                Thử lại
+                {t('common.retry')}
               </Button>
             }
           >
             {error.message}
           </Alert>
         ) : loading ? (
-          <ul className="space-y-2" aria-busy="true" aria-label="Đang tải danh sách địa điểm">
+          <ul className="space-y-2" aria-busy="true" aria-label={t('list.loadingAria')}>
             {[0, 1, 2].map((i) => (
               <li key={i} className="flex gap-3 rounded-xl bg-white p-3">
                 <Skeleton className="h-14 w-14 shrink-0" />
@@ -68,11 +70,11 @@ export default function PoiListPanel({ pois, results, query, onQuery, loading, e
         ) : results.length === 0 ? (
           <div className="rounded-xl border border-dashed border-stone/40 bg-white/60 p-6 text-center text-sm text-stone">
             {pois.length === 0
-              ? 'Chưa có địa điểm công khai nào. Vui lòng quay lại sau.'
-              : 'Không tìm thấy địa điểm phù hợp với từ khoá.'}
+              ? t('list.emptyAll')
+              : t('list.emptySearch')}
           </div>
         ) : (
-          <ul className="space-y-2" aria-label="Kết quả tìm kiếm">
+          <ul className="space-y-2" aria-label={t('list.results')}>
             {results.map((poi) => (
               <li key={poi.id}>
                 <button
@@ -81,8 +83,8 @@ export default function PoiListPanel({ pois, results, query, onQuery, loading, e
                   className="flex w-full gap-3 rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-stone/10 transition hover:ring-olive/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-olive/60"
                 >
                   {poi.imageUrl ? (
-                    <img
-                      src={mediaUrl(poi.imageUrl)}
+                    <ProtectedImage
+                      path={poi.imageUrl}
                       alt=""
                       loading="lazy"
                       className="h-14 w-14 shrink-0 rounded-lg object-cover"
@@ -99,7 +101,7 @@ export default function PoiListPanel({ pois, results, query, onQuery, loading, e
                   )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-forest">{poi.name}</span>
-                    <span className="mt-0.5 block text-xs text-stone">{poi.category || 'Điểm tham quan'}</span>
+                    <span className="mt-0.5 block text-xs text-stone">{poi.category || t('poi.defaultCategory')}</span>
                     <span className="mt-1.5 flex flex-wrap gap-1">
                       {(poi.languages ?? []).slice(0, 4).map((code) => (
                         <Badge key={code} className="bg-olive/10 text-forest">

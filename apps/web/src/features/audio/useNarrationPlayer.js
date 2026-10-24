@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useT } from '../../i18n/LanguageContext.jsx';
 
 /**
  * UC05 audio narration player built on a single HTMLAudioElement per source.
@@ -8,17 +9,18 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * position 0. `attempt` re-creates the element so a retry always starts a fresh load (E2).
  */
 
-function errorMessage(audioError, offline) {
-  if (offline) return 'Mất kết nối mạng. Không thể tiếp tục tải audio. Vui lòng kết nối lại và thử lại.';
+/** Message key for an audio failure; translated at render time so a language switch updates it (UC01). */
+function errorKey(audioError, offline) {
+  if (offline) return 'player.err.offline';
   switch (audioError?.code) {
     case 2: // MEDIA_ERR_NETWORK
-      return 'Mất kết nối với máy chủ khi tải audio. Vui lòng kiểm tra mạng và thử lại.';
+      return 'player.err.network';
     case 3: // MEDIA_ERR_DECODE
-      return 'Không thể phát tệp audio này (lỗi giải mã dữ liệu).';
+      return 'player.err.decode';
     case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
-      return 'Audio không khả dụng hoặc định dạng không được trình duyệt hỗ trợ.';
+      return 'player.err.unsupported';
     default:
-      return 'Không tải được audio. Vui lòng thử lại.';
+      return 'player.err.generic';
   }
 }
 
@@ -30,6 +32,7 @@ export function formatTime(seconds) {
 }
 
 export function useNarrationPlayer(audioUrl) {
+  const t = useT();
   const [status, setStatus] = useState('idle');
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -61,13 +64,13 @@ export function useNarrationPlayer(audioUrl) {
     const onMeta = () => setDuration(Number.isFinite(el.duration) ? el.duration : 0);
     const onError = () => {
       setStatus('error');
-      setError(errorMessage(el.error, typeof navigator !== 'undefined' && navigator.onLine === false));
+      setError(errorKey(el.error, typeof navigator !== 'undefined' && navigator.onLine === false));
     };
     const onOffline = () => {
       if (el.paused) return;
       el.pause();
       setStatus('error');
-      setError(errorMessage(el.error, true));
+      setError(errorKey(el.error, true));
     };
     el.addEventListener('play', onPlay);
     el.addEventListener('playing', onPlay);
@@ -107,15 +110,13 @@ export function useNarrationPlayer(audioUrl) {
           if (err?.name === 'AbortError' || err?.name === 'NotSupportedError') return; // handled by the error event
           setStatus('error');
           setError(
-            err?.name === 'NotAllowedError'
-              ? 'Trình duyệt đã chặn việc phát audio. Vui lòng bấm phát lại.'
-              : 'Không phát được audio. Vui lòng thử lại.',
+            err?.name === 'NotAllowedError' ? 'player.err.blocked' : 'player.err.play',
           );
         });
       }
     } catch {
       setStatus('error');
-      setError('Không phát được audio. Vui lòng thử lại.');
+      setError('player.err.play');
     }
   }, []);
 
@@ -156,5 +157,5 @@ export function useNarrationPlayer(audioUrl) {
     setAttempt((a) => a + 1);
   }, []);
 
-  return { status, position, duration, error, play, pause, stop, seekTo, retry };
+  return { status, position, duration, error: error ? t(error) : null, play, pause, stop, seekTo, retry };
 }

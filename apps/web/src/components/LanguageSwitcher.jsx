@@ -2,24 +2,27 @@ import { useId } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { languageLabel } from '../i18n/languages.js';
 
-/** UC01 control surfaced in the header: switches the narration language used by UC03–UC05. */
+/**
+ * UC01 control in the header (also on the scan screen): lists the enabled languages from the backend and
+ * switches UI + content language. If the list cannot be loaded the current language is kept (E1).
+ */
 export default function LanguageSwitcher() {
-  const { lang, setLang, languages, loading, error, reload } = useLanguage();
+  const { lang, setLang, languages, loading, error, reload, t } = useLanguage();
   const id = useId();
 
-  if (error) {
+  if (error && languages.length === 0) {
     return (
       <div className="flex items-center gap-2 text-xs text-paper/90" role="status">
-        <span>Không tải được danh sách ngôn ngữ</span>
+        <span className="hidden min-[420px]:inline">{t('lang.loadFailed')}</span>
         <button type="button" onClick={reload} className="font-semibold underline hover:text-sand">
-          Thử lại
+          {t('common.retry')}
         </button>
       </div>
     );
   }
 
   if (loading && languages.length === 0) {
-    return <span className="text-xs text-paper/80">Đang tải ngôn ngữ…</span>;
+    return <span className="text-xs text-paper/80">{t('lang.loading')}</span>;
   }
 
   const options = languages.length ? languages : [{ code: lang, name: lang, nativeName: lang }];
@@ -27,14 +30,14 @@ export default function LanguageSwitcher() {
   return (
     <div className="flex items-center gap-2">
       <label htmlFor={id} className="sr-only">
-        Ngôn ngữ thuyết minh
+        {t('lang.label')}
       </label>
       <select
         id={id}
         value={lang}
         onChange={(e) => setLang(e.target.value)}
         className="rounded-lg border border-white/30 bg-olive-dark px-2.5 py-1.5 text-sm font-medium text-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-sand/70"
-        aria-label="Ngôn ngữ thuyết minh"
+        aria-label={t('lang.label')}
       >
         {options.map((l) => (
           <option key={l.code} value={l.code} className="text-charcoal">

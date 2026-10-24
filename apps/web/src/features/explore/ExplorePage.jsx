@@ -12,7 +12,7 @@ import { usePublicPois } from './usePublicPois.js';
  * list selection both open the POI detail page (UC04).
  */
 export default function ExplorePage() {
-  const { lang, languages } = useLanguage();
+  const { lang, languages, t } = useLanguage();
   const navigate = useNavigate();
   const { pois, loading, error, reload } = usePublicPois(lang);
   const [query, setQuery] = useState('');
@@ -43,7 +43,7 @@ export default function ExplorePage() {
           role="alert"
           className="absolute inset-x-0 top-0 z-[1100] bg-danger px-4 py-2 text-center text-sm font-medium text-white"
         >
-          Mất kết nối mạng. Bản đồ, danh sách và thuyết minh cần kết nối internet để hoạt động.
+          {t('offline.banner')}
         </div>
       )}
     </div>

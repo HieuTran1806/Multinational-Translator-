@@ -3,8 +3,8 @@ import { LANGUAGES, MOCK_POIS, audioView } from './fixtures.js';
 
 /**
  * Fake backend for UI work without the real services. Enabled by VITE_USE_MOCK=true (see
- * src/config.js). Read-only and stateless (the visitor app never writes), returning the same JSON
- * shapes and error codes as the real public API (docs/architecture/api.md).
+ * src/config.js). Stateless apart from the UC02 grant the app itself keeps in localStorage, returning
+ * the same JSON shapes and error codes as the real User API (docs/architecture/api.md).
  */
 
 const DEFAULT_LANGUAGE = 'vi';
@@ -63,10 +63,32 @@ function detail(poi, requested) {
   };
 }
 
-export async function mockRequest(path, { signal } = {}) {
+/**
+ * UC02 in mock mode: any code activates a 24 h grant except these, which reproduce the backend errors.
+ * `MOCK-USED` → 409 already used, `MOCK-BAD` → 400 invalid/revoked.
+ */
+function mockRedeem(body) {
+  const token = String(body?.qrToken ?? '').trim();
+  if (token === 'MOCK-USED') {
+    throw fail(409, 'ACCESS_QR_ALREADY_USED', 'Mã QR này đã được sử dụng. Vui lòng liên hệ người bán để được hỗ trợ.');
+  }
+  if (!token || token === 'MOCK-BAD') throw fail(400, 'ACCESS_QR_INVALID', 'Mã QR không hợp lệ.');
+  const expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+  return { accessToken: `mock-grant-${token}`, tokenType: 'Bearer', expiresAt, packageCode: 'DEMO_24H' };
+}
+
+export async function mockRequest(path, { method = 'GET', body, signal } = {}) {
   const [pathname, search = ''] = path.split('?');
   await delay(180, signal);
   const query = new URLSearchParams(search);
+
+  if (method === 'POST' && pathname === '/api/v1/public/access/redeem') return mockRedeem(body);
+  if (pathname === '/api/v1/public/access/me') {
+    const grant = JSON.parse(localStorage.getItem('tm.grant') ?? 'null');
+    if (!grant) throw fail(401, 'ACCESS_REQUIRED', 'Vui lòng quét mã QR hợp lệ để sử dụng chức năng này');
+    const remainingSeconds = Math.max(0, Math.floor((new Date(grant.expiresAt).getTime() - Date.now()) / 1000));
+    return { grantId: 1, packageCode: grant.packageCode, expiresAt: grant.expiresAt, remainingSeconds };
+  }
 
   if (pathname === '/api/v1/public/languages') return structuredClone(LANGUAGES);
 

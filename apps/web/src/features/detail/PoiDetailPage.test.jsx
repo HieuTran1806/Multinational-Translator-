@@ -10,6 +10,12 @@ vi.mock('../../api/endpoints.js', () => ({
 }));
 import { publicApi } from '../../api/endpoints.js';
 
+// UC02: images/audio are downloaded with the grant headers and shown through object URLs.
+vi.mock('../../api/client.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  fetchMediaObjectUrl: vi.fn(async (path) => `blob:test${path}`),
+}));
+
 const poiMock = vi.mocked(publicApi.poi);
 const languagesMock = vi.mocked(publicApi.languages);
 
@@ -108,8 +114,8 @@ describe('PoiDetailPage (UC04)', () => {
 
     expect(await screen.findByRole('heading', { name: 'Địa đạo Bến Dược' })).toBeInTheDocument();
     expect(screen.getByText('Khu di tích thuộc hệ thống địa đạo Củ Chi.')).toBeInTheDocument();
-    expect(screen.getByAltText('Địa đạo Bến Dược')).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'Trình phát thuyết minh' })).toBeInTheDocument();
+    expect(await screen.findByAltText('Địa đạo Bến Dược')).toHaveAttribute('src', 'blob:test/api/v1/public/pois/1/image');
+    expect(await screen.findByRole('group', { name: 'Trình phát thuyết minh' })).toBeInTheDocument();
     expect(poiMock).toHaveBeenCalledWith('1', 'vi');
   });
 
