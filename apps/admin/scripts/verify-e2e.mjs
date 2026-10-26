@@ -1,6 +1,6 @@
 /**
  * End-to-end check of the admin POI/translation/media flow against a REAL backend + database,
- * plus the public (User Mobile) API that must see the same data.
+ * plus the public (User web) API that must see the same data.
  *
  *   E2E_BASE_URL=http://127.0.0.1:8080 \
  *   E2E_ADMIN_USERNAME=admin01 E2E_ADMIN_PASSWORD=123456 \
@@ -21,15 +21,24 @@ const SUPER = process.env.E2E_SUPER_USERNAME
 const results = [];
 let createdIds = [];
 let token = null;
+let grant = null; // { accessToken, deviceId } — visitor access for /api/v1/public/**
+let qrId = null;
 
 function check(name, condition, detail = '') {
   results.push({ name, ok: !!condition, detail });
   if (!condition) throw new Error(`${name}${detail ? ' — ' + detail : ''}`);
-}
+  }
 
-async function api(path, { method = 'GET', body, form, auth = token, headers = {} } = {}) {
+async function api(path, { method = 'GET', body, form, auth = token, visitor = false, headers = {} } = {}) {
   const h = { Accept: 'application/json', ...headers };
-  if (auth) h.Authorization = `Bearer ${auth}`;
+  if (visitor) {
+    // Public visitor APIs require a redeemed grant token bound to the device id.
+    if (!grant) throw new Error('visitor access requested before a grant was redeemed');
+    h.Authorization = `Bearer ${grant.accessToken}`;
+    h['X-Device-Id'] = grant.deviceId;
+  } else if (auth) {
+    h.Authorization = `Bearer ${auth}`;
+  }
   let payload;
   if (form) payload = form;
   else if (body !== undefined) {
@@ -210,14 +219,42 @@ async function main() {
   const published = await expectStatus(`/api/v1/admin/pois/${id}/publish`, 200, { method: 'POST' });
   check('công khai POI thành công sau khi đủ nội dung + audio', published.data.status === 'PUBLISHED');
 
-  // ---- 10. User Mobile (public) contract --------------------------------
-  const publicList = await expectStatus(`/api/v1/public/pois?page=0&size=100&lang=en`, 200, { auth: null });
+  // ---- 10. User web (public) contract --------------------------------
+  // Public visitor APIs are NOT open: without a redeemed grant they must reject.
+  const noGrant = await api(`/api/v1/public/pois?page=0&size=100`, { auth: null });
+  check('public list không có grant → 401 ACCESS_REQUIRED',
+    noGrant.status === 401 && noGrant.data?.code === 'ACCESS_REQUIRED', `${noGrant.status} ${noGrant.data?.code}`);
+
+  // Real UC02 flow: admin issues a one-time QR, the visitor redeems it for a device-bound grant.
+  const qr = (await expectStatus('/api/v1/admin/access-qrs', 201, {
+    method: 'POST', body: { note: `E2E ${suffix}` },
+  })).data;
+  check('tạo QR truy cập nhận qrToken (hiện đúng một lần)', !!qr.qrToken && qr.status === 'ISSUED');
+  qrId = qr.id;
+  grant = { accessToken: null, deviceId: `e2e-device-${suffix.replace(/-/g, '')}` };
+  const redeemed = await expectStatus('/api/v1/public/access/redeem', 200, {
+    method: 'POST', auth: null, body: { qrToken: qr.qrToken, deviceId: grant.deviceId },
+  });
+  grant.accessToken = redeemed.data.accessToken;
+  check('redeem QR nhận grant token có thời hạn', !!grant.accessToken && redeemed.data.expiresAt != null);
+  const grantMe = await expectStatus('/api/v1/public/access/me', 200, { visitor: true });
+  check('GET /public/access/me trả trạng thái grant', grantMe.data.remainingSeconds > 0);
+  const grantOnAccount = await api('/api/v1/auth/me', { auth: grant.accessToken, headers: { 'X-Device-Id': grant.deviceId } });
+  check('grant của visitor không dùng được trên API tài khoản (/auth/me)', grantOnAccount.status === 401 || grantOnAccount.status === 403,
+    `${grantOnAccount.status}`);
+  const reused = await api('/api/v1/public/access/redeem', {
+    method: 'POST', auth: null, body: { qrToken: qr.qrToken, deviceId: grant.deviceId },
+  });
+  check('redeem QR lần hai → bị từ chối (QR một lần)', reused.status === 409 || reused.status === 400,
+    `${reused.status} ${reused.data?.code}`);
+
+  const publicList = await expectStatus(`/api/v1/public/pois?page=0&size=100&lang=en`, 200, { visitor: true });
   const inList = publicList.data.items.find((p) => p.id === id);
   check('POI đã công khai xuất hiện trong danh sách public', !!inList);
   check('danh sách public trả tên theo ngôn ngữ yêu cầu', inList.name === 'Test tunnel', inList.name);
   check('danh sách public có URL ảnh tương đối', inList.imageUrl === `/api/v1/public/pois/${id}/image`, inList.imageUrl);
 
-  const detailEn = (await expectStatus(`/api/v1/public/pois/${id}?lang=en`, 200, { auth: null })).data;
+  const detailEn = (await expectStatus(`/api/v1/public/pois/${id}?lang=en`, 200, { visitor: true })).data;
   check('chi tiết public: ngôn ngữ + nội dung khớp bản dịch đã lưu',
     detailEn.language === 'en' && detailEn.fallback === false && detailEn.narrationText === enText);
   check('chi tiết public có metadata audio hiện hành',
@@ -226,35 +263,35 @@ async function main() {
   check('chi tiết public liệt kê đủ ngôn ngữ có nội dung',
     detailEn.availableLanguages?.includes('vi') && detailEn.availableLanguages?.includes('en'));
 
-  const publicAudio = await api(detailEn.audio.url, { headers: { Accept: '*/*' }, auth: null });
+  const publicAudio = await api(detailEn.audio.url, { headers: { Accept: '*/*' }, visitor: true });
   check('audio public phát được đúng bytes', publicAudio.status === 200 && Buffer.from(publicAudio.data).equals(wavBytes));
-  const publicImage = await api(detailEn.imageUrl, { headers: { Accept: '*/*' }, auth: null });
+  const publicImage = await api(detailEn.imageUrl, { headers: { Accept: '*/*' }, visitor: true });
   check('ảnh public tải được', publicImage.status === 200 && Buffer.from(publicImage.data).equals(pngBytes));
 
-  const fallback = (await expectStatus(`/api/v1/public/pois/${id}?lang=fr`, 200, { auth: null })).data;
+  const fallback = (await expectStatus(`/api/v1/public/pois/${id}?lang=fr`, 200, { visitor: true })).data;
   check('ngôn ngữ chưa có bản dịch → fallback=true về ngôn ngữ mặc định',
     fallback.fallback === true && fallback.language === 'vi', `${fallback.language} ${fallback.fallback}`);
 
-  const manifest = (await expectStatus(`/api/v1/public/pois/${id}/offline-manifest`, 200, { auth: null })).data;
+  const manifest = (await expectStatus(`/api/v1/public/pois/${id}/offline-manifest`, 200, { visitor: true })).data;
   const enOffline = manifest.translations.find((t) => t.languageCode === 'en');
   check('manifest ngoại tuyến chứa bản dịch + sha256 audio',
     enOffline?.narrationText === enText && enOffline.audio?.sha256?.length === 64 && !!manifest.manifestVersion);
 
-  // ---- 11. Draft is invisible to User Mobile ----------------------------
+  // ---- 11. Draft is invisible to User web ----------------------------
   const draft = (await expectStatus('/api/v1/admin/pois', 201, {
     method: 'POST',
     body: { code: DRAFT_CODE, defaultName: 'POI nháp', latitude: 11.1, longitude: 106.4 },
   })).data;
   createdIds.push(draft.id);
-  await expectStatus(`/api/v1/public/pois/${draft.id}`, 404, { auth: null });
+  await expectStatus(`/api/v1/public/pois/${draft.id}`, 404, { visitor: true });
   check('POI nháp không có trong danh sách public',
-    !(await api('/api/v1/public/pois?page=0&size=100', { auth: null })).data.items.some((p) => p.id === draft.id));
+    !(await api('/api/v1/public/pois?page=0&size=100', { visitor: true })).data.items.some((p) => p.id === draft.id));
 
   // ---- 12. Unpublish hides content again --------------------------------
   const unpublished = await expectStatus(`/api/v1/admin/pois/${id}/unpublish`, 200, { method: 'POST' });
   check('gỡ công khai → DRAFT', unpublished.data.status === 'DRAFT');
-  await expectStatus(`/api/v1/public/pois/${id}`, 404, { auth: null });
-  const hiddenAudio = await api(`/api/v1/public/audio/${audioUp.data.id}`, { headers: { Accept: '*/*' }, auth: null });
+  await expectStatus(`/api/v1/public/pois/${id}`, 404, { visitor: true });
+  const hiddenAudio = await api(`/api/v1/public/audio/${audioUp.data.id}`, { headers: { Accept: '*/*' }, visitor: true });
   check('audio của POI đã gỡ công khai không còn truy cập được', hiddenAudio.status === 404, `${hiddenAudio.status}`);
 
   // ---- 13. Soft delete ---------------------------------------------------
@@ -279,12 +316,21 @@ async function main() {
     const suPublish = await api(`/api/v1/admin/pois/${id}/publish`, { method: 'POST', auth: suLogin.data.accessToken });
     check('Super Admin bị từ chối công khai POI (403)', suPublish.status === 403, `${suPublish.status}`);
   }
+
+  // ---- 15. Revoking the QR kills the visitor grant ------------------------
+  await expectStatus(`/api/v1/admin/access-qrs/${qr.id}/revoke`, 200, { method: 'POST' });
+  const revokedAccess = await api(`/api/v1/public/pois?page=0&size=100`, { visitor: true });
+  check('thu hồi QR → grant không còn tác dụng (401)', revokedAccess.status === 401,
+    `${revokedAccess.status} ${revokedAccess.data?.code}`);
 }
 
 async function cleanup() {
   if (!token) return;
   for (const id of createdIds) {
     await api(`/api/v1/admin/pois/${id}`, { method: 'DELETE' }).catch(() => {});
+  }
+  if (qrId) {
+    await api(`/api/v1/admin/access-qrs/${qrId}/revoke`, { method: 'POST' }).catch(() => {});
   }
 }
 
