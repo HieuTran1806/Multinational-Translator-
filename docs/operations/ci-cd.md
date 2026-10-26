@@ -15,6 +15,7 @@ Workflow chạy khi push lên bất kỳ branch nào và khi mở/cập nhật P
 | Contract documentation | Tài liệu baseline bắt buộc tồn tại; `git diff --check` |
 | Backend unit tests | Java 21 + Maven Wrapper, `./mvnw clean test` |
 | Admin quality checks | Node.js 22, `npm ci`, `npm run lint`, `npm test`, `npm run build` |
+| Web quality checks | Node.js 22, `npm ci`, `npm run lint`, `npm test`, `npm run build` (`apps/web`) |
 
 CI không cần credentials của production. Dependencies được cài từ lockfile/wrapper; job có timeout, quyền `contents: read` và concurrency cancellation.
 

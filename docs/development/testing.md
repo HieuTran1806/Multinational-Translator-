@@ -1,6 +1,6 @@
 # Kiểm thử
 
-> Các test offline hiện có trong bảng bên dưới là kiểm thử legacy của code hiện tại; chúng không phải tiêu chí nghiệm thu cho ứng dụng User online-only và không có nghĩa tính năng offline nằm trong phạm vi mục tiêu.
+> Ghi chú phạm vi: các dòng cũ nhắc đến test của ứng dụng di động (`offlineManager.test.ts`, `apiClient.test.ts`…) đã được loại bỏ vì `apps/mobile` không còn trong nhánh web-only này. Bảng dưới đây chỉ liệt kê kiểm thử đang tồn tại thực tế.
 
 | Yêu cầu | Test | Thành phần |
 |---|---|---|
@@ -15,12 +15,7 @@
 | Job bị gián đoạn được phục hồi | `TtsIT.interruptedRunningJobIsRequeuedOnRestart` | kiểm thử tích hợp backend |
 | Validation, upload sai định dạng, phân trang, 404/409 | `PoiFlowIT.validationAndUploadRules`, `cannotPublishWithoutContentAndDuplicateCodeConflicts`, `adminListIsPaginated` | kiểm thử tích hợp backend |
 | Lưu trữ an toàn (path traversal), nhận dạng định dạng | `LocalMediaStorageTest`, `DetectedMediaTest` | kiểm thử đơn vị backend |
-| Dữ liệu offline đã tải vẫn mở được khi mất mạng | `offlineManager.test.ts` ("serves it offline") | mobile |
-| Kiểm tra toàn vẹn, retry, file hỏng/mất, cập nhật, xoá | `offlineManager.test.ts` | mobile |
-| Thiếu giọng offline được xử lý rõ ràng; không dùng giọng sai ngôn ngữ | `voiceSelection.test.ts` | mobile |
-| Ưu tiên nguồn phát, không dùng audio phiên bản cũ | `sourceResolver.test.ts` | mobile |
-| Đổi nguồn/ngôn ngữ không phát chồng | `narrationController.test.ts` | mobile |
-| Lỗi API thống nhất, 401 đưa về đăng nhập, lỗi mạng | `client.test.js` (admin), `apiClient.test.ts` (mobile) | admin, mobile |
+| Lỗi API thống nhất, 401 đưa về đăng nhập, lỗi mạng | `client.test.js` (admin), `client.test.js` (web) | admin, web |
 | Đăng nhập admin, trạng thái audio/TTS trên giao diện | `LoginPage.test.jsx`, `AudioPanel.test.jsx`, `PoiEditPage.test.js` | admin |
 
 Lệnh chạy: xem README mục "Chạy test". Kiểm thử tích hợp backend cần PostgreSQL (`TEST_DB_URL`); bảng dữ liệu bị `TRUNCATE` trước mỗi test, nên **không trỏ vào DB thật**.

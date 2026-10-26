@@ -1,5 +1,7 @@
 # Kế hoạch, giả định và phiên bản (MVP)
 
+> **Cập nhật 2026-10-24:** các dòng phiên bản React Native/Gradle/react-native-* trong bảng dưới đây là lịch sử của `apps/mobile` — ứng dụng đã bị loại bỏ có chủ đích, dự án hiện web-only (xem `docs/development/mobile.md`).
+
 ## 1. Nguồn thiết kế đã đọc được
 
 Bản Penpot được chia sẻ ("Cu Chi Tunnels Tourism Guide") đã được mở bằng trình duyệt và trích xuất nội dung chữ của 4 trang:

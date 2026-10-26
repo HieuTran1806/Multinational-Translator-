@@ -33,7 +33,7 @@ Triển khai Vercel: [`../../docs/operations/deployment.md`](../../docs/operatio
 
 ## Kiểm chứng đầu cuối với backend thật
 
-`scripts/verify-e2e.mjs` chạy toàn bộ luồng qua API thật (đăng nhập → tạo/sửa POI → bản dịch → ảnh/audio → công khai → đọc lại bằng API public của User Mobile → gỡ công khai → xoá mềm → kiểm tra phân quyền) và tự xoá mềm dữ liệu test:
+`scripts/verify-e2e.mjs` chạy toàn bộ luồng qua API thật (đăng nhập → tạo/sửa POI → bản dịch → ảnh/audio → công khai → đọc lại bằng API public của User web → gỡ công khai → xoá mềm → kiểm tra phân quyền) và tự xoá mềm dữ liệu test:
 
 ```bash
 E2E_BASE_URL=http://127.0.0.1:8080 \

@@ -17,7 +17,7 @@ import vn.edu.thuyetminh.poi.PoiTranslationStore;
 
 /**
  * DEV PROFILE ONLY. Attaches the bundled demo WAV fixtures (simple tones, NOT speech) to the
- * published demo POIs if they have no current audio, so the mobile flow can be demonstrated
+ * published demo POIs if they have no current audio, so the web user flow can be demonstrated
  * without Google Cloud credentials. These files are marked as uploads named "demo-*.wav".
  */
 @Component

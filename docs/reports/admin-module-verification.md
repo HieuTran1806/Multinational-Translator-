@@ -22,7 +22,7 @@ Ngày kiểm chứng: 2026-10-21. Các kiểm thử được thực hiện trên
 | UC07 E1 | Dữ liệu không hợp lệ | lỗi theo trường trên form | 400 `VALIDATION_FAILED` + `fieldErrors` | E2E validation, `SecurityIT` |
 | UC07 E2 | Ghi đè đồng thời | `rowVersion` gửi kèm | 409 `CONFLICT` | E2E stale rowVersion |
 | UC07 E4 | Không đủ quyền | `RequirePoiAdmin`, ẩn nav | 403 `FORBIDDEN` | `App.test.jsx`, `SecurityIT.superAdminCannotManagePoiContent`, E2E |
-| UC04/UC05 (User Mobile) | Dữ liệu Admin lưu phải đọc được bởi app User | — | `GET /public/pois`, `/public/pois/{id}?lang`, `/public/audio/{id}`, `/public/pois/{id}/image`, `/offline-manifest` | E2E: tên/nội dung/audio/ảnh/fallback/manifest |
+| UC04/UC05 (User web) | Dữ liệu Admin lưu phải đọc được bởi app User | — | `GET /public/pois`, `/public/pois/{id}?lang`, `/public/audio/{id}`, `/public/pois/{id}/image`, `/offline-manifest` | E2E: tên/nội dung/audio/ảnh/fallback/manifest |
 
 ## 3. Thay đổi chính
 
@@ -68,7 +68,7 @@ Chưa áp dụng (và lý do):
 | `npm run verify:e2e` (API thật, DB `thuyetminh_e2e`) | PASS | 60/60 kiểm tra |
 | UI thật trên trình duyệt headless (Edge + CDP, dev server + backend 18081) | PASS | đăng nhập bị chặn khi chưa có session; danh sách/sửa/tạo render dữ liệu thật; 0 request lỗi, 0 exception |
 | Persistence sau ghi | PASS | E2E đọc lại POI, bản dịch, ảnh/audio (so sánh bytes), manifest |
-| User Mobile compatibility | PASS | `GET /public/pois`, `/pois/{id}?lang`, `/public/audio/{id}`, ảnh, manifest trả đúng nội dung đã lưu; POI nháp/gỡ công khai trả 404 |
+| User web compatibility | PASS | `GET /public/pois`, `/pois/{id}?lang`, `/public/audio/{id}`, ảnh, manifest trả đúng nội dung đã lưu; POI nháp/gỡ công khai trả 404 |
 | Authorization | PASS | 401 khi không token; 403 với Super Admin; `SecurityIT` |
 
 Môi trường: Java 25 (mã nguồn target 21), Maven Wrapper 3.9.11, Node 24.21, PostgreSQL 16 (Docker), Edge 155 headless.
@@ -77,7 +77,7 @@ Môi trường: Java 25 (mã nguồn target 21), Maven Wrapper 3.9.11, Node 24.2
 
 - E2E dùng PostgreSQL local + storage local (`./target/e2e-media`), không phải môi trường staging/production.
 - Không có Google Cloud TTS credential: luồng TTS chỉ kiểm bằng provider `none` (đã có `TtsIT` với provider giả) — chưa xác minh tạo audio thật từ Google.
-- Chưa kiểm thử trên thiết bị di động thật; tương thích User Mobile được xác minh ở mức contract API public (đối chiếu `apps/mobile/src/api/types.ts` trên nhánh gốc).
+- Chưa kiểm thử trên thiết bị di động thật; tương thích User web được xác minh ở mức contract API public (đối chiếu `apps/mobile/src/api/types.ts` trên nhánh gốc).
 - Chưa có E2E trình duyệt tự động trong CI (script CDP chỉ dùng một lần để kiểm chứng thủ công).
 - Trước khi commit, đã chạy lại `npm run lint`, `npm test` (8 file/28 test) và `npm run build`: đều PASS. `./mvnw verify` chạy lại không hoàn tất do thông tin xác thực PostgreSQL local không khớp; không thay đổi mật khẩu, cấu hình hoặc dữ liệu DB.
 - Các màn hình Figma ngoài phạm vi backend ở mục 4 vẫn chưa có.

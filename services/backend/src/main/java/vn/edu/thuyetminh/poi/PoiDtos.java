@@ -95,7 +95,7 @@ public final class PoiDtos {
                                      int contentVersion, AudioView audio) {
     }
 
-    /** Everything the mobile app needs to use one POI offline. URLs are relative to the API base. */
+    /** Everything the web app needs to use one POI offline. URLs are relative to the API base. */
     public record OfflineManifest(Long poiId, String code, String manifestVersion, Instant generatedAt,
                                   String defaultName, double latitude, double longitude, String imageUrl,
                                   String imageMimeType, String category, double triggerRadius, Instant updatedAt,

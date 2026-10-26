@@ -36,7 +36,7 @@ public class PublicPoiController {
     }
 
     @GetMapping("/{id}/offline-manifest")
-    @Operation(summary = "Manifest để mobile tải nội dung + audio dùng offline")
+    @Operation(summary = "Manifest để web tải nội dung + audio dùng offline")
     public PoiDtos.OfflineManifest manifest(@PathVariable Long id) {
         return service.offlineManifest(id);
     }

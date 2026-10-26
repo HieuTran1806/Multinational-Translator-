@@ -1,5 +1,7 @@
 # Báo cáo kiểm chứng (2026-10-13)
 
+> **Cập nhật 2026-10-24:** `apps/mobile` đã bị loại bỏ có chủ đích; dự án hiện web-only. Các dòng kết quả `apps/mobile` bên dưới chỉ còn giá trị lịch sử (chạy trên nhánh cũ trước khi loại bỏ), không áp dụng cho nhánh hiện tại.
+
 Môi trường phát triển: Linux container, JDK 21.0.12, Maven 3.9.11, Node 22.22.0 / npm 10.9.4, PostgreSQL 16.15, Docker 29.8.2. **Không có** Android SDK, macOS/Xcode, thiết bị thật, thông tin xác thực Google Cloud hay khóa API Maps.
 
 **Giới hạn mạng của môi trường:** chính sách egress chặn `repo.maven.apache.org`, `maven.google.com`, `dl.google.com`, `services.gradle.org`, `registry-1.docker.io` (HTTP 403). Chỉ npm registry và GitHub truy cập được. Hệ quả: **không tải được dependency Maven, Docker image hay Gradle/Android SDK** → backend chưa được biên dịch/test, Docker image và APK chưa được build.

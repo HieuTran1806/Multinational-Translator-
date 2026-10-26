@@ -6,7 +6,9 @@ Bản kiểm kê này được lập từ triển khai trước trên nhánh `Xu
 
 Bản kiểm kê dưới đây dựa trên việc kiểm tra tệp được Git theo dõi và tìm kiếm route/model trong mã nguồn, không dựa trên một lần chạy toàn bộ kiểm thử mới. Hãy xem tên route và trường dữ liệu là hành vi quan sát được từ hệ thống cũ, không phải hợp đồng đích đã được phê duyệt.
 
-## Người 1 — Ứng dụng di động User
+## Người 1 — Ứng dụng User
+
+> **Cập nhật 2026-10-24:** Ứng dụng di động React Native (`apps/mobile`) đã bị loại bỏ có chủ đích; dự án hiện web-only. Ứng dụng User hiện tại là web app `apps/web`. Các quan sát dưới đây là lịch sử từ nhánh cũ.
 
 Đã quan sát:
 - Ứng dụng di động React Native/TypeScript nằm trong `apps/mobile`.
