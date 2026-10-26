@@ -64,6 +64,7 @@ app:
     enabled: ${APP_BOOTSTRAP_ADMIN_ENABLED:false}
     username: ${APP_BOOTSTRAP_ADMIN_USERNAME:}
     password: ${APP_BOOTSTRAP_ADMIN_PASSWORD:}
+    role: ${APP_BOOTSTRAP_ADMIN_ROLE:SUPER_ADMIN}
   storage:
     local-root: ${APP_STORAGE_LOCAL_ROOT:./data/media}
   upload:

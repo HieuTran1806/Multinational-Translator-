@@ -1,5 +1,7 @@
 # Chuẩn bị triển khai (chưa triển khai thật)
 
+> Phương án miễn phí ưu tiên Botkeep + Cloudflare Pages được mô tả tại [deployment-free.md](deployment-free.md). Đây là kế hoạch; chưa tạo workload hoặc public website.
+
 Tài liệu này chỉ mô tả cấu hình. Chưa tạo tài nguyên trả phí và chưa thực hiện triển khai nào.
 
 ## 1. Ứng dụng web Admin trên Vercel
@@ -23,7 +25,7 @@ Image: `services/backend/Dockerfile` (nhiều giai đoạn, chạy bằng ngư�
 |---|---|
 | Cổng | Render cấp biến `PORT`; Spring đọc `server.port=${PORT:8080}` |
 | Đường dẫn kiểm tra tình trạng | `/actuator/health/readiness` (hoặc `/actuator/health`) |
-| Bắt buộc | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `APP_CORS_ALLOWED_ORIGINS=https://admin.<domain>` |
+| Bắt buộc | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `APP_CORS_ALLOWED_ORIGINS=https://web.<domain>,https://admin.<domain>` (chỉ các origin cần thiết) |
 | Tùy chọn | `APP_AUTH_SESSION_TTL`, `APP_TTS_PROVIDER=google`, `GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/gcp-tts.json` (tệp bí mật của Render), `APP_API_DOCS_ENABLED=false` |
 | Admin đầu tiên | Bật `APP_BOOTSTRAP_ADMIN_*` một lần với mật khẩu mạnh trong kho bí mật, rồi tắt |
 
@@ -51,7 +53,7 @@ Thông tin bí mật không bao giờ được đưa vào image, kho mã nguồn
 
 - HTTPS bắt buộc cho backend và admin trong môi trường production (Render/Vercel cấp sẵn chứng chỉ; VPS dùng Caddy/Let's Encrypt).
 - Bản Android **phát hành** chặn HTTP (cleartext chỉ bật cho bản gỡ lỗi) → backend phải là HTTPS.
-- `APP_CORS_ALLOWED_ORIGINS` chỉ chứa tên miền Admin chính xác (không `*`).
+- `APP_CORS_ALLOWED_ORIGINS` chỉ chứa các origin frontend chính xác cần truy cập API (Web và Admin nếu dùng hai site riêng; không `*`).
 - Ứng dụng di động không cần CORS.
 - Sao lưu cơ sở dữ liệu hằng ngày và kiểm tra khôi phục định kỳ.
 

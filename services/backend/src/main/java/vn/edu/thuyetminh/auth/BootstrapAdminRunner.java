@@ -52,7 +52,16 @@ public class BootstrapAdminRunner implements ApplicationRunner {
             log.info("Bootstrap admin '{}' already exists; nothing to do", username);
             return;
         }
-        accounts.save(new Account(username, encoder.encode(password), "Super Admin", AccountRole.SUPER_ADMIN));
-        log.info("Bootstrap admin '{}' created. Disable APP_BOOTSTRAP_ADMIN_ENABLED afterwards.", username);
+        AccountRole role;
+        String configuredRole = b.role() == null ? "SUPER_ADMIN" : b.role().trim();
+        try {
+            role = AccountRole.valueOf(configuredRole.toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("APP_BOOTSTRAP_ADMIN_ROLE must be ADMIN or SUPER_ADMIN");
+        }
+        String displayName = role == AccountRole.ADMIN ? "Project Owner" : "Super Admin";
+        accounts.save(new Account(username, encoder.encode(password), displayName, role));
+        log.info("Bootstrap account '{}' created with role {}. Disable APP_BOOTSTRAP_ADMIN_ENABLED afterwards.",
+                username, role);
     }
 }

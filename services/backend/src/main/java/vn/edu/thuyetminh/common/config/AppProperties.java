@@ -36,7 +36,8 @@ public record AppProperties(
     public record Bootstrap(
             @DefaultValue("false") boolean enabled,
             @DefaultValue("") String username,
-            @DefaultValue("") String password) {
+            @DefaultValue("") String password,
+            @DefaultValue("SUPER_ADMIN") String role) {
     }
 
     public record Storage(@DefaultValue("./data/media") String localRoot) {

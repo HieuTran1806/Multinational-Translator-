@@ -57,3 +57,5 @@ services/backend/data/
 **/*.local.properties
 **/*.local.json
 infra/postgres/data/
+.neon
+node_modules/

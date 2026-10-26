@@ -92,8 +92,11 @@ jobs:
         run: npm run lint
       - name: Unit tests
         run: npm test
-      - name: Production build
-        run: npm run build
+      - name: Production build configuration and bundle
+        env:
+          VITE_API_BASE_URL: https://api.example.invalid
+          VITE_USE_MOCK: 'false'
+        run: npm run build:production
 
   web-quality:
     name: Web (User) lint, tests and build
@@ -116,5 +119,8 @@ jobs:
         run: npm run lint
       - name: Unit tests
         run: npm test
-      - name: Production build
-        run: npm run build
+      - name: Production build configuration and bundle
+        env:
+          VITE_API_BASE_URL: https://api.example.invalid
+          VITE_USE_MOCK: 'false'
+        run: npm run build:production
