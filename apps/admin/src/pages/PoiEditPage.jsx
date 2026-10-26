@@ -9,7 +9,7 @@ const EMPTY = { code: '', defaultName: '', latitude: '', longitude: '', category
 
 function toForm(poi) {
   return poi
-    ? { code: poi.code, defaultName: poi.defaultName, latitude: String(poi.latitude), longitude: String(poi.longitude), category: poi.category ?? '', triggerRadius: String(poi.triggerRadius ?? 50) }
+    ? { code: poi.code ?? '', defaultName: poi.defaultName ?? '', latitude: String(poi.latitude ?? ''), longitude: String(poi.longitude ?? ''), category: poi.category ?? '', triggerRadius: String(poi.triggerRadius ?? 50) }
     : EMPTY;
 }
 
@@ -197,7 +197,10 @@ export default function PoiEditPage() {
     }
   }
 
-  if (loading) {
+  // Covers the create → edit transition: after create we navigate to /pois/{id}
+  // while this component stays mounted, so `poi` is still null for one render
+  // before the effect fetches it.
+  if (loading || (!isNew && !poi)) {
     return (
       <div className="py-20 text-center text-stone">
         <Spinner label="Đang tải POI…" />
