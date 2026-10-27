@@ -59,7 +59,7 @@ app:
   access:
     # UC02: package for QR codes issued without one, and the User-app page each QR opens (?t=<token> is appended).
     default-package: ${APP_ACCESS_DEFAULT_PACKAGE:DEMO_24H}
-    activation-url: ${APP_ACCESS_ACTIVATION_URL:http://localhost:5174/activate}
+    activation-url: ${APP_ACCESS_ACTIVATION_URL:https://multitional-translator-web.pages.dev/activate}
   bootstrap-admin:
     enabled: ${APP_BOOTSTRAP_ADMIN_ENABLED:false}
     username: ${APP_BOOTSTRAP_ADMIN_USERNAME:}
