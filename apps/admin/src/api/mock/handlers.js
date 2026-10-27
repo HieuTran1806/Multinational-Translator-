@@ -211,7 +211,7 @@ on('POST', '/api/v1/admin/access-qrs', ({ body }) => {
     token,
   };
   qrList().push(qr);
-  return { ...qrSummary(qr), qrToken: token, activationUrl: `http://localhost:5174/activate?t=${token}` };
+  return { ...qrSummary(qr), qrToken: token, activationUrl: `https://multitional-translator-web.pages.dev/activate?t=${token}` };
 });
 
 on('POST', '/api/v1/admin/access-qrs/:id/revoke', ({ params }) => {

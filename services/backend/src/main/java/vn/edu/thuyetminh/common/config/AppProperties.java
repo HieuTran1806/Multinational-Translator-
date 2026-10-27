@@ -26,7 +26,7 @@ public record AppProperties(
     /** UC02 access QR: package used when none is given, and the User-app URL encoded into each QR. */
     public record Access(
             @DefaultValue("DEMO_24H") String defaultPackage,
-            @DefaultValue("http://localhost:5174/activate") String activationUrl) {
+            @DefaultValue("https://multitional-translator-web.pages.dev/activate") String activationUrl) {
     }
 
     public record Auth(@DefaultValue("8h") Duration sessionTtl) {

@@ -38,7 +38,7 @@ services:
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
       APP_AUTH_SESSION_TTL: ${APP_AUTH_SESSION_TTL:-8h}
       # UC02: page each access QR opens. Use the LAN IP (http://<IP>:5174/activate) to test with a real phone.
-      APP_ACCESS_ACTIVATION_URL: ${APP_ACCESS_ACTIVATION_URL:-http://localhost:5174/activate}
+      APP_ACCESS_ACTIVATION_URL: ${APP_ACCESS_ACTIVATION_URL:-https://multitional-translator-web.pages.dev/activate}
       APP_STORAGE_LOCAL_ROOT: /app/data/media
       APP_BOOTSTRAP_ADMIN_ENABLED: ${APP_BOOTSTRAP_ADMIN_ENABLED:-false}
       APP_BOOTSTRAP_ADMIN_USERNAME: ${APP_BOOTSTRAP_ADMIN_USERNAME:-}

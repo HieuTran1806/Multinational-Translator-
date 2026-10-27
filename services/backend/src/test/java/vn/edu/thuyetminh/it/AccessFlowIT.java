@@ -58,7 +58,7 @@ class AccessFlowIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.status").value("ISSUED"))
                 .andExpect(jsonPath("$.packageCode").value("DEMO_24H"))
                 .andExpect(jsonPath("$.durationMinutes").value(1440))
-                .andExpect(jsonPath("$.activationUrl").value(startsWith("http://localhost:5174/activate?t=")))
+                .andExpect(jsonPath("$.activationUrl").value(startsWith("https://multitional-translator-web.pages.dev/activate?t=")))
                 .andReturn().getResponse().getContentAsString();
         String qrToken = JsonPath.read(issued, "$.qrToken");
 
