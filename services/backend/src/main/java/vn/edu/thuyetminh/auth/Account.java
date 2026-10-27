@@ -37,6 +37,13 @@ public class Account {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    /** UC09 E2: soft delete keeps transactions/reports/audit history while blocking login and new business. */
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -75,8 +82,20 @@ public class Account {
         return passwordHash;
     }
 
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
     public String getDisplayName() {
         return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 
     public AccountRole getRole() {
@@ -87,7 +106,26 @@ public class Account {
         return enabled;
     }
 
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public void softDelete(Instant when, Long actorId) {
+        this.deletedAt = when;
+        this.deletedBy = actorId;
+        this.enabled = false;
+    }
+
+    public void restore() {
+        this.deletedAt = null;
+        this.deletedBy = null;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
     }
 }

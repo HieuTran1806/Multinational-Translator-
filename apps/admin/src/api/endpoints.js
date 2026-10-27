@@ -48,7 +48,8 @@ export const accessQrApi = {
     if (status) params.set('status', status);
     return request(`/api/v1/admin/access-qrs?${params}`);
   },
-  issue: ({ note, packageCode } = {}) => request('/api/v1/admin/access-qrs', { method: 'POST', body: { note, packageCode } }),
+  issue: ({ note, packageCode, sellerUsername } = {}) =>
+    request('/api/v1/admin/access-qrs', { method: 'POST', body: { note, packageCode, sellerUsername } }),
   revoke: (id) => request(`/api/v1/admin/access-qrs/${id}/revoke`, { method: 'POST' }),
 };
 
@@ -62,3 +63,51 @@ export async function fetchMediaObjectUrl(path, signal) {
   const blob = await res.blob();
   return URL.createObjectURL(blob);
 }
+
+/** UC09 seller account management (ADMIN only; Super Admin is rejected by the backend). */
+export const sellersApi = {
+  list: ({ page = 0, size = 20, q } = {}) => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (q) params.set('q', q);
+    return request(`/api/v1/admin/sellers?${params}`);
+  },
+  create: (data) => request('/api/v1/admin/sellers', { method: 'POST', body: data }),
+  update: (id, data) => request(`/api/v1/admin/sellers/${id}`, { method: 'PUT', body: data }),
+  resetPassword: (id, newPassword) =>
+    request(`/api/v1/admin/sellers/${id}/reset-password`, { method: 'POST', body: { newPassword } }),
+  remove: (id) => request(`/api/v1/admin/sellers/${id}`, { method: 'DELETE' }),
+};
+
+/** UC14 system analytics (ADMIN + SUPER_ADMIN). */
+export const analyticsApi = {
+  summary: ({ from, to } = {}) => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    return request(`/api/v1/admin/analytics/summary?${params}`);
+  },
+};
+
+/** UC15 audit log (SUPER_ADMIN only). */
+export const auditApi = {
+  list: ({ page = 0, size = 20, action, result, resourceType, actorId, from, to } = {}) => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (action) params.set('action', action);
+    if (result) params.set('result', result);
+    if (resourceType) params.set('resourceType', resourceType);
+    if (actorId) params.set('actorId', actorId);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    return request(`/api/v1/admin/audit?${params}`);
+  },
+};
+
+/** UC13 seller self reports (SELLER role; scope comes from the server session). */
+export const sellerReportsApi = {
+  summary: ({ from, to } = {}) => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    return request(`/api/v1/seller/reports/summary?${params}`);
+  },
+};

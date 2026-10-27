@@ -14,6 +14,35 @@ function MapPinIcon() {
   );
 }
 
+function UsersIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3.5 20c.5-3.5 2.8-5 5.5-5s5 1.5 5.5 5" strokeLinecap="round" />
+      <path d="M16 5.5a3 3 0 0 1 0 5M18.5 20c-.2-2.2-1-3.6-2.3-4.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ChartIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M4 20V4" strokeLinecap="round" />
+      <path d="M4 20h16" strokeLinecap="round" />
+      <path d="M8 16v-4M12 16V8M16 16v-6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M12 21c4.5-1.8 7-4.8 7-9V6l-7-3-7 3v6c0 4.2 2.5 7.2 7 9Z" strokeLinejoin="round" />
+      <path d="m9.5 12 2 2 3.5-4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function QrIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -40,12 +69,18 @@ const CRUMBS = [
   [/^\/pois\/new$/, 'Tạo POI'],
   [/^\/pois\/\d+$/, 'Chi tiết & chỉnh sửa POI'],
   [/^\/access-qrs$/, 'QR truy cập'],
+  [/^\/sellers$/, 'Tài khoản Seller'],
+  [/^\/analytics$/, 'Analytics'],
+  [/^\/audit$/, 'Audit Log'],
+  [/^\/reports$/, 'Báo cáo của tôi'],
 ];
 
 export default function Layout() {
   const { account, logout } = useAuth();
   const { pathname } = useLocation();
   const isAdmin = account?.role === 'ADMIN';
+  const isSuper = account?.role === 'SUPER_ADMIN';
+  const isSeller = account?.role === 'SELLER';
   const crumb = CRUMBS.find(([re]) => re.test(pathname))?.[1];
 
   return (
@@ -89,6 +124,58 @@ export default function Layout() {
               )}
             </NavLink>
           )}
+          {/* UC09: seller accounts are an Admin responsibility. */}
+          {isAdmin && (
+            <NavLink to="/sellers" className={navClass}>
+              {({ isActive }) => (
+                <>
+                  <span aria-hidden="true" className={isActive ? 'text-olive' : 'text-muted'}>
+                    <UsersIcon />
+                  </span>
+                  Tài khoản Seller
+                </>
+              )}
+            </NavLink>
+          )}
+          {/* UC14: analytics is shared by Admin and Super Admin. */}
+          {(isAdmin || isSuper) && (
+            <NavLink to="/analytics" className={navClass}>
+              {({ isActive }) => (
+                <>
+                  <span aria-hidden="true" className={isActive ? 'text-olive' : 'text-muted'}>
+                    <ChartIcon />
+                  </span>
+                  Analytics
+                </>
+              )}
+            </NavLink>
+          )}
+          {/* UC15: only Super Admin reads the audit log. */}
+          {isSuper && (
+            <NavLink to="/audit" className={navClass}>
+              {({ isActive }) => (
+                <>
+                  <span aria-hidden="true" className={isActive ? 'text-olive' : 'text-muted'}>
+                    <ShieldIcon />
+                  </span>
+                  Audit Log
+                </>
+              )}
+            </NavLink>
+          )}
+          {/* UC13: the seller sees only its own reports. */}
+          {isSeller && (
+            <NavLink to="/reports" className={navClass}>
+              {({ isActive }) => (
+                <>
+                  <span aria-hidden="true" className={isActive ? 'text-olive' : 'text-muted'}>
+                    <ChartIcon />
+                  </span>
+                  Báo cáo của tôi
+                </>
+              )}
+            </NavLink>
+          )}
         </nav>
         {USE_MOCK && (
           <p className="mx-4 mt-2 inline-block rounded bg-terracotta px-2 py-0.5 text-[11px] font-bold text-paper">
@@ -104,7 +191,7 @@ export default function Layout() {
               {account?.displayName || account?.username}
             </span>
             <span className="block text-[11px] text-muted">
-              {account?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Quản trị viên'}
+              {account?.role === 'SUPER_ADMIN' ? 'Super Admin' : account?.role === 'SELLER' ? 'Seller' : 'Quản trị viên'}
             </span>
           </span>
           <Button variant="ghost" className="!px-2 !py-1 text-[11px]" onClick={logout} title="Đăng xuất">

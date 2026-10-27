@@ -53,9 +53,10 @@ public class AuthService {
 
     @Transactional
     public AuthDtos.LoginResponse login(AuthDtos.LoginRequest req) {
-        Optional<Account> found = accounts.findByUsername(req.username().trim());
+        Optional<Account> found = accounts.findLiveByUsername(req.username().trim());
         boolean ok;
         if (found.isPresent()) {
+            // soft-deleted accounts are excluded by the live lookup (UC09 E2: block login)
             ok = passwordEncoder.matches(req.password(), found.get().getPasswordHash()) && found.get().isEnabled();
         } else {
             passwordEncoder.matches(req.password(), dummyHash); // constant-ish time, result ignored
@@ -84,6 +85,7 @@ public class AuthService {
         return sessions.findByTokenHash(Hashing.sha256Hex(rawToken))
                 .filter(s -> s.isActive(now))
                 .filter(s -> s.getAccount().isEnabled())
+                .filter(s -> !s.getAccount().isDeleted())
                 .map(s -> {
                     // write at most once per minute to limit DB churn
                     if (s.getLastUsedAt() == null || s.getLastUsedAt().isBefore(now.minusSeconds(60))) {

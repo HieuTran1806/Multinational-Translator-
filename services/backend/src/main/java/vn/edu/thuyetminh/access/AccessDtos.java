@@ -39,7 +39,9 @@ public final class AccessDtos {
     public record GrantStatus(Long grantId, String packageCode, Instant expiresAt, long remainingSeconds) {
     }
 
-    public record IssueRequest(@Size(max = 40) String packageCode, @Size(max = 200) String note) {
+    /** {@code sellerUsername} optionally assigns the QR to a live Seller (UC09/UC13); Admin issues on their behalf. */
+    public record IssueRequest(@Size(max = 40) String packageCode, @Size(max = 200) String note,
+                               @Size(max = 64) String sellerUsername) {
     }
 
     /** The only response that carries the plaintext QR token; it cannot be shown again later. */

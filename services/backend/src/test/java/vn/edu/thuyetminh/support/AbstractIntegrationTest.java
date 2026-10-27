@@ -47,8 +47,8 @@ public abstract class AbstractIntegrationTest {
     @BeforeEach
     void setUpBase() {
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-        jdbc.execute("TRUNCATE access_grant, access_qr, audio_generation_job, audio_asset, poi_translation, poi, "
-                + "auth_session, account RESTART IDENTITY CASCADE");
+        jdbc.execute("TRUNCATE audit_log, usage_event, access_grant, access_qr, audio_generation_job, audio_asset, "
+                + "poi_translation, poi, auth_session, account RESTART IDENTITY CASCADE");
         jdbc.update("INSERT INTO account (username, password_hash, display_name, role) VALUES (?, ?, ?, 'ADMIN')",
                 ADMIN_USER, encoder.encode(ADMIN_PASS), "IT Admin");
     }

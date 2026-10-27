@@ -29,11 +29,14 @@ public class AccessGrantService {
     private final AccessQrStore qrs;
     private final AccessGrantStore grants;
     private final Clock clock;
+    private final vn.edu.thuyetminh.audit.AuditService audit;
 
-    public AccessGrantService(AccessQrStore qrs, AccessGrantStore grants, Clock clock) {
+    public AccessGrantService(AccessQrStore qrs, AccessGrantStore grants, Clock clock,
+                              vn.edu.thuyetminh.audit.AuditService audit) {
         this.qrs = qrs;
         this.grants = grants;
         this.clock = clock;
+        this.audit = audit;
     }
 
     /**
@@ -50,10 +53,12 @@ public class AccessGrantService {
             Optional<AccessQr> existing = qrs.findByTokenHash(qrHash);
             if (existing.isPresent() && existing.get().getStatus() == AccessQrStatus.REDEEMED) {
                 log.info("Rejected redeem: access QR id={} was already used", existing.get().getId());
+                auditDeny(existing.get().getId(), "already_used");
                 throw new ApiException(ErrorCode.ACCESS_QR_ALREADY_USED,
                         "Mã QR này đã được sử dụng. Vui lòng liên hệ người bán để được hỗ trợ.");
             }
             log.info("Rejected redeem: access QR is unknown or revoked");
+            auditDeny(null, "invalid_or_revoked");
             throw new ApiException(ErrorCode.ACCESS_QR_INVALID, "Mã QR không hợp lệ.");
         }
 
@@ -65,7 +70,15 @@ public class AccessGrantService {
         grants.saveNow(new AccessGrant(qr, Hashing.sha256Hex(token), Hashing.sha256Hex(req.deviceId()), now,
                 expiresAt));
         log.info("Access QR id={} redeemed ({}), grant valid until {}", qr.getId(), pkg.getCode(), expiresAt);
+        audit.record(null, vn.edu.thuyetminh.audit.AuditService.QR_REDEEM, "ACCESS_QR", String.valueOf(qr.getId()),
+                vn.edu.thuyetminh.audit.AuditService.RESULT_SUCCESS, "package=" + pkg.getCode());
         return new AccessDtos.GrantResponse(token, "Bearer", expiresAt, pkg.getCode());
+    }
+
+    private void auditDeny(Long qrId, String detail) {
+        audit.recordIndependent(null, vn.edu.thuyetminh.audit.AuditService.QR_REDEEM, "ACCESS_QR",
+                qrId == null ? null : String.valueOf(qrId), vn.edu.thuyetminh.audit.AuditService.RESULT_DENIED,
+                detail);
     }
 
     /**

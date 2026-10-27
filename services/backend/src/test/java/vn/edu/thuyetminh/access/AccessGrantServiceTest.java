@@ -30,8 +30,9 @@ class AccessGrantServiceTest {
 
     private final AccessQrStore qrs = mock(AccessQrStore.class);
     private final AccessGrantStore grants = mock(AccessGrantStore.class);
+    private final vn.edu.thuyetminh.audit.AuditService audit = mock(vn.edu.thuyetminh.audit.AuditService.class);
     private final AccessGrantService service =
-            new AccessGrantService(qrs, grants, Clock.fixed(NOW, ZoneOffset.UTC));
+            new AccessGrantService(qrs, grants, Clock.fixed(NOW, ZoneOffset.UTC), audit);
     private final AccessPackage demo24h = new AccessPackage("DEMO_24H", "Demo", 1440);
 
     @Test

@@ -63,11 +63,19 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/public/languages").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/public/access/redeem").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/public/**").hasRole("VISITOR")
-                        // UC07: POI/content/media management belongs to ADMIN. SUPER_ADMIN manages accounts/RBAC/audit
-                        // (not implemented yet) and must never author POI content; it gets 403 here, not just a hidden UI.
+                        // UC13/UC14 metrics: a valid grant only; identity comes from the grant, not the body.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/public/usage-events").hasRole("VISITOR")
+                        // UC15: only Super Admin reads the audit log — before the ADMIN-only /admin rule.
+                        .requestMatchers("/api/v1/admin/audit/**").hasRole("SUPER_ADMIN")
+                        // UC14: analytics is shared by Admin and Super Admin.
+                        .requestMatchers("/api/v1/admin/analytics/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        // UC07 + UC09: POI content and Seller management belong to ADMIN. SUPER_ADMIN must never
+                        // author POI content or manage Sellers; it gets 403 here, not just a hidden UI.
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        // UC13: seller reports are seller-scoped data behind the seller's own session.
+                        .requestMatchers("/api/v1/seller/**").hasRole("SELLER")
                         // Account endpoints: a visitor grant is not an account, so it must not reach /auth/me.
-                        .requestMatchers("/api/v1/auth/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/v1/auth/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "SELLER")
                         .requestMatchers("/error").permitAll()
                         .anyRequest().denyAll())
                 .exceptionHandling(e -> e

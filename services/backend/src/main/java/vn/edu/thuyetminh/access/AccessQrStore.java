@@ -24,4 +24,7 @@ public interface AccessQrStore {
      * redeemed or revoked — including when another request redeemed it a moment earlier.
      */
     boolean markRedeemed(String tokenHash, Instant now);
+
+    /** UC13: QR counts per owning seller, grouped by status. */
+    java.util.Map<AccessQrStatus, Long> countBySellerGroupByStatus(Long sellerId);
 }

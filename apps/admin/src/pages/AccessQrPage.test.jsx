@@ -7,6 +7,7 @@ import AccessQrPage from './AccessQrPage.jsx';
 
 vi.mock('../api/endpoints.js', () => ({
   accessQrApi: { list: vi.fn(), issue: vi.fn(), revoke: vi.fn() },
+  sellersApi: { list: vi.fn().mockResolvedValue({ items: [] }) },
 }));
 
 const page = (items = []) => ({ items, page: 0, size: 20, totalItems: items.length, totalPages: items.length ? 1 : 0 });

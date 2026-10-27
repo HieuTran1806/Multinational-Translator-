@@ -92,9 +92,24 @@ class BootstrapAdminRunnerTest {
         }
 
         @Override
+        public Optional<Account> findLiveByUsername(String username) {
+            return findByUsername(username);
+        }
+
+        @Override
+        public Optional<Account> findLiveById(Long id) {
+            return findById(id);
+        }
+
+        @Override
         public Account save(Account account) {
             accounts.put(account.getUsername(), account);
             return account;
+        }
+
+        @Override
+        public vn.edu.thuyetminh.common.web.PageResponse<Account> searchSellers(String q, int page, int size) {
+            return new vn.edu.thuyetminh.common.web.PageResponse<>(List.of(), page, size, 0, 0);
         }
     }
 }

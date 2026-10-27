@@ -49,7 +49,7 @@ public class AdminAccessQrController {
 
     @PostMapping("/{id}/revoke")
     @Operation(summary = "Thu hồi QR; nếu QR đã được đổi thì quyền truy cập tương ứng cũng chấm dứt")
-    public AccessDtos.QrSummary revoke(@PathVariable Long id) {
-        return service.revoke(id);
+    public AccessDtos.QrSummary revoke(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedAdmin admin) {
+        return service.revoke(id, admin);
     }
 }

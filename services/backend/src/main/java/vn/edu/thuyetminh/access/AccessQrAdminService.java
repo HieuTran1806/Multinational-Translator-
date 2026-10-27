@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import vn.edu.thuyetminh.audit.AuditService;
+import vn.edu.thuyetminh.auth.AuthenticatedAdmin;
 import vn.edu.thuyetminh.common.Hashing;
 import vn.edu.thuyetminh.common.config.AppProperties;
 import vn.edu.thuyetminh.common.error.ApiException;
@@ -28,12 +30,17 @@ public class AccessQrAdminService {
     private final AccessGrantStore grants;
     private final AppProperties props;
     private final Clock clock;
+    private final AuditService audit;
+    private final vn.edu.thuyetminh.auth.AccountStore accounts;
 
-    public AccessQrAdminService(AccessQrStore qrs, AccessGrantStore grants, AppProperties props, Clock clock) {
+    public AccessQrAdminService(AccessQrStore qrs, AccessGrantStore grants, AppProperties props, Clock clock,
+                                AuditService audit, vn.edu.thuyetminh.auth.AccountStore accounts) {
         this.qrs = qrs;
         this.grants = grants;
         this.props = props;
         this.clock = clock;
+        this.audit = audit;
+        this.accounts = accounts;
     }
 
     @Transactional
@@ -44,11 +51,15 @@ public class AccessQrAdminService {
                 .orElseThrow(() -> new ApiException(ErrorCode.BAD_REQUEST,
                         "Gói '" + code + "' không tồn tại hoặc đã ngừng áp dụng"));
         String note = req == null || req.note() == null || req.note().isBlank() ? null : req.note().trim();
+        Long sellerId = resolveSellerId(req);
 
         String token = AccessTokens.newToken();
         AccessQr qr = qrs.save(new AccessQr(Hashing.sha256Hex(token), pkg, note, issuedByAccountId,
                 clock.instant().truncatedTo(ChronoUnit.SECONDS)));
+        qr.setSellerId(sellerId);
         log.info("Access QR id={} ({}) issued by account id={}", qr.getId(), pkg.getCode(), issuedByAccountId);
+        audit.record(auditActor(issuedByAccountId), AuditService.QR_ISSUE, "ACCESS_QR", String.valueOf(qr.getId()),
+                AuditService.RESULT_SUCCESS, "package=" + pkg.getCode());
         return new AccessDtos.IssuedQr(qr.getId(), qr.getStatus(), pkg.getCode(), pkg.getDurationMinutes(),
                 qr.getNote(), qr.getCreatedAt(), token, activationUrl(token));
     }
@@ -60,15 +71,33 @@ public class AccessQrAdminService {
 
     /** Revoking blocks a QR that was not redeemed yet and also ends the grant of one that was. Idempotent. */
     @Transactional
-    public AccessDtos.QrSummary revoke(Long id) {
+    public AccessDtos.QrSummary revoke(Long id, AuthenticatedAdmin admin) {
         AccessQr qr = qrs.findById(id).orElseThrow(() -> ApiException.notFound("Mã QR"));
         if (!qr.isRevoked()) {
             Instant now = clock.instant().truncatedTo(ChronoUnit.SECONDS);
             qr.revoke(now);
             grants.findByQrId(id).ifPresent(g -> g.revoke(now));
             log.info("Access QR id={} revoked", id);
+            audit.record(AuditService.Actor.from(admin), AuditService.QR_REVOKE, "ACCESS_QR", String.valueOf(id),
+                    AuditService.RESULT_SUCCESS, null);
         }
         return AccessDtos.QrSummary.from(qr);
+    }
+
+    private AuditService.Actor auditActor(Long issuedByAccountId) {
+        return new AuditService.Actor(issuedByAccountId, null);
+    }
+
+    private Long resolveSellerId(AccessDtos.IssueRequest req) {
+        String username = req == null ? null : req.sellerUsername();
+        if (username == null || username.isBlank()) {
+            return null;
+        }
+        return accounts.findLiveByUsername(username.trim())
+                .filter(a -> a.getRole() == vn.edu.thuyetminh.auth.AccountRole.SELLER)
+                .map(vn.edu.thuyetminh.auth.Account::getId)
+                .orElseThrow(() -> new ApiException(ErrorCode.BAD_REQUEST,
+                        "Seller '" + username.trim() + "' không tồn tại hoặc đã bị xóa"));
     }
 
     private String activationUrl(String token) {
