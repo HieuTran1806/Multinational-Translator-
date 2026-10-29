@@ -1,6 +1,8 @@
 # Kiến trúc
 
-> **Trạng thái tài liệu:** Mô tả kiến trúc/mã nguồn hiện có. Đặc tả nghiệp vụ đích đã chuyển sang ứng dụng User online-only với Seller/QR theo `docs/requirements/Use_Case_Specification_Final_15_UC.md`. Các mô tả mobile/offline bên dưới là hiện trạng legacy, không được hiểu là phạm vi nghiệp vụ đích; cần thiết kế và triển khai migration riêng.
+> **Quyết định quyền mới nhất (2026-10-29):** Seller bị loại bỏ; Admin và Super Admin dùng chung ứng dụng quản trị nhưng có quyền tách biệt. Admin quản lý POI, bản dịch, media, QR và Analytics; Super Admin quản lý tài khoản Admin và đọc Audit Log. UC12 không còn thanh toán Seller. Xem [kế hoạch chuẩn hóa ma trận quyền và loại bỏ Seller](../planning/role-matrix-seller-removal-plan.md); migration V6 đã gỡ Seller ownership khỏi schema production.
+
+> **Trạng thái tài liệu:** Mô tả kiến trúc/mã nguồn hiện có. Đặc tả nghiệp vụ hiện hành loại bỏ Seller và thanh toán; UC12 chỉ quản lý QR truy cập Admin hiện có. Các mô tả mobile/offline bên dưới là hiện trạng legacy, không được hiểu là phạm vi nghiệp vụ đích; cần thiết kế và triển khai migration riêng.
 
 ## Tổng quan
 
@@ -193,26 +195,9 @@ sequenceDiagram
 | `storage/db` | SQLite (op-sqlite): settings, metadata/nội dung offline |
 | `@dr.pogodin/react-native-fs` | Lưu file audio trong thư mục riêng của ứng dụng |
 
-## Kiến trúc đích Seller/thanh toán/QR cho bản demo — chưa triển khai hoặc xác minh
+## Phạm vi QR hiện hành
 
-- **Seller Transaction API:** tạo giao dịch gói `DEMO_24H`, giá 1 VND; kiểm tra ownership ở backend; chỉ hủy trước redeem.
-- **Bộ tích hợp VNPAY Sandbox:** chỉ dùng điểm cuối API/thông tin xác thực sandbox. Backend xác minh chữ ký, mã tham chiếu, số tiền và trạng thái. URL quay về của trình duyệt không phải bằng chứng thanh toán.
-- **Đối soát thanh toán:** callback lặp phải idempotent. Sai lệch giao dịch chuyển trạng thái cần kiểm tra, không tự đánh dấu thành công.
-- **Bộ xử lý kích hoạt QR một lần:** redeem trong transaction nguyên tử, xác minh thanh toán và trạng thái QR trước khi đánh dấu đã dùng/tạo grant.
-- **Quyền truy cập User:** lưu `activated_at`, `expires_at` và trạng thái; `expires_at = activated_at + 24 giờ`. Mọi API User cần grant hợp lệ ở backend, trừ luồng cần thiết để xem/đổi QR và lỗi.
-- **Analytics/Audit:** ghi các sự kiện nghiệp vụ đã chốt, không ghi token QR/credential dạng rõ; tách quyền đọc/ghi audit và xác định retention/backup trước production.
-
-### Thực thể/thuộc tính đích cần xem xét trong ERD/từ điển dữ liệu
-
-Các mục sau là dữ liệu mục tiêu, chưa khẳng định schema hiện tại đã có:
-
-- `service_package`: mã `DEMO_24H`, giá 1 VND, thời hạn 24 giờ, trạng thái bật/tắt.
-- `seller_transaction`: Seller, package, số tiền, phương thức, trạng thái, thời điểm tạo/hủy/xác nhận và tham chiếu thanh toán.
-- `payment_notification`: provider event/reference, kết quả xác minh chữ ký, idempotency và thời điểm nhận; chỉ lưu payload tối thiểu đã làm sạch.
-- `access_qr`: token hash, trạng thái, `redeemed_at`, `revoked_at`; QR không tự hết hạn trước kích hoạt đầu tiên; Seller có thể thu hồi QR. Seller tạo/cấp QR sau thanh toán thành công; UC12/luồng tạo QR ngoài MVP.
-- `user_access_grant`: transaction/QR, `activated_at`, `expires_at`, trạng thái và binding với thiết bị đã kích hoạt; khôi phục chỉ trên cùng thiết bị trong thời hạn.
-- `usage_event`/`analytics_read_model`: loại sự kiện, POI, ngôn ngữ, thời điểm và metadata tối thiểu.
-- `audit_record`: tác nhân, hành động, tài nguyên, thời điểm, kết quả và metadata đã loại bỏ bí mật.
+`access_qr`, `access_grant` và `usage_event` phục vụ luồng QR/grant của User và Analytics toàn hệ thống. Không có thực thể giao dịch Seller hoặc thanh toán. Cột `access_qr.seller_id` được loại bỏ bằng migration V6 sau khi xóa dữ liệu riêng Seller.
 
 ### Mục tiêu yêu cầu phi chức năng (NFR) của MVP — chưa đo kiểm
 
@@ -232,4 +217,4 @@ VNPAY Sandbox chỉ phục vụ bản demo/kiểm thử. Các endpoint/entity tr
 - Mọi thực thể nghiệp vụ có thể xóa đều dùng cơ chế xóa mềm (`deleted_at`, `deleted_by` hoặc tương đương); truy vấn mặc định loại bản ghi đã xóa. Không xóa vật lý qua UI/API thông thường; giữ khóa ngoại, lịch sử và audit. Khôi phục cần quyền riêng và audit event.
 - Audit log append-only; lưu tối thiểu 24 tháng theo mục tiêu hiện tại, sao lưu hằng ngày và kiểm thử khôi phục định kỳ. Chính sách phải được rà soát trước production.
 - Ngôn ngữ được quản lý bằng bảng/cấu hình và khóa mã ngôn ngữ chuẩn, không enum cố định chỉ gồm `vi`/`en`; MVP chỉ bật hai ngôn ngữ này. Phương án dự phòng là chính sách dữ liệu/tài nguyên, không phải nhánh mã hóa cứng theo từng ngôn ngữ.
-- Gói dịch vụ là dữ liệu cấu hình (mã, giá, đơn vị tiền tệ, thời lượng, trạng thái/phiên bản điều kiện); không mã hóa cứng một gói. UC12 và việc tạo QR nội bộ ngoài MVP; theo quy tắc đích Seller chỉ tạo/cấp QR sau thanh toán thành công.
+- Gói dịch vụ là dữ liệu cấu hình (mã, giá, đơn vị tiền tệ, thời lượng, trạng thái/phiên bản điều kiện); không mã hóa cứng một gói. UC12 chỉ bao gồm quản lý QR Admin hiện có; không triển khai thanh toán.

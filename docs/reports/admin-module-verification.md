@@ -1,3 +1,10 @@
+# Current verification addendum — 2026-10-29
+
+The role/feature descriptions in the historical report below are superseded by this current matrix: Admin manages POI, translations, media, QR and system Analytics; Super Admin manages Admin accounts and reads Audit Log; Seller and Seller reports are removed. The Admin Accounts page now fixes created account role to ADMIN, lists only Admin accounts, supports details and soft deletion, and does not edit roles. Production Flyway V6 is applied; backend unit tests (60), Admin tests (56), lint and build passed; Web User tests (73), lint (3 warnings/0 errors) and build passed. Production has one active Admin and zero Super Admins, so privileged production UI/API flows cannot be operationally exercised until an approved Super Admin bootstrap is performed.
+
+---
+
+## Historical baseline — 2026-10-21 (not current role requirements)
 # Báo cáo nghiệm thu — Admin module (UC07 + UC08 một phần)
 
 Ngày kiểm chứng: 2026-10-21. Các kiểm thử được thực hiện trên cây làm việc bắt đầu từ nhánh `phase-1-contract-baseline`; báo cáo được bổ sung vào nhánh `feat(admin)` (HEAD trước commit: `7273c9a`).

@@ -49,11 +49,11 @@ Các trường phản hồi chung gồm `code`, `status`, `message`, `path` và 
 - Mặc định từ chối quyền truy cập nếu chưa được cho phép; việc phân quyền phải được thực thi tại ranh giới API/dịch vụ.
 - Các API đọc công khai dành cho User phải nằm trong danh sách cho phép rõ ràng; mọi endpoint khác đều cần xác thực và kiểm tra quyền.
 - Chỉ Super Admin được tạo tài khoản Admin.
-- Super Admin không được quản lý POI và không được tạo tài khoản Seller.
+- Super Admin không được quản lý POI, media, QR hoặc Analytics; chỉ quản lý tài khoản Admin và Audit Log.
 - Super Admin không được tự vô hiệu hóa, hạ vai trò, xóa hoặc làm mất quyền Super Admin của chính mình nếu việc đó khiến không còn Super Admin nào khác đang hoạt động. Chỉ cho phép thao tác khi sau giao dịch vẫn còn ít nhất một Super Admin khác đang hoạt động. Phải bảo đảm bằng giao dịch để tránh các yêu cầu đồng thời vô hiệu hóa hai Super Admin cuối cùng.
 - Trả 401 khi thiếu thông tin xác thực hoặc xác thực không hợp lệ; trả 403 khi không đủ quyền hoặc vi phạm quy tắc tự thao tác được bảo vệ.
 - Ghi nhật ký kiểm toán cho thao tác nhạy cảm về bảo mật: tác nhân, hành động, đối tượng, thời điểm, kết quả và mã tương quan/yêu cầu. Không bao giờ ghi thông tin xác thực, bearer token, bí mật thanh toán hoặc toàn bộ bí mật QR.
-- Trước khi lập trình, xác định vai trò/quyền và quyền sở hữu tài nguyên trong ma trận đã được rà soát. Tên vai trò dưới đây chỉ là đề xuất: `SUPER_ADMIN`, `ADMIN`, `SELLER`, `USER`.
+- Trước khi lập trình, xác định vai trò/quyền và quyền sở hữu tài nguyên trong ma trận đã được rà soát. Ma trận vai trò hiện hành chỉ gồm `ADMIN` và `SUPER_ADMIN`; User dùng grant QR, không phải account role. Seller đã bị loại bỏ.
 
 ## 4. Nền tảng POI và đa phương tiện
 
@@ -62,20 +62,16 @@ Các trường phản hồi chung gồm `code`, `status`, `message`, `path` và 
 - Quyền truy cập đa phương tiện phải dựa trên quyền sở hữu và chính sách hiển thị tài nguyên, không chỉ dựa vào ID có thể đoán được. Máy chủ phải kiểm tra loại tệp tải lên, kích thước, checksum, khóa lưu trữ và thứ tự.
 - Phải đặc tả phiên bản manifest ngoại tuyến và cách xử lý nội dung lỗi thời. Không mặc định quyền truy cập đã tải xuống hoặc QR là token phân quyền nếu chưa được phê duyệt riêng.
 
-## 5. Nền tảng Seller, thanh toán và QR
+## 5. QR truy cập hiện hành
 
-- Seller chỉ được cấp QR cho một User cụ thể sau khi kết quả thanh toán đáng tin cậy ở phía máy chủ xác nhận thành công.
-- QR không được hết hạn trước khi được kích hoạt.
-- QR phải gắn với một lần cấp/quyền truy cập duy nhất và có cơ chế chống phát lại. Thao tác quét/kích hoạt phải nguyên tử và có tính lặp an toàn.
-- Không xem cờ “thanh toán thành công” do client gửi lên là bằng chứng có thẩm quyền.
-- Các quyết định còn thiếu: nhà cung cấp thanh toán/xác minh webhook, xử lý hoàn tiền/chargeback, thanh toán trùng, hết hạn sau kích hoạt (nếu có), đổi/thu hồi QR, danh tính được phép kích hoạt và nội dung/dịch vụ mà QR cấp quyền.
+Admin tạo/thu hồi QR theo UC12; User redeem QR hợp lệ để nhận grant. Không có giao dịch Seller hoặc tích hợp thanh toán trong phạm vi hiện hành.
 
 ## 6. Các miền API tối thiểu cần thống nhất
 
 | Miền | Phạm vi tối thiểu cần đặc tả | Người phụ trách rà soát ban đầu |
 |---|---|---|
 | Ứng dụng User | Định danh/phiên User nếu cần; khám phá/xem chi tiết POI công khai; ngôn ngữ; đa phương tiện; manifest ngoại tuyến; quyền truy cập/kích hoạt QR | Người 1 |
-| POI/đa phương tiện/Seller | Vòng đời POI; bản dịch; hình ảnh/âm thanh; định danh Seller; xác nhận thanh toán; cấp/cấp lại/thu hồi QR | Người 2 |
+| POI/đa phương tiện | Quản lý POI, bản dịch, media và QR | Admin |
 | RBAC/Admin/báo cáo | Xác thực Admin; vòng đời tài khoản; vai trò/quyền; nhật ký kiểm toán; báo cáo; quy tắc an toàn Super Admin | Người 3 |
 
 ## 7. Tiêu chí thông qua hợp đồng

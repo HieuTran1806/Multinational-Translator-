@@ -1,4 +1,6 @@
-﻿# ĐẶC TẢ CA SỬ DỤNG — MULTITIONAL-TRANSLATOR-
+# ĐẶC TẢ CA SỬ DỤNG — MULTITIONAL-TRANSLATOR-
+
+> **Quyết định quyền mới nhất (2026-10-29):** Xem [kế hoạch chuẩn hóa ma trận quyền và loại bỏ Seller](../planning/role-matrix-seller-removal-plan.md). Seller/UC09 và báo cáo Seller/UC13 bị loại bỏ; Analytics chỉ Admin; Super Admin chỉ quản lý tài khoản Admin và xem Audit Log; UC12 chỉ quản lý QR hiện có, không triển khai thanh toán. Ma trận quyền dưới đây là yêu cầu hiện hành; UC09/UC13 được giữ số thứ tự để bảo toàn traceability nhưng đã loại bỏ.
 
 ## Danh sách ca sử dụng
 
@@ -12,21 +14,29 @@
 | UC06 | Nhận thuyết minh tự động theo vị trí | User |
 | UC07 | Quản lý POI, bản dịch và media | Admin |
 | UC08 | Giám sát tiến độ tạo Audio | Admin |
-| UC09 | Quản lý tài khoản Seller | Admin |
 | UC10 | Quản lý tài khoản Admin | Super Admin |
-| UC11 | Quản lý vai trò và phân quyền (RBAC) | Super Admin |
-| UC12 | Quản lý thanh toán và tạo QR truy cập | Seller |
-| UC13 | Xem thống kê và báo cáo Seller | Seller |
+| UC11 | RBAC động — ngoài phạm vi, không triển khai | Không áp dụng |
+| UC12 | Quản lý QR theo chức năng hiện có; không thanh toán | Admin |
+| UC13 | Đã loại bỏ — không còn báo cáo Seller | Không áp dụng |
 | UC14 | Xem Analytics toàn hệ thống | Admin |
 | UC15 | Xem Audit Log | Super Admin |
 
+
+## Ma trận quyền hiện hành
+
+| Quyền | User | Admin | Super Admin |
+|---|---:|---:|---:|
+| Kích hoạt QR hợp lệ / xem nội dung theo grant | Có | Không thay User | Không |
+| POI, bản dịch, media/audio, QR quản trị | Không | Có | 403 |
+| Analytics toàn hệ thống | Không | Có | 403 |
+| Tạo/xem/sửa/khóa/reset/xóa mềm tài khoản Admin | Không | 403 | Có |
+| Xem Audit Log | Không | 403 | Có |
+| Seller, payment/order, Seller report, dynamic RBAC | Không tồn tại | Không tồn tại | Không tồn tại |
 ## Quy ước và thuật ngữ
 
 - **User:** khách truy cập các tính năng tham quan sau khi quét và kích hoạt QR hợp lệ. User không cần đăng ký, đăng nhập hoặc đăng xuất bằng tài khoản cá nhân.
-- **Seller:** tài khoản do Admin tạo và quản lý. Seller chỉ thao tác trên giao dịch, QR và báo cáo thuộc phạm vi của chính mình.
-- **QR truy cập:** mã dùng một lần để kích hoạt quyền sử dụng các chức năng User trong thời hạn của gói/dịch vụ đã thanh toán. QR không phải bằng chứng thanh toán tự thân.
-- **Thanh toán chuyển khoản:** trạng thái thanh toán chỉ được xác nhận tự động khi nhận được xác nhận đáng tin cậy từ tích hợp ngân hàng/đơn vị thanh toán. Không coi ảnh chụp màn hình do người dùng gửi là xác nhận tự động.
-- **Thanh toán tiền mặt:** Seller xác nhận đã nhận tiền; thao tác này phải được ghi nhận để truy vết.
+- **Seller:** đã loại bỏ; không có account, session, API, UI, báo cáo hoặc dữ liệu riêng.
+- **QR truy cập:** mã dùng một lần do Admin tạo theo UC12; User redeem để nhận grant theo UC02. Không gắn với giao dịch hoặc thanh toán.
 - **Chỉ hoạt động trực tuyến (chỉ hoạt động trực tuyến):** các trang và chức năng nghiệp vụ yêu cầu kết nối mạng. Khi mất mạng, hệ thống hiển thị trạng thái mất kết nối và cho phép thử lại; không cam kết tiếp tục sử dụng bằng tài nguyên ngoại tuyến.
 - Các chi tiết chưa được chủ sản phẩm quyết định được ghi **TBD**, không được xem là quyết định đã phê duyệt.
 
@@ -91,12 +101,12 @@ User muốn chọn hoặc đổi ngôn ngữ.
 **User**; dịch vụ backend là tác nhân hỗ trợ.
 
 ### 4. Tóm tắt
-User quét QR riêng cho khách hàng để kích hoạt quyền. QR chỉ kích hoạt một lần và quyền gắn với thiết bị đã kích hoạt. Hệ thống xác minh QR dùng một lần và trạng thái thu hồi; nếu hợp lệ, cấp quyền User trong 24 giờ kể từ lúc kích hoạt thành công. MVP không quản lý giao dịch/thanh toán hoặc tạo QR nội bộ (UC12 ngoài phạm vi). Không yêu cầu tài khoản Tourist.
+User quét QR riêng cho khách hàng để kích hoạt quyền. QR chỉ kích hoạt một lần và quyền gắn với thiết bị đã kích hoạt. Hệ thống xác minh QR dùng một lần và trạng thái thu hồi; nếu hợp lệ, cấp quyền User trong 24 giờ kể từ lúc kích hoạt thành công. Không quản lý giao dịch/thanh toán; QR được Admin quản lý theo UC12. Không yêu cầu tài khoản Tourist.
 
 ### 5. Điều kiện tiên quyết
 - Website và backend đang truy cập được.
-- Mỗi khách hàng có QR riêng. Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công. QR không tự hết hạn trước khi kích hoạt; Seller vẫn có thể thu hồi QR. UC12 và nghiệp vụ thanh toán/tạo QR nội bộ ngoài MVP.
-- QR chưa được sử dụng và chưa bị thu hồi. QR không tự hết hạn trước lần kích hoạt đầu tiên; Seller có thể thu hồi QR.
+- Mỗi khách hàng có QR riêng. Admin tạo và quản lý QR theo API hiện có; User kích hoạt QR hợp lệ để nhận grant. Không có thanh toán hoặc Seller.
+- QR chưa được sử dụng và chưa bị thu hồi; hành vi hết hạn/thu hồi theo API hiện hành.
 - Thời lượng quyền demo hiện tại là 24 giờ kể từ lúc kích hoạt thành công; thời lượng phải được lấy từ cấu hình để hỗ trợ gói khác trong tương lai.
 
 ### 6. Luồng sự kiện chính
@@ -105,7 +115,7 @@ User quét QR riêng cho khách hàng để kích hoạt quyền. QR chỉ kích
 |---|---|---|
 | 1 | User mở ứng dụng User và chọn quét QR hoặc mở QR link bằng camera/thiết bị hỗ trợ. | Website hiển thị hướng dẫn quét/mở QR. |
 | 2 | User quét QR hoặc mở URL được mã hóa trong QR. | Hệ thống nhận token QR; không tin cậy dữ liệu quyền truy cập chỉ dựa trên nội dung hiển thị trong QR. **[A2]** |
-| 3 | — | Backend kiểm tra token, trạng thái thu hồi và trạng thái chưa sử dụng của QR; không xác minh giao dịch thanh toán trong MVP vì UC12 nằm ngoài phạm vi. **[A1, E1, E3, E4, E5]** |
+| 3 | — | Backend kiểm tra token, trạng thái thu hồi và trạng thái chưa sử dụng của QR; không có bước xác minh thanh toán; UC12 chỉ quản lý QR Admin. **[A1, E1, E3, E4, E5]** |
 | 4 | — | Nếu hợp lệ, backend nguyên tử đánh dấu QR đã sử dụng và tạo phiên/quyền truy cập có thời hạn. **[E2, E6]** |
 | 5 | — | Hệ thống hiển thị xác nhận kích hoạt thành công và mở chức năng User được cấp quyền. |
 | 6 | User chọn bản đồ, POI hoặc audio. | Hệ thống cho phép truy cập trong phạm vi và thời hạn đã cấp. |
@@ -115,19 +125,19 @@ User quét QR riêng cho khách hàng để kích hoạt quyền. QR chỉ kích
 - **A2 — QR được mở qua liên kết thay vì camera:** ứng dụng User xử lý URL/token theo cùng quy tắc xác minh như quét camera.
 ### 8. Luồng ngoại lệ
 - **E1 — QR không hợp lệ hoặc bị sửa đổi:** từ chối kích hoạt, không cấp quyền và hiển thị thông báo chung.
-- **E2 — QR đã được sử dụng:** từ chối dùng lại; hướng dẫn liên hệ Seller nếu cần hỗ trợ. Không tự cấp quyền cho thiết bị khác.
-- **E3 — Token QR bị thu hồi hoặc không hợp lệ:** không cấp quyền. Trong MVP, hệ thống không có trạng thái thanh toán nội bộ để xác minh.
+- **E2 — QR đã được sử dụng:** từ chối dùng lại; hướng dẫn liên hệ đơn vị vận hành nếu cần hỗ trợ. Không tự cấp quyền cho thiết bị khác.
+- **E3 — Token QR bị thu hồi hoặc không hợp lệ:** không cấp quyền. Không có nghiệp vụ thanh toán trong hệ thống hiện hành.
 - **E4 — QR bị thu hồi hoặc quyền/gói không còn hợp lệ:** từ chối kích hoạt. QR chưa kích hoạt không tự hết hạn; QR bị thu hồi hoặc không hợp lệ phải bị từ chối. Quyền sau kích hoạt có thời hạn theo gói đã áp dụng.
 - **E5 — Mất mạng/backend không phản hồi:** không cấp quyền khi chưa xác minh được; cho phép thử lại khi kết nối phục hồi.
 - **E6 — Lỗi ghi nhận dùng một lần:** giao dịch kích hoạt phải có tính nguyên tử để tránh hai thiết bị cùng đổi một QR thành công.
 ### 9. Sự kiện kích hoạt
-User nhận được QR riêng của mình và muốn kích hoạt quyền truy cập tính năng tham quan. Seller tạo và cấp QR sau khi thanh toán thành công.
+User có QR truy cập và muốn kích hoạt quyền tham quan. QR được Admin tạo theo UC12 hiện hành.
 
 ### 10. Quy tắc nghiệp vụ
 - QR có thể được quét/đổi **một lần**; quyền truy cập sau đó duy trì theo thời hạn gói/dịch vụ.
 - QR cấp quyền sử dụng **các chức năng User trong phạm vi dịch vụ**, không tự động cấp quyền quản trị.
 - Token QR phải khó đoán, không chứa dữ liệu nhạy cảm dạng rõ, có thể bị thu hồi và không được ghi nguyên văn vào log.
-- QR có thể bị thu hồi. QR không tự hết hạn trước khi kích hoạt; Seller có thể thu hồi QR. Quyền truy cập có thời hạn 24 giờ kể từ khi kích hoạt thành công theo cấu hình demo; kiến trúc phải cho phép cấu hình thời lượng gói trong tương lai.
+- QR có thể bị thu hồi theo API quản trị hiện hành. Quyền truy cập có thời hạn 24 giờ kể từ khi kích hoạt thành công theo cấu hình demo; kiến trúc phải cho phép cấu hình thời lượng gói trong tương lai.
 - Grant gắn với thiết bị đã kích hoạt và có hiệu lực 24 giờ. Khi ứng dụng đóng/mở lại, phiên chỉ được khôi phục trên cùng thiết bị trong thời hạn; không hỗ trợ chuyển thiết bị hoặc khôi phục grant sang thiết bị khác.
 
 ### 11. Điều kiện hậu
@@ -374,232 +384,58 @@ Admin xem được trạng thái tác vụ; thao tác xem không tự thay đổ
 
 ---
 
-# UC09 — QUẢN LÝ TÀI KHOẢN SELLER
+# UC09 — ĐÃ LOẠI BỎ: QUẢN LÝ SELLER
 
-### 1. Mã ca sử dụng
-**UC09**
-
-### 2. Tác nhân
-**Admin**
-
-### 3. Tóm tắt
-Admin tạo và quản lý tài khoản Seller. Seller không tự đăng ký.
-
-### 4. Điều kiện tiên quyết
-- Actor đã đăng nhập vùng quản trị.
-- Actor có quyền quản lý Seller.
-
-### 5. Luồng sự kiện chính
-1. Admin mở trang quản lý Seller.
-2. Hệ thống hiển thị danh sách Seller trong phạm vi quyền.
-3. Actor tạo tài khoản Seller hoặc chọn tài khoản cần cập nhật. **[E1]**
-4. Actor nhập/cập nhật thông tin và trạng thái hoạt động. **[A1, A2, A3, E1, E2]**
-5. Hệ thống kiểm tra tính hợp lệ và lưu thay đổi. **[A1, A2, A3, E1, E3]**
-6. Hệ thống thông báo kết quả và làm mới danh sách. **[A1, A2, A3]**
-
-### 6. Luồng thay thế
-- **A1 — Vô hiệu hóa Seller để chặn tạo giao dịch/QR mới.**
-- **A2 — Kích hoạt lại Seller theo quyền.**
-- **A3 — Đặt lại thông tin xác thực theo chính sách quản trị được phê duyệt.**
-### 7. Luồng ngoại lệ
-- **E1 — Tài khoản trùng hoặc dữ liệu sai**: từ chối lưu.
-- **E2 — Seller có dữ liệu liên quan**: dùng soft delete; giữ giao dịch, báo cáo và audit lịch sử, đồng thời chặn đăng nhập/tạo nghiệp vụ mới khi tài khoản đã bị xóa mềm.
-- **E3 — Actor không có quyền**: từ chối ở backend.
-### 8. Quy tắc nghiệp vụ
-- Tài khoản Seller chỉ do Admin tạo; Super Admin không được tạo hoặc quản lý Seller.
-- Seller chỉ xem/thao tác giao dịch, QR và báo cáo của chính mình.
-- Vô hiệu hóa Seller không tự động xóa giao dịch/audit đã phát sinh.
-
-### 9. Điều kiện hậu
-Tài khoản Seller được tạo/cập nhật hoặc trạng thái thay đổi theo quyền.
-
----
-
+**Trạng thái:** Không thuộc nghiệp vụ hiện hành. Role, tài khoản, API, giao diện, báo cáo và dữ liệu riêng Seller được loại bỏ. Không tạo endpoint thay thế.
 # UC10 — QUẢN LÝ TÀI KHOẢN ADMIN
 
-### 1. Mã ca sử dụng
-**UC10**
+**Actor:** Super Admin. **Tiền điều kiện:** đã đăng nhập bằng session hợp lệ và có role `SUPER_ADMIN`.
 
-### 2. Tác nhân
-**Super Admin**
+## Mục tiêu
+Super Admin tạo, xem danh sách/chi tiết, sửa thông tin, khóa/mở khóa, reset mật khẩu và xóa mềm tài khoản `ADMIN`.
 
-### 3. Tóm tắt
-Super Admin tạo, cập nhật, vô hiệu hóa và quản lý tài khoản Admin.
+## Luồng chính
+1. Super Admin mở `/accounts`; backend trả về danh sách Admin còn hiệu lực, hỗ trợ tìm kiếm và phân trang.
+2. Super Admin tạo tài khoản với username, mật khẩu và tên hiển thị tùy chọn. Backend cố định role là `ADMIN`, hash mật khẩu và ghi audit.
+3. Super Admin xem chi tiết một Admin, cập nhật tên hiển thị hoặc trạng thái enabled.
+4. Super Admin reset mật khẩu; backend lưu hash, giữ secret khỏi response/log và ghi audit.
+5. Super Admin xóa mềm Admin; tài khoản không thể đăng nhập hoặc dùng session mới, lịch sử được giữ.
 
-### 4. Điều kiện tiên quyết
-- Super Admin có phiên quản trị hợp lệ và quyền phù hợp.
+## Quy tắc và lỗi
+- Tất cả API `/api/v1/admin/accounts/**` chỉ dành cho `SUPER_ADMIN`; service kiểm tra lại actor.
+- UC10 chỉ quản lý tài khoản có role `ADMIN`; không tạo, sửa, khóa, reset hoặc xóa tài khoản Super Admin. Không có role editor.
+- Username trùng trả 409; dữ liệu không hợp lệ trả 400; tài khoản không tồn tại/đã xóa mềm trả 404; actor không đủ quyền trả 403.
+- Không cho Admin tự nâng quyền; không thêm profile hoặc self-service đổi mật khẩu.
+# UC11 — PHÂN QUYỀN TĨNH (KHÔNG CÓ PERMISSION EDITOR)
 
-### 5. Luồng sự kiện chính
-1. Super Admin mở quản lý tài khoản Admin.
-2. Hệ thống hiển thị tài khoản trong phạm vi.
-3. Super Admin tạo/chọn tài khoản. **[E1]**
-4. Super Admin nhập hoặc cập nhật dữ liệu tài khoản. **[A1, A2, E1]**
-5. Hệ thống kiểm tra và lưu. **[A1, A2, E2]**
-6. Hệ thống hiển thị kết quả. **[E3]**
+**Trạng thái:** Chính sách role tĩnh được thực thi ở backend; không triển khai CRUD role, permission matrix động hoặc giao diện chỉnh quyền.
 
-### 6. Luồng thay thế
-- **A1 — Vô hiệu hóa/kích hoạt tài khoản.**
-- **A2 — Đặt lại thông tin xác thực theo chính sách đã phê duyệt.**
-### 7. Luồng ngoại lệ
-- **E1 — Tài khoản không tồn tại hoặc dữ liệu không hợp lệ**: thông báo và làm mới dữ liệu.
-- **E2 — Không cho phép xóa/vô hiệu hóa tài khoản theo cách làm mất Super Admin cuối cùng.**
-- **E3 — Thao tác thất bại**: không báo thành công giả.
-### 8. Quy tắc nghiệp vụ
-- Gán/đổi role thuộc UC11; không được tự đổi vai trò hoặc tự vô hiệu hóa tài khoản Super Admin nếu không còn Super Admin khác đang hoạt động.
-- Super Admin không được tự đổi vai trò hoặc tự vô hiệu hóa chính mình. Thay đổi vai trò/trạng thái tài khoản Super Admin phải do Super Admin khác thực hiện; sau thao tác phải còn ít nhất một Super Admin đang hoạt động.
+- `ADMIN`: POI, bản dịch, media/audio, QR và Analytics toàn hệ thống.
+- `SUPER_ADMIN`: tài khoản Admin và Audit Log.
+- User truy cập nội dung qua grant QR; không được cấp quyền quản trị.
+- `SELLER` không còn là role hợp lệ. Mọi route không được khai báo bị từ chối; matcher cụ thể phải đứng trước `/api/v1/admin/**`.
+# UC12 — QUẢN LÝ QR TRUY CẬP (PHẠM VI HIỆN HÀNH)
 
-### 9. Điều kiện hậu
-Tài khoản Admin được cập nhật theo thao tác hợp lệ.
+**Actor:** Admin. **Trạng thái:** Chức năng QR hiện có; không bao gồm giao dịch, thanh toán, đơn hàng hoặc Seller.
 
----
+## Mục tiêu
+Admin tạo QR truy cập một lần cho khách, xem trạng thái và thu hồi QR theo API hiện có. User chỉ nhận grant sau khi kích hoạt QR hợp lệ theo UC02.
 
-# UC11 — QUẢN LÝ VAI TRÒ VÀ PHÂN QUYỀN (RBAC)
+## Luồng chính
+1. Admin mở mục QR truy cập.
+2. Admin tạo QR với ghi chú tùy chọn và gói đã được cấu hình.
+3. Backend lưu token hash, trả token rõ một lần và ghi audit event.
+4. Admin xem trạng thái QR và có thể thu hồi QR theo quyền hiện có.
+5. User kích hoạt QR hợp lệ; backend tạo grant theo luồng UC02.
 
-### 1. Mã ca sử dụng
-**UC11**
+## Quy tắc và lỗi
+- Chỉ `ADMIN` được gọi API quản trị QR; `SUPER_ADMIN` bị từ chối.
+- QR chỉ dùng một lần; grant và thời hạn tuân theo cấu hình và quy tắc hiện hành.
+- QR đã dùng/đã thu hồi/không hợp lệ không thể kích hoạt lại.
+- Không có gán QR cho Seller, nghiệp vụ thanh toán hoặc đơn hàng.
+# UC13 — ĐÃ LOẠI BỎ: BÁO CÁO SELLER
 
-### 2. Tác nhân
-**Super Admin**
-
-### 3. Tóm tắt
-Super Admin quản lý role và permission registry được phép gán cho từng role.
-
-### 4. Điều kiện tiên quyết
-- Super Admin có quyền RBAC.
-- Role store và permission registry khả dụng.
-
-### 5. Luồng sự kiện chính
-1. Super Admin mở quản lý RBAC.
-2. Hệ thống hiển thị role và quyền hiện có.
-3. Super Admin tạo/sửa/xóa role hoặc điều chỉnh permission array. **[A1, A2, E1, E2]**
-4. Hệ thống kiểm tra tên role, permission hợp lệ và các ràng buộc an toàn. **[E1, E2, E3, E4]**
-5. Super Admin lưu thay đổi. **[A2]**
-6. Hệ thống lưu và hiển thị kết quả. **[E4]**
-
-### 6. Luồng thay thế
-- **A1 — Tạo role mới với tên duy nhất và permission thuộc registry.**
-- **A2 — Gán role cho tài khoản qua luồng quản lý tài khoản tương ứng.**
-### 7. Luồng ngoại lệ
-- **E1 — Permission không tồn tại hoặc role trùng tên**: từ chối.
-- **E2 — Role hệ thống/role đang được sử dụng bị yêu cầu xóa**: từ chối hoặc yêu cầu chuyển tài khoản trước.
-- **E3 — Không cho phép loại bỏ quyền quản trị cuối cùng theo quy tắc an toàn đã phê duyệt.**
-- **E4 — Không có quyền**: từ chối ở backend.
-### 8. Quy tắc nghiệp vụ
-- Quyền phải được kiểm tra tại backend; ẩn nút trên UI không thay thế authorization.
-- Seller chỉ được truy cập dữ liệu của chính mình; cần kiểm tra ownership ở backend.
-- Không được tự động coi mọi permission trong tài liệu cũ là đã triển khai.
-
-### 9. Điều kiện hậu
-Cấu hình role hợp lệ được lưu và có hiệu lực theo chính sách áp dụng.
-
----
-
-# UC12 — QUẢN LÝ THANH TOÁN VÀ TẠO QR TRUY CẬP
-
-> **Phạm vi:** KHÔNG THỰC HIỆN TRONG MVP. MVP không triển khai luồng thanh toán, quản lý giao dịch hoặc tạo QR trong hệ thống. Sau khi xác nhận thanh toán thành công, Seller tạo và cấp QR riêng cho User. QR không tự hết hạn trước khi kích hoạt nhưng có thể bị thu hồi. Nội dung bên dưới là định hướng cho giai đoạn sau, không phải cam kết triển khai MVP.
-
-### 1. Mã ca sử dụng
-**UC12**
-
-### 2. Tên ca sử dụng
-**Quản lý thanh toán và tạo QR truy cập**
-
-### 3. Tác nhân
-**Seller**; hệ thống ngân hàng/đơn vị thanh toán là tác nhân hỗ trợ đối với chuyển khoản.
-
-### 4. Tóm tắt
-Seller tạo giao dịch cho khách và ghi nhận/xác nhận thanh toán theo phương thức được hỗ trợ. Chỉ sau khi thanh toán thành công, Seller tạo và cấp QR riêng, dùng một lần, để User kích hoạt quyền truy cập trong thời hạn gói/dịch vụ. QR chưa kích hoạt không tự hết hạn nhưng có thể bị Seller thu hồi. Seller chỉ xem và thao tác trên giao dịch của chính mình.
-
-### 5. Điều kiện tiên quyết
-- Seller đã đăng nhập và tài khoản đang hoạt động.
-- Seller có quyền tạo giao dịch.
-- Danh mục gói/dịch vụ, giá và thời hạn đã được cấu hình.
-- Với chuyển khoản, tích hợp ngân hàng/đơn vị thanh toán đang khả dụng.
-
-### 6. Luồng sự kiện chính
-
-| Step | Hành động của tác nhân | Phản hồi của hệ thống |
-|---|---|---|
-| 1 | Seller chọn tạo giao dịch và chọn gói/dịch vụ. | Hệ thống hiển thị giá, thời hạn và thông tin giao dịch. **[E3, E5]** |
-| 2 | Seller chọn phương thức thanh toán tiền mặt hoặc chuyển khoản. | Hệ thống tạo giao dịch ở trạng thái chờ thanh toán/xác nhận. **[E3, E5]** |
-| 3a | Seller nhận tiền mặt và xác nhận đã thu tiền. | Hệ thống ghi nhận actor, thời điểm, số tiền và phương thức; trạng thái chuyển sang đã thanh toán nếu dữ liệu hợp lệ. **[E3, E5]** |
-| 3b | Khách chuyển khoản theo hướng dẫn thanh toán. | Hệ thống chờ webhook/đối soát đáng tin cậy từ ngân hàng/đơn vị thanh toán và xác minh mã giao dịch, số tiền, trạng thái. **[A1, E1, E2, E5]** |
-| 4b | — | Khi nhận xác nhận chuyển khoản hợp lệ, hệ thống tự cập nhật trạng thái giao dịch đã thanh toán. **[A1, E1, E2]** |
-| 5 | — | Khi giao dịch được xác nhận đã thanh toán, hệ thống tạo QR token dùng một lần gắn với giao dịch, Seller và thời hạn gói. **[A2, E2, E3, E4]** |
-| 6 | Seller hiển thị QR cho khách. | Hệ thống hiển thị QR và trạng thái giao dịch; không hiển thị QR có thể đổi trước khi thanh toán được xác nhận. **[A2, E4, E5]** |
-| 7 | User quét QR. | Hệ thống thực hiện UC02 và đánh dấu QR đã sử dụng khi đổi thành công. **[A3]** |
-
-### 7. Luồng thay thế
-- **A1 — Chuyển khoản chưa được xác nhận:** Seller xem trạng thái chờ; hệ thống chưa tạo QR kích hoạt.
-- **A2 — Giao dịch đã thanh toán nhưng QR chưa hiển thị do lỗi:** Seller có thể tải lại trạng thái hoặc yêu cầu hệ thống hiển thị lại cùng QR còn hiệu lực; không tạo nhiều quyền độc lập cho một giao dịch.
-- **A3 — QR đã được đổi:** Seller xem trạng thái đã sử dụng; không thể tái kích hoạt bằng QR cũ.
-### 8. Luồng ngoại lệ
-- **E1 — Xác nhận chuyển khoản không khớp số tiền/mã giao dịch:** giao dịch không được tự đánh dấu đã thanh toán; đưa vào trạng thái cần kiểm tra.
-- **E2 — Webhook trùng lặp:** xử lý idempotent, không tạo nhiều giao dịch/quyền cho một khoản thanh toán.
-- **E3 — Seller không hoạt động hoặc không sở hữu giao dịch:** từ chối thao tác.
-- **E4 — Không thể tạo QR:** giữ trạng thái thanh toán chính xác, báo lỗi và cho phép thử lại mà không thu tiền lần nữa.
-- **E5 — Mất mạng:** không xác nhận thành công dựa trên trạng thái chưa được máy chủ ghi nhận.
-### 9. Quy tắc nghiệp vụ
-- Tiền mặt: Seller xác nhận thủ công.
-- Phương thức thanh toán và cách Seller xác nhận thu tiền do Seller tự quyết định ngoài phạm vi MVP. Nếu hệ thống tích hợp thanh toán trong tương lai, phải xác minh bằng nguồn tin cậy và không coi redirect/ảnh chụp là bằng chứng thanh toán.
-- Một QR chỉ đổi thành công một lần. QR được đổi thành công tạo quyền User trong thời hạn gói/dịch vụ; quyền có thể tiếp tục tồn tại trong phiên đã kích hoạt cho đến hết hạn.
-- QR không cấp quyền Seller/Admin.
-- Seller không được sửa trạng thái thanh toán chuyển khoản đã xác minh hoặc tự ghi nhận hoàn tiền nếu chưa được cấp quyền.
-- Thiết kế gói dịch vụ phải mở rộng được (bảng dữ liệu/cấu hình gói, giá, đơn vị tiền, thời lượng, trạng thái và phiên bản điều kiện); không hard-code một gói duy nhất vào logic. Gói demo hiện tại là `DEMO_24H`, giá cấu hình 1 VND và quyền 24 giờ từ lúc redeem; giá/điều kiện thực tế khi triển khai UC12 do Seller/chủ sản phẩm quyết định.
-- QR không có hạn hết hiệu lực trước lần redeem đầu tiên; vẫn có thể bị thu hồi. Thời hạn quyền truy cập chỉ bắt đầu tính từ lúc redeem thành công.
-
-### 10. Điều kiện hậu
-- Thành công: giao dịch và thanh toán được ghi nhận; QR một lần được tạo; quyền được cấp chỉ sau khi User đổi QR thành công.
-- Thất bại: trạng thái thanh toán/giao dịch được giữ chính xác; không cấp quyền trái phép.
-
----
-
-# UC13 — XEM THỐNG KÊ VÀ BÁO CÁO SELLER
-
-### 1. Mã ca sử dụng
-**UC13**
-
-### 2. Tác nhân
-**Seller**
-
-### 3. Tóm tắt
-Seller xem thống kê và báo cáo chỉ thuộc dữ liệu của chính Seller, gồm doanh thu, giao dịch và mức sử dụng tính năng User.
-
-### 4. Điều kiện tiên quyết
-- Seller đã đăng nhập và tài khoản đang hoạt động.
-- Seller có quyền xem báo cáo.
-- Dữ liệu giao dịch/QR/usage đã được ghi nhận và nguồn báo cáo khả dụng.
-
-### 5. Luồng sự kiện chính
-1. Seller mở trang Báo cáo.
-2. Hệ thống xác định phạm vi dữ liệu từ danh tính Seller phía máy chủ, không tin cậy Seller ID do client tự gửi. **[E2]**
-3. Seller chọn khoảng thời gian và bộ lọc được hỗ trợ. **[A2]**
-4. Hệ thống tổng hợp và hiển thị: **[A1, A2, A3, E1, E2, E3]**
-   - Doanh thu theo ngày/tháng và phương thức thanh toán.
-   - Số giao dịch theo trạng thái.
-   - Số QR đã tạo, đã đổi, chưa đổi, hết hạn/thu hồi nếu có.
-   - Mức sử dụng tính năng User như lượt truy cập, xem POI hoặc phát âm thanh, theo định nghĩa metric được chốt.
-5. Seller xem kết quả; dữ liệu chỉ bao gồm các giao dịch/phiên thuộc Seller đó. **[A1, A3]**
-
-### 6. Luồng thay thế
-- **A1 — Chưa có dữ liệu:** hiển thị trạng thái rỗng và khoảng thời gian được chọn.
-- **A2 — Thay đổi bộ lọc/ngày:** hệ thống tải lại báo cáo theo điều kiện mới.
-- **A3 — Yêu cầu xuất báo cáo:** không được hỗ trợ; hệ thống chỉ cung cấp xem và lọc trên giao diện.
-### 7. Luồng ngoại lệ
-- **E1 — Nguồn báo cáo không khả dụng**: hiển thị lỗi và cho phép thử lại.
-- **E2 — Actor cố truy cập dữ liệu Seller khác**: backend từ chối.
-- **E3 — Dữ liệu chưa đồng bộ**: thể hiện thời điểm cập nhật gần nhất và không khẳng định số liệu là thời gian thực nếu không đảm bảo.
-### 8. Quy tắc nghiệp vụ
-- Phạm vi Seller là **dữ liệu của chính Seller**.
-- Doanh thu phải phân biệt tổng tiền thu, giao dịch thất bại/hủy và hoàn tiền nếu tính năng hoàn tiền được hỗ trợ.
-- Tất cả timestamp lưu theo UTC và hiển thị theo múi giờ `Asia/Ho_Chi_Minh`; dashboard ghi rõ thời điểm cập nhật, mục tiêu độ trễ tối đa 5 phút. Định nghĩa metric: `poi_view` là lượt xem chi tiết POI sau khi tải thành công; `audio_play` là lần người dùng nhấn Play và audio bắt đầu phát; `session_start` là lần đầu grant hợp lệ được sử dụng trên thiết bị đã kích hoạt. Khử trùng lặp theo event ID; lưu event thô tối đa 90 ngày và số liệu tổng hợp 13 tháng. Không hỗ trợ xuất báo cáo ra CSV, Excel, PDF hoặc định dạng tệp khác; dashboard chỉ hỗ trợ xem và lọc. Các metric tài chính chỉ xuất hiện khi có dữ liệu giao dịch hợp lệ.
-- Không hiển thị thông tin cá nhân nhạy cảm của User trong báo cáo nếu không cần thiết.
-
-### 9. Điều kiện hậu
-Báo cáo được hiển thị mà không làm thay đổi giao dịch hoặc quyền truy cập.
-
----
-
+**Trạng thái:** Không thuộc nghiệp vụ hiện hành. Không còn Seller-scoped analytics, báo cáo doanh thu/giao dịch Seller hoặc endpoint `/api/v1/seller/**`. Analytics vận hành toàn hệ thống được mô tả tại UC14 và chỉ dành cho Admin.
 # UC14 — XEM ANALYTICS TOÀN HỆ THỐNG
 
 ### 1. Mã ca sử dụng
@@ -609,7 +445,7 @@ Báo cáo được hiển thị mà không làm thay đổi giao dịch hoặc q
 **Admin, Super Admin**
 
 ### 3. Tóm tắt
-Admin/Super Admin có quyền xem số liệu vận hành toàn hệ thống, tách biệt với báo cáo phạm vi riêng của Seller.
+Chỉ Admin có quyền xem số liệu vận hành toàn hệ thống. Super Admin bị từ chối ở Analytics.
 
 ### 4. Điều kiện tiên quyết
 - Actor có phiên quản trị hợp lệ và quyền `analytics:view`.
@@ -618,7 +454,7 @@ Admin/Super Admin có quyền xem số liệu vận hành toàn hệ thống, t�
 ### 5. Luồng sự kiện chính
 1. Actor mở Analytics.
 2. Hệ thống tải dữ liệu read model và áp dụng phạm vi quyền. **[E1, E2, E3]**
-3. Hệ thống hiển thị các metric được thống nhất, có thể gồm lượt xem POI, lượt phát âm thanh, tìm kiếm, POI phổ biến, giao dịch và trạng thái thanh toán tổng hợp. **[A1, A2, E3]**
+3. Hệ thống hiển thị các metric được thống nhất, có thể gồm lượt xem POI, lượt phát âm thanh, tìm kiếm, POI phổ biến, . **[A1, A2, E3]**
 4. Actor chọn date range/filter được hỗ trợ. **[A2, E1]**
 5. Hệ thống cập nhật dashboard và hiển thị thời điểm dữ liệu được cập nhật.
 
@@ -630,9 +466,9 @@ Admin/Super Admin có quyền xem số liệu vận hành toàn hệ thống, t�
 - **E2 — Actor không có quyền**: từ chối.
 - **E3 — Dữ liệu nhạy cảm**: chỉ hiển thị ở mức tổng hợp theo quyền đã cấp.
 ### 8. Quy tắc nghiệp vụ
-- UC14 là analytics toàn hệ thống; UC13 là báo cáo Seller của chính mình.
+- UC14 là Analytics toàn hệ thống chỉ dành cho Admin; UC09 và UC13 đã loại bỏ.
 - Metric, công thức, múi giờ, consent, retention và phạm vi lọc phải được định nghĩa thống nhất.
-- Dashboard chỉ hỗ trợ xem số liệu tổng hợp và lọc theo ngày/POI/locale phù hợp; không có chức năng xuất báo cáo hoặc drill-down xuất file. Metric dùng chung định nghĩa với UC13; timestamp lưu UTC, hiển thị `Asia/Ho_Chi_Minh`, độ trễ mục tiêu tối đa 5 phút, event thô 90 ngày và số liệu tổng hợp 13 tháng.
+- Dashboard chỉ hỗ trợ xem số liệu tổng hợp và lọc theo ngày/POI/locale phù hợp; không có chức năng xuất báo cáo hoặc drill-down xuất file. Metric định nghĩa tại UC14; timestamp lưu UTC, hiển thị `Asia/Ho_Chi_Minh`, độ trễ mục tiêu tối đa 5 phút, event thô 90 ngày và số liệu tổng hợp 13 tháng.
 
 ### 9. Điều kiện hậu
 Dashboard được hiển thị theo quyền; thao tác xem không thay đổi dữ liệu nghiệp vụ.
@@ -648,7 +484,7 @@ Dashboard được hiển thị theo quyền; thao tác xem không thay đổi d
 **Super Admin**
 
 ### 3. Tóm tắt
-Chỉ Super Admin được tra cứu Audit Log toàn hệ thống, gồm sự kiện quản trị và nghiệp vụ quan trọng. Admin và Seller không được xem Audit Log toàn hệ thống.
+Chỉ Super Admin được tra cứu Audit Log toàn hệ thống, gồm sự kiện quản trị và nghiệp vụ quan trọng. Admin không được xem Audit Log toàn hệ thống.
 
 ### 4. Điều kiện tiên quyết
 - Super Admin có quyền `audit:read`.
@@ -667,8 +503,8 @@ Chỉ Super Admin được tra cứu Audit Log toàn hệ thống, gồm sự ki
 - **E3 — Không có quyền**: từ chối.
 - **E4 — Không ghi token QR, mật khẩu, credential ngân hàng hoặc dữ liệu nhạy cảm dạng rõ vào log.**
 ### 7. Quy tắc nghiệp vụ
-- Các sự kiện cần audit tối thiểu: tạo/sửa/vô hiệu hóa Seller; tạo giao dịch; xác nhận tiền mặt; nhận xác nhận chuyển khoản; tạo/đổi/thu hồi QR; thay đổi quyền; truy cập bị từ chối quan trọng.
-- Audit log lưu tối thiểu 24 tháng; chỉ Super Admin/role được cấp quyền mới được đọc. Bản ghi audit append-only, không cho sửa/xóa qua nghiệp vụ thông thường; áp dụng kiểm soát truy cập, backup hằng ngày và kiểm thử khôi phục định kỳ. Không ghi token QR, mật khẩu, secret hoặc credential dạng rõ. Nếu audit store không khả dụng, thao tác nhạy cảm (đổi role, xác nhận thanh toán, redeem/revoke QR, soft delete/restore) phải fail-closed; thao tác đọc thông thường được phép tiếp tục và phát cảnh báo.
+- Các sự kiện cần audit tối thiểu: tạo/cập nhật/khóa/xóa mềm tài khoản Admin; reset mật khẩu; tạo/thu hồi/kích hoạt QR; thay đổi nội dung/xuất bản; truy cập bị từ chối quan trọng.
+- Audit log lưu tối thiểu 24 tháng; chỉ Super Admin được đọc. Bản ghi audit append-only, không cho sửa/xóa qua nghiệp vụ thông thường; áp dụng kiểm soát truy cập, backup hằng ngày và kiểm thử khôi phục định kỳ. Không ghi token QR, mật khẩu, secret hoặc credential dạng rõ. Nếu audit store không khả dụng, thao tác nhạy cảm (reset mật khẩu, redeem/revoke QR, soft delete tài khoản Admin) phải fail-closed; thao tác đọc thông thường được phép tiếp tục và phát cảnh báo.
 
 ### 8. Điều kiện hậu
 Audit records được hiển thị; thao tác xem không sửa/xóa log.
@@ -686,52 +522,50 @@ Audit records được hiển thị; thao tác xem không sửa/xóa log.
 | UC06 | reuses audio playback | UC05 | Auto narration dùng nguồn audio và quy tắc phát liên quan. |
 | UC07 | provides POI/content/media | UC04–UC06 | Admin quản lý nội dung hiển thị và audio. |
 | UC07 | may enqueue audio task | UC08 | Thay đổi nội dung có thể tạo tác vụ xử lý audio. |
-| UC09 | creates/manages Seller account | UC12–UC13 | Seller phải được Admin/Super Admin cấp tài khoản. |
-| UC12 | confirms payment and issues one-time QR | UC02 | User chỉ được cấp quyền sau khi thanh toán được xác nhận và QR được đổi. |
-| UC12 | creates transaction/QR events | UC13–UC14 | Dữ liệu giao dịch phục vụ báo cáo Seller và Analytics hệ thống. |
-| UC02 | emits access/usage events | UC13–UC14 | Thống kê mức sử dụng dựa trên sự kiện đã ghi nhận. |
-| UC11 | enforces roles/permissions | UC07–UC15 | RBAC quyết định quyền truy cập; ownership Seller phải được kiểm tra backend. |
-| UC09–UC12 | generates audit events | UC15 | Các thay đổi quan trọng phải có khả năng truy vết. |
+| UC12 | creates/revokes access QR | UC02, UC14 | QR hợp lệ cấp grant cho User; usage events phục vụ Analytics Admin. |
+| UC02 | emits access/usage events | UC14 | Analytics Admin tổng hợp sự kiện sử dụng. |
+| UC11 | static role policy | UC07, UC10, UC14, UC15 | Policy tĩnh, deny-by-default; không có dynamic RBAC. |
+| UC10, UC12 | generates audit events | UC15 | Các thay đổi quan trọng phải có khả năng truy vết. |
 
 ## Các quyết định đã chốt
 
 1. Không yêu cầu Tourist/User đăng ký, đăng nhập hoặc đăng xuất bằng tài khoản cá nhân.
-2. Seller account chỉ do Admin tạo; Super Admin không được tạo hoặc quản lý Seller.
-3. UC12 (thanh toán/giao dịch/tạo QR nội bộ) ngoài MVP. Mỗi khách hàng có QR riêng; Seller tạo và cấp QR riêng cho User sau khi thanh toán thành công. VNPAY Sandbox chỉ là phương án tham khảo cho giai đoạn sau.
+2. Seller account đã loại bỏ; không tồn tại API hoặc luồng quản lý Seller.
+3. UC12 chỉ quản lý QR truy cập Admin hiện có; không có thanh toán/đơn hàng.
 4. User phải redeem QR hợp lệ trước khi dùng chức năng User yêu cầu grant; kiểm tra quyền ở backend.
-5. QR kích hoạt một lần; QR không tự hết hạn trước khi kích hoạt nhưng có thể bị thu hồi; quyền demo có thời hạn 24 giờ kể từ lúc kích hoạt thành công. Mô hình gói phải mở rộng được; `DEMO_24H` chỉ là cấu hình demo tham khảo, UC12 ngoài MVP.
+5. QR kích hoạt một lần; QR không tự hết hạn trước khi kích hoạt nhưng có thể bị thu hồi; quyền demo có thời hạn 24 giờ kể từ lúc kích hoạt thành công. Mô hình gói phải mở rộng được; `DEMO_24H` chỉ là cấu hình demo tham khảo; UC12 quản lý QR Admin hiện có.
 6. Grant gắn với thiết bị đã kích hoạt; phiên có thể được khôi phục trên cùng thiết bị trong 24 giờ; không hỗ trợ chuyển thiết bị/khôi phục sang thiết bị khác.
-7. Seller chỉ xem và thao tác dữ liệu của chính mình; nghiệp vụ giao dịch/thanh toán/tạo QR thuộc UC12 ngoài MVP.
+7. Không có dữ liệu hoặc quyền Seller trong hệ thống hiện hành.
 8. Ứng dụng User React Native chỉ hoạt động trực tuyến; không có quản lý/tải offline pack, offline map hoặc offline audio.
 9. Chỉ `vi`/`en`; UI locale và audio locale độc lập, fallback hiển thị nhãn ngôn ngữ.
 10. Publish POI yêu cầu English content hợp lệ và audio tiếng Anh hiện hành khớp phiên bản nội dung; tối đa 6 ảnh có thứ tự/gallery.
 11. Auto narration chỉ khi ứng dụng đang hoạt động và hệ điều hành cho phép.
 12. Chỉ có hai role `ADMIN` và `SUPER_ADMIN`; RBAC động để sau.
-13. Analytics/Audit theo các định nghĩa ở UC13–UC15; mục tiêu NFR theo BRD chưa được đo kiểm. UC08/UC12 ngoài MVP.
+13. Analytics/Audit theo các định nghĩa ở UC14–UC15; mục tiêu NFR theo BRD chưa được đo kiểm. UC08 ngoài MVP; UC12 quản lý QR Admin hiện có.
 
 ## Các điểm còn cần đặc tả/kiểm chứng
 
-- Tích hợp thanh toán/QR tự động thuộc giai đoạn sau MVP; VNPAY Sandbox chỉ là lựa chọn tham khảo nếu được duyệt.
-- Kết quả kiểm thử khôi phục phiên trên cùng thiết bị trong 24 giờ; không hỗ trợ chuyển thiết bị. QR không tự hết hạn trước khi kích hoạt; Seller có thể thu hồi QR.
-- Kiểm chứng nguồn dữ liệu và độ chính xác của metric đã định nghĩa tại UC13/UC14; Không có chức năng xuất báo cáo ở UC13 hoặc UC14; chỉ kiểm chứng nguồn dữ liệu và độ chính xác của metric.
+- Không có tích hợp thanh toán; QR Admin hiện có là luồng được hỗ trợ.
+- Kết quả kiểm thử khôi phục phiên trên cùng thiết bị trong 24 giờ; không hỗ trợ chuyển thiết bị. QR được thu hồi theo API quản trị hiện hành.
+- Kiểm chứng nguồn dữ liệu và độ chính xác của metric tại UC14; Không có chức năng xuất báo cáo ở UC13 hoặc UC14; chỉ kiểm chứng nguồn dữ liệu và độ chính xác của metric.
 - Kiểm chứng cấu hình retention 24 tháng, backup hằng ngày, khả năng khôi phục và fail-closed cho thao tác nhạy cảm.
 - Danh sách trình duyệt hỗ trợ và kết quả đo NFR.
 - Mọi quyết định chuyển sang production.
 
 ---
 **Author(s):** Product Owner / nhóm dự án$2
-**Trạng thái phê duyệt:** Bản cập nhật theo các quyết định MVP ngày 2026-10-20; UC08 và UC12 ngoài phạm vi MVP. Các mục còn mở được liệt kê trong phần Open Decisions; chưa phải phê duyệt nghiệm thu triển khai.
+**Trạng thái phê duyệt:** Bản cập nhật theo các quyết định MVP ngày 2026-10-20; UC08 ngoài phạm vi MVP; UC12 quản lý QR Admin hiện có. Các mục còn mở được liệt kê trong phần Open Decisions; chưa phải phê duyệt nghiệm thu triển khai.
 
 ## Quy tắc toàn hệ thống: soft delete
 
-- Mọi thực thể nghiệp vụ có thể bị xóa (POI, bản dịch/media metadata, tài khoản, Seller, gói, giao dịch và dữ liệu quản trị liên quan) phải dùng soft delete; không xóa vật lý theo luồng nghiệp vụ thông thường.
+- Mọi thực thể nghiệp vụ có thể bị xóa (POI, bản dịch/media metadata và tài khoản Admin) phải dùng soft delete; không xóa vật lý theo luồng nghiệp vụ thông thường.
 - Bản ghi bị xóa mềm phải có tối thiểu `deleted_at` và `deleted_by` (hoặc trường tương đương), bị loại khỏi truy vấn/danh sách mặc định và không được dùng để tạo nghiệp vụ mới. Khôi phục chỉ dành cho role được cấp quyền và phải ghi audit.
-- Giữ nguyên quan hệ và lịch sử giao dịch/audit; xóa mềm POI không được làm mất audit hay làm hỏng tham chiếu của báo cáo. Ràng buộc unique phải tính đến trạng thái đã xóa theo thiết kế DB.
+- Giữ nguyên quan hệ và lịch sử audit; xóa mềm POI không được làm mất audit hay làm hỏng tham chiếu của báo cáo. Ràng buộc unique phải tính đến trạng thái đã xóa theo thiết kế DB.
 - Audit log là append-only; không soft-delete hoặc chỉnh sửa log qua UI nghiệp vụ. Ngoại lệ xóa vật lý chỉ khi có yêu cầu pháp lý/bảo vệ dữ liệu được phê duyệt, có quy trình riêng và audit.
 
 ## Open Decisions còn lại sau cập nhật
 
 - Kết quả đo kiểm NFR trên môi trường mục tiêu và danh sách trình duyệt/thiết bị hỗ trợ.
 - Metric nguồn dữ liệu thực tế và kiểm thử độ chính xác sau khi có instrumentation; các ngưỡng ở đây là tiêu chí mục tiêu, chưa phải kết quả đo.
-- Chính sách khôi phục/retention cụ thể theo luật áp dụng và khả năng hạ tầng; mục tiêu mặc định nêu tại UC13–UC15 cần được rà soát trước production.
-- Tích hợp thanh toán/QR tự động thuộc giai đoạn sau MVP; VNPAY Sandbox chỉ là phương án thử nghiệm tham khảo, chưa phải cam kết triển khai.
+- Chính sách khôi phục/retention cụ thể theo luật áp dụng và khả năng hạ tầng; mục tiêu mặc định nêu tại UC14–UC15 cần được rà soát trước production.
+- Không có tích hợp thanh toán hoặc đơn hàng trong phạm vi hiện hành.

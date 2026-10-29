@@ -2,6 +2,14 @@
 
 Nền tảng thuyết minh đa ngôn ngữ gồm Web User, Web Admin và REST API Spring Boot.
 
+## Ma trận quyền hiện hành (2026-10-29)
+
+- **User:** kích hoạt QR hợp lệ, xem bản đồ/POI công khai và nghe audio theo grant.
+- **Admin:** quản lý POI, bản dịch, media/audio, QR và Analytics toàn hệ thống.
+- **Super Admin:** quản lý tài khoản Admin và đọc Audit Log; không có quyền Admin/Analytics.
+- **Seller, payment/order Seller, Seller report và dynamic RBAC:** đã loại bỏ. UC09/UC13 đã nghỉ; UC12 chỉ quản lý QR hiện có.
+- **Production:** Flyway V6 đã áp dụng. Hậu kiểm cho thấy 1 Admin active và 0 Super Admin; bootstrap tài khoản Super Admin cần quy trình được ủy quyền.
+
 ## Hai cách chạy được hỗ trợ
 
 ### 1. Web User — production trên Internet
@@ -110,4 +118,4 @@ Integration tests (`mvnw verify`) cần database kiểm thử riêng qua `TEST_D
 | Lỗi CORS | Kiểm tra origin chính xác và `APP_CORS_ALLOWED_ORIGINS` của backend đích. |
 | Admin đã lưu nhưng User chưa thấy dữ liệu | Kiểm tra POI đã publish chưa và xác minh hai backend trỏ cùng Neon database. Tải lại Web User. |
 
-Tài liệu liên quan: [Kiến trúc](docs/architecture/architecture.md) · [API contract](docs/architecture/api.md) · [Use Cases](docs/requirements/Use_Case_Specification_Final_15_UC.md) · [Web Admin](apps/admin/README.md) · [Web User](apps/web/README.md) · [Backend](services/backend/README.md) · [Triển khai](docs/operations/deployment.md) · [CI](docs/operations/ci-cd.md).
+Tài liệu liên quan: [Kế hoạch chuẩn hóa quyền và loại bỏ Seller](docs/planning/role-matrix-seller-removal-plan.md) · [Kiến trúc](docs/architecture/architecture.md) · [API contract](docs/architecture/api.md) · [Use Cases](docs/requirements/Use_Case_Specification_Final_15_UC.md) · [Web Admin](apps/admin/README.md) · [Web User](apps/web/README.md) · [Backend](services/backend/README.md) · [Triển khai](docs/operations/deployment.md) · [CI](docs/operations/ci-cd.md).

@@ -14,6 +14,7 @@ Tài liệu được tổ chức theo yêu cầu, kiến trúc, phát triển, k
 - [Backend: kiến trúc và quy tắc phụ thuộc](../services/backend/ARCHITECTURE.md)
 
 ## Phát triển và lập kế hoạch
+- [Kế hoạch chuẩn hóa ma trận quyền và loại bỏ Seller](planning/role-matrix-seller-removal-plan.md) — quyết định và truy vết triển khai; Flyway V6 đã áp dụng trên production. Seller/UC09/UC13 không còn là nghiệp vụ hiện hành.
 - [Development standards](development/DEVELOPMENT_STANDARDS.md)
 - [Mobile development notes](development/mobile.md) — tài liệu tham khảo; mã nguồn mobile chưa có trong nhánh hiện tại.
 - [Testing](development/testing.md)

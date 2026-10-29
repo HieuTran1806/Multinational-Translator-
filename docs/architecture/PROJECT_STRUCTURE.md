@@ -7,7 +7,7 @@ Các phần hiện có và còn thiếu:
 - Ứng dụng di động User: chưa khôi phục trên nhánh này.
 - `services/backend/`: Spring Boot REST API, PostgreSQL/Flyway, media storage và TTS; đang được tái cấu trúc theo từng bước.
 - Ứng dụng web Admin: chưa khôi phục trên nhánh này.
-- Luồng Seller/thanh toán/QR: chưa có controller/model triển khai trong backend cũ.
+- Luồng Seller/thanh toán đã loại bỏ; QR/grant hiện hành phục vụ Admin và User, không có seller ownership.
 - Hạ tầng và môi trường phát triển cục bộ: chưa khôi phục ngoài cấu hình riêng của backend.
 - Design token dùng chung: chưa khôi phục trên nhánh này.
 

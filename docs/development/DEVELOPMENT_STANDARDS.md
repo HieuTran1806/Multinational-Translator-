@@ -205,7 +205,7 @@ Các luồng audio, offline và analytics cần quy định rõ trạng thái h�
 
 - Backend là nơi thực thi quyền truy cập có thẩm quyền; mọi endpoint nhạy cảm phải kiểm tra quyền ở server.
 - Áp dụng RBAC theo UC11; UI chỉ hỗ trợ trải nghiệm và không thay thế kiểm tra quyền phía backend.
-- Phân biệt rõ UC09 (quản lý tài khoản Seller) và UC10 (quản lý tài khoản Admin).
+- UC09 đã loại bỏ; UC10 chỉ cho Super Admin quản lý tài khoản Admin.
 - Quy trình tạo Admin, vai trò mặc định và quyền có hiệu lực phải theo Use Case/đặc tả đã thống nhất; không tự gán thêm quyền.
 - Kiểm tra dữ liệu ở cả frontend (trải nghiệm) và backend (bảo vệ dữ liệu).
 - Không log mật khẩu, token, secret hoặc dữ liệu cá nhân không cần thiết.
@@ -263,7 +263,7 @@ Tùy stack, ưu tiên:
 Các luồng E2E tối thiểu cần cân nhắc dựa trên đặc tả:
 
 - User: kích hoạt QR một lần, khôi phục phiên trên cùng thiết bị trong 24 giờ, chọn ngôn ngữ, khám phá bản đồ, mở chi tiết POI và phát audio online. Không có tài khoản Tourist hoặc tính năng offline.
-- Admin: đăng nhập, quản lý POI/nội dung/audio, tạo/quản lý Seller, xem Analytics. Super Admin: quản lý Admin/RBAC và xem Audit Log; không quản lý POI/Seller.
+- Admin: quản lý POI/bản dịch/media/QR và Analytics. Super Admin: quản lý tài khoản Admin và Audit Log; không có Seller hoặc dynamic RBAC.
 - Phân quyền: kiểm tra cả trường hợp được phép và bị từ chối ở backend.
 
 ### 9.2 Danh sách kiểm tra tiêu chí hoàn thành

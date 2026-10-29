@@ -1,8 +1,8 @@
 # REST API `/api/v1`
 
-> **Hợp đồng chuẩn cho giai đoạn xây dựng lại:** [phase-1-contract-baseline.md](./phase-1-contract-baseline.md) là nguồn tham chiếu cho quy ước chung, cấu trúc phản hồi lỗi, RBAC và nghiệp vụ Seller/thanh toán/QR. Các endpoint cũ hoặc được đánh dấu đề xuất trong tài liệu này không mặc nhiên được xem là điểm cuối API đã được triển khai.
+> **Ma trận quyền hiện hành:** [Kế hoạch chuẩn hóa ma trận quyền và loại bỏ Seller](../planning/role-matrix-seller-removal-plan.md). Analytics chỉ cho ADMIN; tài khoản Admin và Audit Log chỉ cho SUPER_ADMIN; các API nghiệp vụ `/api/v1/admin/**` chỉ cho ADMIN; Seller endpoints đã bị loại bỏ. API matrix dưới đây phản ánh code hiện hành; không có endpoint Seller.
 
-> **Lưu ý phạm vi:** Tài liệu này phản ánh hợp đồng/hiện trạng API hiện có. Nghiệp vụ đích mới cần bổ sung giao dịch Seller, xác minh thanh toán, QR dùng một lần, quyền User có thời hạn và báo cáo Seller; các endpoint/cơ chế ngoại tuyến cũ không thuộc phạm vi nghiệp vụ chỉ hoạt động khi có mạng và cần được rà soát riêng.
+
 
 OpenAPI: `GET /v3/api-docs`, giao diện Swagger: `/swagger-ui.html` (bật trong môi trường phát triển; tắt trong production trừ khi `APP_API_DOCS_ENABLED=true`).
 
@@ -66,7 +66,7 @@ X-Device-Id: <mã thiết bị ngẫu nhiên do app tự sinh một lần, 16–
 - Đổi QR là nguyên tử (`UPDATE ... WHERE status='ISSUED'` + `UNIQUE(access_grant.qr_id)`): nhiều thiết bị đổi cùng lúc chỉ một thành công.
 - Thời hạn grant lấy từ bảng `access_package` (`DEMO_24H` = 1440 phút), tính từ lúc đổi thành công.
 - DB chỉ lưu SHA-256 của token QR, token grant và mã thiết bị; không log token.
-- Tạm thời **Admin** tạo QR vì UC12 (Seller) ngoài MVP. URL trong QR cấu hình bằng `APP_ACCESS_ACTIVATION_URL`.
+- **Admin** tạo và quản lý QR truy cập theo UC12 hiện hành. URL trong QR cấu hình bằng `APP_ACCESS_ACTIVATION_URL`.
 
 ## API User (cần grant UC02, trừ `/public/languages`)
 
@@ -83,22 +83,23 @@ X-Device-Id: <mã thiết bị ngẫu nhiên do app tự sinh một lần, 16–
 
 ## API quản trị (Bearer token)
 
-- `ADMIN`: quản lý POI/nội dung/đa phương tiện/âm thanh và tạo/quản lý Seller.
-- `SUPER_ADMIN`: quản lý tài khoản Admin, RBAC và Audit Log; không có quyền quản lý POI hoặc Seller.
+- `ADMIN`: quản lý POI, bản dịch, media, QR và Analytics toàn hệ thống.
+- `SUPER_ADMIN`: quản lý tài khoản Admin và đọc Audit Log; không có quyền gọi API nghiệp vụ Admin hoặc Analytics.
 - Chỉ `SUPER_ADMIN` được xem Audit Log toàn hệ thống. Mọi quy tắc phải được thực thi tại backend, không chỉ ẩn giao diện.
 
-> **RBAC đích đã chốt và đã thực thi:** `SecurityConfig` khai báo các matcher riêng **trước** `/api/v1/admin/**` — `/api/v1/admin/accounts/**` và `/api/v1/admin/audit/**` chỉ `SUPER_ADMIN`, `/api/v1/admin/analytics/**` cho `ADMIN` + `SUPER_ADMIN`, phần còn lại của `/api/v1/admin/**` chỉ `ADMIN`. Nhờ vậy Super Admin bị 403 khi quản lý POI/nội dung/audio và `/api/v1/admin/sellers/**`, còn Admin/ Seller bị 403 ở UC10 và Audit Log. Kiểm thử: `SecurityIT`, `SellerFlowIT`, `AdminAccountFlowIT`. Khi thêm endpoint mới cho Super Admin phải khai báo matcher riêng trước `/api/v1/admin/**`.
+> **RBAC hiện hành:** `/api/v1/admin/accounts/**` và `/api/v1/admin/audit/**` chỉ `SUPER_ADMIN`; `/api/v1/admin/analytics/**` chỉ `ADMIN`; phần còn lại của `/api/v1/admin/**` chỉ `ADMIN`. Các matcher cụ thể đứng trước matcher tổng quát; mọi route không được khai báo bị từ chối.
 
 ### Quản lý tài khoản Admin (UC10 — chỉ `SUPER_ADMIN`)
 
 | Phương thức | Đường dẫn | Mô tả |
 |---|---|---|
-| GET | `/admin/accounts?page&size&q&role` | Danh sách tài khoản `ADMIN`/`SUPER_ADMIN` đang hoạt động (không trả về hash mật khẩu), mới nhất trước |
-| POST | `/admin/accounts` | Tạo tài khoản `{username, password, displayName?, role?}` → 201; trùng username → 409; `role` chỉ nhận `ADMIN`/`SUPER_ADMIN` |
-| PUT | `/admin/accounts/{id}` | Cập nhật `{displayName?, enabled?, role?}`; 403 khi tự vô hiệu hóa/tự đổi role hoặc làm mất Super Admin đang hoạt động cuối cùng (E2) |
+| GET | `/admin/accounts?page&size&q` | Danh sách tài khoản `ADMIN` đang hoạt động (không trả về hash mật khẩu), mới nhất trước |
+| POST | `/admin/accounts` | Tạo tài khoản `{username, password, displayName?}` → 201; trùng username → 409; role được backend cố định thành `ADMIN` |
+| PUT | `/admin/accounts/{id}` | Cập nhật `{displayName?, enabled?}`; target phải là tài khoản `ADMIN` |
+| GET | `/admin/accounts/{id}` | Chi tiết một tài khoản Admin; target khác role ADMIN trả 404 |
+| DELETE | `/admin/accounts/{id}` | Xóa mềm Admin, vô hiệu hóa đăng nhập và giữ lịch sử |
 | POST | `/admin/accounts/{id}/reset-password` | Đặt lại mật khẩu `{newPassword}`; chỉ lưu hash BCrypt, không ghi mật khẩu vào audit log |
 
-- Tài khoản Seller thuộc UC09 (`/admin/sellers`); UC10 từ chối id của Seller (404) để hai luồng không lẫn nhau.
 - Role vẫn là mô hình tĩnh `ADMIN`/`SUPER_ADMIN`; RBAC động (UC11) chưa triển khai.
 - Mọi thao tác ghi audit `ADMIN_CREATE`/`ADMIN_UPDATE`/`ADMIN_RESET_PASSWORD` và chỉ Super Admin đọc được các bản ghi này qua `GET /admin/audit`.
 
@@ -125,31 +126,12 @@ X-Device-Id: <mã thiết bị ngẫu nhiên do app tự sinh một lần, 16–
 
 `GET /actuator/health` (+ `/liveness`, `/readiness`) — public, không lộ chi tiết.
 
-## Hợp đồng đích Seller/thanh toán/QR — chưa triển khai hoặc xác minh
+## Seller và thanh toán đã loại khỏi phạm vi
 
-> Phần này là đề xuất kiến trúc đích, không khẳng định endpoint đã tồn tại trong OpenAPI hoặc mã nguồn.
-
-| Phương thức | Đường dẫn đề xuất | Hành vi |
-|---|---|---|
-| POST | `/seller/transactions` | Định hướng giai đoạn sau (UC12 ngoài MVP); gói lấy từ cấu hình/dữ liệu, không hard-code. |
-| POST | `/seller/transactions/{id}/cancel` | Định hướng giai đoạn sau; chính sách hủy do Seller/chủ sản phẩm chốt khi UC12 được triển khai. |
-| GET | `/seller/transactions/{id}` | Định hướng giai đoạn sau; kiểm tra quyền sở hữu ở backend, không lộ secret. |
-| POST | `/payments/vnpay/return` | Điều hướng trình duyệt; không coi chuyển hướng trình duyệt là bằng chứng thanh toán. |
-| POST | `/payments/vnpay/ipn` | Xác minh chữ ký, mã tham chiếu, số tiền/trạng thái; xử lý idempotent; sai lệch chuyển sang cần kiểm tra. |
-
-`/public/access/redeem` và `/public/access/me` đã được triển khai (xem mục "Truy cập User bằng QR"). Khi làm UC12, Seller tạo QR qua `AccessQrAdminService` sau khi thanh toán được xác nhận, thay cho Admin.
-
-### Quy tắc tích hợp VNPAY Sandbox
-
-- Chỉ cấu hình endpoint và thông tin xác thực thương gia của môi trường sandbox; bí mật không được commit vào kho mã nguồn.
-- Xác minh checksum/chữ ký theo tài liệu chính thức, đối chiếu mã đơn hàng, số tiền và trạng thái. Không tin tham số từ trình duyệt đơn thuần.
-- Callback lặp/trễ phải idempotent; không tạo QR/grant trùng. Kiểm thử chữ ký sai, số tiền/mã sai, callback trễ/lặp và timeout.
-- Chỉ phát QR sau khi backend xác nhận thanh toán. Grant và đánh dấu QR đã dùng phải được bảo vệ bằng giao dịch/ràng buộc dữ liệu để không thể cấp hai grant.
-- UC12 ngoài MVP. Thiết kế gói phải mở rộng được; `DEMO_24H` (1 VND/24 giờ kể từ lúc kích hoạt thành công) chỉ là cấu hình demo tham khảo cho giai đoạn sau. Seller tạo/cấp QR riêng cho từng khách hàng sau khi thanh toán thành công; QR không tự hết hạn trước khi kích hoạt. UC12 và nghiệp vụ tạo QR nội bộ ngoài MVP.
-- IPN có thể cần URL backend truy cập được từ Internet; `localhost` không tự nhận callback từ nhà cung cấp. Nếu dùng tunnel, chỉ dùng tunnel demo có kiểm soát.
+Không có API Seller, giao dịch hoặc tích hợp thanh toán. UC12 chỉ bao gồm quản lý QR Admin hiện có; việc kích hoạt QR và cấp grant User tuân theo các endpoint public đã mô tả ở trên.
 
 ### Bảo vệ quyền User
 
 Tất cả API User yêu cầu quyền truy cập hợp lệ ở backend, ngoại trừ điểm cuối API tối thiểu cần thiết để xem/đổi QR và xử lý lỗi. QR riêng cho từng khách hàng, chỉ kích hoạt một lần; grant gắn với thiết bị đã kích hoạt. Phiên có thể được khôi phục trên cùng thiết bị trong 24 giờ; không hỗ trợ chuyển thiết bị hoặc cấp lại grant sang thiết bị khác.
 
-Đã thực thi trong `SecurityConfig`: `GET /api/v1/public/**` yêu cầu `ROLE_VISITOR`, chỉ trừ `/public/languages` và `POST /public/access/redeem`. Kiểm thử: `AccessFlowIT`, `AccessGrantServiceTest`. Các endpoint Seller/thanh toán ở bảng trên vẫn là hợp đồng đề xuất.
+Đã thực thi trong `SecurityConfig`: `GET /api/v1/public/**` yêu cầu `ROLE_VISITOR`, chỉ trừ `/public/languages` và `POST /public/access/redeem`. Kiểm thử: `AccessFlowIT`, `AccessGrantServiceTest`. Không có endpoint Seller/thanh toán trong hợp đồng hiện hành.
