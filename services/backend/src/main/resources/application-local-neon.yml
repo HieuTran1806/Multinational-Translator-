@@ -1,0 +1,24 @@
+# Local backend talking to the Neon production database.
+# Start via scripts/run-local-neon.ps1, which builds DB_URL/DB_USERNAME/DB_PASSWORD
+# from the repo-root .env.local DATABASE_URL (postgresql:// URI -> JDBC URL).
+# Fails fast when DB_* are missing: never silently falls back to a local database.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  flyway:
+    locations: classpath:db/migration   # never loads demo data
+app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+logging:
+  level:
+    vn.edu.thuyetminh: INFO
+storage:
+  r2:
+    endpoint: ${R2_ENDPOINT}
+    region: ${R2_REGION:auto}
+    bucket: ${R2_BUCKET}
+    access-key-id: ${R2_ACCESS_KEY_ID}
+    secret-access-key: ${R2_SECRET_ACCESS_KEY}
