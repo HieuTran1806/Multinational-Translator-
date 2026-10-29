@@ -78,6 +78,20 @@ export const sellersApi = {
   remove: (id) => request(`/api/v1/admin/sellers/${id}`, { method: 'DELETE' }),
 };
 
+/** UC10 admin/super-admin account management (SUPER_ADMIN only; Admin and Seller get 403). */
+export const adminAccountsApi = {
+  list: ({ page = 0, size = 20, q, role } = {}) => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (q) params.set('q', q);
+    if (role) params.set('role', role);
+    return request(`/api/v1/admin/accounts?${params}`);
+  },
+  create: (data) => request('/api/v1/admin/accounts', { method: 'POST', body: data }),
+  update: (id, data) => request(`/api/v1/admin/accounts/${id}`, { method: 'PUT', body: data }),
+  resetPassword: (id, newPassword) =>
+    request(`/api/v1/admin/accounts/${id}/reset-password`, { method: 'POST', body: { newPassword } }),
+};
+
 /** UC14 system analytics (ADMIN + SUPER_ADMIN). */
 export const analyticsApi = {
   summary: ({ from, to } = {}) => {

@@ -102,6 +102,11 @@ public class Account {
         return role;
     }
 
+    /** UC10: only a Super Admin may change this (see AdminAccountService), never on itself. */
+    public void changeRole(AccountRole role) {
+        this.role = role;
+    }
+
     public boolean isEnabled() {
         return enabled;
     }

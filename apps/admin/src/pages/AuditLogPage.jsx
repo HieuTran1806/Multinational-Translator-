@@ -8,6 +8,9 @@ const PAGE_SIZE = 20;
 
 const ACTIONS = [
   ['', 'Tất cả hành động'],
+  ['ADMIN_CREATE', 'Tạo tài khoản Admin'],
+  ['ADMIN_UPDATE', 'Cập nhật tài khoản Admin'],
+  ['ADMIN_RESET_PASSWORD', 'Đặt lại mật khẩu Admin'],
   ['SELLER_CREATE', 'Tạo Seller'],
   ['SELLER_UPDATE', 'Cập nhật Seller'],
   ['SELLER_DELETE', 'Xóa Seller'],

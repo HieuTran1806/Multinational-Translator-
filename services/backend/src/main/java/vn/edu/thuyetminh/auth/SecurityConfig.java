@@ -67,6 +67,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/public/usage-events").hasRole("VISITOR")
                         // UC15: only Super Admin reads the audit log — before the ADMIN-only /admin rule.
                         .requestMatchers("/api/v1/admin/audit/**").hasRole("SUPER_ADMIN")
+                        // UC10: admin/super-admin account management belongs to Super Admin only.
+                        .requestMatchers("/api/v1/admin/accounts/**").hasRole("SUPER_ADMIN")
                         // UC14: analytics is shared by Admin and Super Admin.
                         .requestMatchers("/api/v1/admin/analytics/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                         // UC07 + UC09: POI content and Seller management belong to ADMIN. SUPER_ADMIN must never

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import vn.edu.thuyetminh.auth.Account;
 import vn.edu.thuyetminh.auth.AccountRepository;
+import vn.edu.thuyetminh.auth.AccountRole;
 import vn.edu.thuyetminh.auth.AccountStore;
 import vn.edu.thuyetminh.common.error.ApiException;
 import vn.edu.thuyetminh.common.error.ErrorCode;
@@ -47,11 +48,31 @@ public class JpaAccountStore implements AccountStore {
     }
 
     @Override public PageResponse<Account> searchSellers(String q, int page, int size) {
+        return toPage(repository.searchSellers(q == null ? "" : q, pageRequest(page, size)));
+    }
+
+    @Override public PageResponse<Account> searchAdmins(String q, AccountRole role, int page, int size) {
+        String query = q == null ? "" : q;
+        PageRequest request = pageRequest(page, size);
+        Page<Account> result = role == null
+                ? repository.searchAdmins(query, request)
+                : repository.searchAdminsByRole(query, role, request);
+        return toPage(result);
+    }
+
+    @Override public long countActiveSuperAdminsExcept(Long excludeId) {
+        return excludeId == null ? repository.countByRoleAndDeletedAtIsNull(AccountRole.SUPER_ADMIN)
+                : repository.countActiveSuperAdminsExcept(excludeId);
+    }
+
+    private static PageRequest pageRequest(int page, int size) {
         if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
             throw new ApiException(ErrorCode.BAD_REQUEST, "page phải >= 0 và size trong khoảng 1.." + MAX_PAGE_SIZE);
         }
-        Page<Account> result = repository.searchSellers(q == null ? "" : q,
-                PageRequest.of(page, size, NEWEST_FIRST));
+        return PageRequest.of(page, size, NEWEST_FIRST);
+    }
+
+    private static PageResponse<Account> toPage(Page<Account> result) {
         return new PageResponse<>(result.getContent(), result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages());
     }

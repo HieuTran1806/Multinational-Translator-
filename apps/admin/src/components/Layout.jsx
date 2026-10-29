@@ -71,6 +71,7 @@ const CRUMBS = [
   [/^\/access-qrs$/, 'QR truy cập'],
   [/^\/sellers$/, 'Tài khoản Seller'],
   [/^\/analytics$/, 'Analytics'],
+  [/^\/accounts$/, 'Tài khoản Admin'],
   [/^\/audit$/, 'Audit Log'],
   [/^\/reports$/, 'Báo cáo của tôi'],
 ];
@@ -146,6 +147,19 @@ export default function Layout() {
                     <ChartIcon />
                   </span>
                   Analytics
+                </>
+              )}
+            </NavLink>
+          )}
+          {/* UC10: only Super Admin manages Admin/Super Admin accounts. */}
+          {isSuper && (
+            <NavLink to="/accounts" className={navClass}>
+              {({ isActive }) => (
+                <>
+                  <span aria-hidden="true" className={isActive ? 'text-olive' : 'text-muted'}>
+                    <UsersIcon />
+                  </span>
+                  Tài khoản Admin
                 </>
               )}
             </NavLink>

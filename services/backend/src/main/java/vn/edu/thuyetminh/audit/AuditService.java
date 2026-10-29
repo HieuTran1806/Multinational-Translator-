@@ -29,6 +29,9 @@ public class AuditService {
     public static final String SELLER_UPDATE = "SELLER_UPDATE";
     public static final String SELLER_DELETE = "SELLER_DELETE";
     public static final String SELLER_RESET_PASSWORD = "SELLER_RESET_PASSWORD";
+    public static final String ADMIN_CREATE = "ADMIN_CREATE";
+    public static final String ADMIN_UPDATE = "ADMIN_UPDATE";
+    public static final String ADMIN_RESET_PASSWORD = "ADMIN_RESET_PASSWORD";
     public static final String QR_ISSUE = "QR_ISSUE";
     public static final String QR_REDEEM = "QR_REDEEM";
     public static final String QR_REVOKE = "QR_REVOKE";

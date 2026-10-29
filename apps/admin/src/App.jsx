@@ -9,6 +9,7 @@ import SellersPage from './pages/SellersPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
 import AuditLogPage from './pages/AuditLogPage.jsx';
 import SellerReportsPage from './pages/SellerReportsPage.jsx';
+import AdminAccountsPage from './pages/AdminAccountsPage.jsx';
 
 function RequireAuth({ children }) {
   const { isAuthenticated } = useAuth();
@@ -44,10 +45,22 @@ const SUPER_ONLY = {
   title: 'Không đủ quyền truy cập',
   message: 'Audit Log chỉ dành cho Super Admin (UC15).',
 };
+const ACCOUNTS_SUPER_ONLY = {
+  roles: ['SUPER_ADMIN'],
+  title: 'Không đủ quyền truy cập',
+  message: 'Quản lý tài khoản Admin chỉ dành cho Super Admin (UC10). Backend cũng trả 403 cho vai trò khác.',
+};
+const SELLER_ONLY = {
+  roles: ['SELLER'],
+  title: 'Không đủ quyền truy cập',
+  message: 'Báo cáo chỉ dành cho tài khoản Seller (UC13). Backend cũng từ chối vai trò khác (403).',
+};
 
 function HomeRedirect() {
   const { account } = useAuth();
-  return <Navigate to={account?.role === 'SELLER' ? '/reports' : '/pois'} replace />;
+  if (account?.role === 'SELLER') return <Navigate to="/reports" replace />;
+  if (account?.role === 'SUPER_ADMIN') return <Navigate to="/accounts" replace />;
+  return <Navigate to="/pois" replace />;
 }
 
 export default function App() {
@@ -122,8 +135,24 @@ export default function App() {
             </RequireRole>
           }
         />
-        {/* UC13: the seller's own reports. */}
-        <Route path="/reports" element={<SellerReportsPage />} />
+        {/* UC10: admin account management — SUPER_ADMIN only. */}
+        <Route
+          path="/accounts"
+          element={
+            <RequireRole {...ACCOUNTS_SUPER_ONLY}>
+              <AdminAccountsPage />
+            </RequireRole>
+          }
+        />
+        {/* UC13: the seller's own reports — SELLER only, like the backend. */}
+        <Route
+          path="/reports"
+          element={
+            <RequireRole {...SELLER_ONLY}>
+              <SellerReportsPage />
+            </RequireRole>
+          }
+        />
         <Route path="*" element={<p className="text-stone">Không tìm thấy trang.</p>} />
       </Route>
     </Routes>
