@@ -15,11 +15,11 @@ const ENTRY = (over = {}) => ({
   occurredAt: '2026-10-27T09:30:00Z',
   actorId: 1,
   actorName: 'it_admin',
-  action: 'SELLER_CREATE',
+  action: 'ADMIN_CREATE',
   resourceType: 'ACCOUNT',
   resourceId: '3',
   result: 'SUCCESS',
-  detail: 'username=seller_01',
+  detail: 'username=admin01',
   ...over,
 });
 
@@ -42,7 +42,7 @@ describe('AuditLogPage (UC15 – Super Admin tra cứu audit log)', () => {
         <AuditLogPage />
       </MemoryRouter>,
     );
-    const table = (await screen.findByText('SELLER_CREATE')).closest('table');
+    const table = (await screen.findByText('ADMIN_CREATE')).closest('table');
     expect(within(table).getByText('it_admin')).toBeInTheDocument();
     expect(within(table).getByText('Thành công')).toBeInTheDocument();
     expect(within(table).getByText('ACCOUNT #3')).toBeInTheDocument();
@@ -66,11 +66,11 @@ describe('AuditLogPage (UC15 – Super Admin tra cứu audit log)', () => {
       </MemoryRouter>,
     );
     await screen.findByRole('combobox', { name: 'Hành động' });
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Hành động' }), 'SELLER_CREATE');
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Hành động' }), 'ADMIN_CREATE');
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Kết quả' }), 'DENIED');
     await waitFor(() => {
       const last = auditApi.list.mock.calls.at(-1)[0];
-      expect(last.action).toBe('SELLER_CREATE');
+      expect(last.action).toBe('ADMIN_CREATE');
       expect(last.result).toBe('DENIED');
       expect(last.page).toBe(0);
     });

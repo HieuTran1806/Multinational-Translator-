@@ -1,5 +1,5 @@
-# Audit Log — UC16
+# Audit Log — UC15
 
-Chứa giao diện xem và lọc audit log theo phạm vi Use Case, gồm trạng thái empty/error và chi tiết hành động chỉ khi đặc tả đã phê duyệt.
+Chỉ `SUPER_ADMIN` được đọc `/api/v1/admin/audit/**`. Backend là nguồn audit có thẩm quyền; UI không tự tạo hoặc sửa log và không hiển thị token/credential.
 
-Nguồn audit có thẩm quyền là backend. Không tự thêm Audit Log Detail/export nếu ngoài phạm vi; không để log UI chứa token hoặc dữ liệu nhạy cảm.
+Seller-only action labels đã loại bỏ; log dùng chung hoặc log Admin/Super Admin ngoài phạm vi xóa vẫn được bảo toàn.

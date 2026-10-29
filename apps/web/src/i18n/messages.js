@@ -181,7 +181,7 @@ export const MESSAGES = {
     'activate.scanAgain': 'Scan another code',
     'activate.missingToken': 'This activation link has no QR code.',
     'activate.err.invalid': 'This QR code is invalid or has been revoked. Please check the code you were given.',
-    'activate.err.used': 'This QR code has already been used. Please contact the seller for help.',
+    'activate.err.used': 'This QR code has already been used. Please contact the site administrator for help.',
     'activate.err.network': 'The server cannot be reached, so activation is not possible yet. Check your connection and try again.',
     'activate.err.generic': 'Something went wrong during activation. Please try again.',
 

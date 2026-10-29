@@ -69,11 +69,9 @@ const CRUMBS = [
   [/^\/pois\/new$/, 'Tạo POI'],
   [/^\/pois\/\d+$/, 'Chi tiết & chỉnh sửa POI'],
   [/^\/access-qrs$/, 'QR truy cập'],
-  [/^\/sellers$/, 'Tài khoản Seller'],
   [/^\/analytics$/, 'Analytics'],
   [/^\/accounts$/, 'Tài khoản Admin'],
   [/^\/audit$/, 'Audit Log'],
-  [/^\/reports$/, 'Báo cáo của tôi'],
 ];
 
 export default function Layout() {
@@ -81,7 +79,6 @@ export default function Layout() {
   const { pathname } = useLocation();
   const isAdmin = account?.role === 'ADMIN';
   const isSuper = account?.role === 'SUPER_ADMIN';
-  const isSeller = account?.role === 'SELLER';
   const crumb = CRUMBS.find(([re]) => re.test(pathname))?.[1];
 
   return (
@@ -112,7 +109,7 @@ export default function Layout() {
               )}
             </NavLink>
           )}
-          {/* UC02: Admin issues visitor QR codes until the Seller flow (UC12) exists. */}
+          {/* UC02/UC12: Admin issues and manages visitor QR codes. */}
           {isAdmin && (
             <NavLink to="/access-qrs" className={navClass}>
               {({ isActive }) => (
@@ -125,21 +122,8 @@ export default function Layout() {
               )}
             </NavLink>
           )}
-          {/* UC09: seller accounts are an Admin responsibility. */}
+          {/* UC14: analytics is Admin-only. */}
           {isAdmin && (
-            <NavLink to="/sellers" className={navClass}>
-              {({ isActive }) => (
-                <>
-                  <span aria-hidden="true" className={isActive ? 'text-olive' : 'text-muted'}>
-                    <UsersIcon />
-                  </span>
-                  Tài khoản Seller
-                </>
-              )}
-            </NavLink>
-          )}
-          {/* UC14: analytics is shared by Admin and Super Admin. */}
-          {(isAdmin || isSuper) && (
             <NavLink to="/analytics" className={navClass}>
               {({ isActive }) => (
                 <>
@@ -151,7 +135,7 @@ export default function Layout() {
               )}
             </NavLink>
           )}
-          {/* UC10: only Super Admin manages Admin/Super Admin accounts. */}
+          {/* UC10: only Super Admin manages Admin accounts. */}
           {isSuper && (
             <NavLink to="/accounts" className={navClass}>
               {({ isActive }) => (
@@ -177,19 +161,6 @@ export default function Layout() {
               )}
             </NavLink>
           )}
-          {/* UC13: the seller sees only its own reports. */}
-          {isSeller && (
-            <NavLink to="/reports" className={navClass}>
-              {({ isActive }) => (
-                <>
-                  <span aria-hidden="true" className={isActive ? 'text-olive' : 'text-muted'}>
-                    <ChartIcon />
-                  </span>
-                  Báo cáo của tôi
-                </>
-              )}
-            </NavLink>
-          )}
         </nav>
         {USE_MOCK && (
           <p className="mx-4 mt-2 inline-block rounded bg-terracotta px-2 py-0.5 text-[11px] font-bold text-paper">
@@ -205,7 +176,7 @@ export default function Layout() {
               {account?.displayName || account?.username}
             </span>
             <span className="block text-[11px] text-muted">
-              {account?.role === 'SUPER_ADMIN' ? 'Super Admin' : account?.role === 'SELLER' ? 'Seller' : 'Quản trị viên'}
+              {account?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Quản trị viên'}
             </span>
           </span>
           <Button variant="ghost" className="!px-2 !py-1 text-[11px]" onClick={logout} title="Đăng xuất">

@@ -41,15 +41,15 @@ export const ttsApi = {
   job: (jobId) => request(`/api/v1/admin/tts/jobs/${jobId}`),
 };
 
-/** UC02 access QR codes (issued by Admin while UC12/Seller is out of the MVP). */
+/** UC02/UC12 access QR codes issued and managed by Admin. */
 export const accessQrApi = {
   list: ({ page = 0, size = 20, status } = {}) => {
     const params = new URLSearchParams({ page: String(page), size: String(size) });
     if (status) params.set('status', status);
     return request(`/api/v1/admin/access-qrs?${params}`);
   },
-  issue: ({ note, packageCode, sellerUsername } = {}) =>
-    request('/api/v1/admin/access-qrs', { method: 'POST', body: { note, packageCode, sellerUsername } }),
+  issue: ({ note, packageCode } = {}) =>
+    request('/api/v1/admin/access-qrs', { method: 'POST', body: { note, packageCode } }),
   revoke: (id) => request(`/api/v1/admin/access-qrs/${id}/revoke`, { method: 'POST' }),
 };
 
@@ -64,35 +64,22 @@ export async function fetchMediaObjectUrl(path, signal) {
   return URL.createObjectURL(blob);
 }
 
-/** UC09 seller account management (ADMIN only; Super Admin is rejected by the backend). */
-export const sellersApi = {
+/** UC10 Admin account management (SUPER_ADMIN only). */
+export const adminAccountsApi = {
   list: ({ page = 0, size = 20, q } = {}) => {
     const params = new URLSearchParams({ page: String(page), size: String(size) });
     if (q) params.set('q', q);
-    return request(`/api/v1/admin/sellers?${params}`);
-  },
-  create: (data) => request('/api/v1/admin/sellers', { method: 'POST', body: data }),
-  update: (id, data) => request(`/api/v1/admin/sellers/${id}`, { method: 'PUT', body: data }),
-  resetPassword: (id, newPassword) =>
-    request(`/api/v1/admin/sellers/${id}/reset-password`, { method: 'POST', body: { newPassword } }),
-  remove: (id) => request(`/api/v1/admin/sellers/${id}`, { method: 'DELETE' }),
-};
-
-/** UC10 admin/super-admin account management (SUPER_ADMIN only; Admin and Seller get 403). */
-export const adminAccountsApi = {
-  list: ({ page = 0, size = 20, q, role } = {}) => {
-    const params = new URLSearchParams({ page: String(page), size: String(size) });
-    if (q) params.set('q', q);
-    if (role) params.set('role', role);
     return request(`/api/v1/admin/accounts?${params}`);
   },
+  get: (id) => request(`/api/v1/admin/accounts/${id}`),
   create: (data) => request('/api/v1/admin/accounts', { method: 'POST', body: data }),
   update: (id, data) => request(`/api/v1/admin/accounts/${id}`, { method: 'PUT', body: data }),
   resetPassword: (id, newPassword) =>
     request(`/api/v1/admin/accounts/${id}/reset-password`, { method: 'POST', body: { newPassword } }),
+  remove: (id) => request(`/api/v1/admin/accounts/${id}`, { method: 'DELETE' }),
 };
 
-/** UC14 system analytics (ADMIN + SUPER_ADMIN). */
+/** UC14 system analytics (ADMIN only). */
 export const analyticsApi = {
   summary: ({ from, to } = {}) => {
     const params = new URLSearchParams();
@@ -113,15 +100,5 @@ export const auditApi = {
     if (from) params.set('from', from);
     if (to) params.set('to', to);
     return request(`/api/v1/admin/audit?${params}`);
-  },
-};
-
-/** UC13 seller self reports (SELLER role; scope comes from the server session). */
-export const sellerReportsApi = {
-  summary: ({ from, to } = {}) => {
-    const params = new URLSearchParams();
-    if (from) params.set('from', from);
-    if (to) params.set('to', to);
-    return request(`/api/v1/seller/reports/summary?${params}`);
   },
 };

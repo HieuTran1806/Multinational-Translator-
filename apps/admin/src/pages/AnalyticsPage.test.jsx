@@ -1,12 +1,10 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { analyticsApi, sellerReportsApi } from '../api/endpoints.js';
+import { analyticsApi } from '../api/endpoints.js';
 import AnalyticsPage from './AnalyticsPage.jsx';
-import SellerReportsPage from './SellerReportsPage.jsx';
 
 vi.mock('../api/endpoints.js', () => ({
   analyticsApi: { summary: vi.fn() },
-  sellerReportsApi: { summary: vi.fn() },
 }));
 
 const SUMMARY = {
@@ -21,10 +19,9 @@ const SUMMARY = {
   generatedAt: '2026-10-28T03:00:00Z',
 };
 
-describe('UsageSummary dashboards (UC13 seller reports + UC14 system analytics)', () => {
+describe('UsageSummary dashboard (UC14 system analytics)', () => {
   beforeEach(() => {
     analyticsApi.summary.mockReset().mockResolvedValue(SUMMARY);
-    sellerReportsApi.summary.mockReset().mockResolvedValue(SUMMARY);
   });
   afterEach(() => {
     cleanup();
@@ -38,13 +35,6 @@ describe('UsageSummary dashboards (UC13 seller reports + UC14 system analytics)'
     expect(await screen.findByText('POI được xem nhiều nhất')).toBeInTheDocument();
     expect(screen.getByText(/POI #5/)).toBeInTheDocument();
     expect(screen.getByText(/cập nhật lúc/)).toBeInTheDocument();
-  });
-
-  it('UC13: renders the QR status card for the seller scope', async () => {
-    render(<SellerReportsPage />);
-    expect(await screen.findByText('Mã QR của tôi')).toBeInTheDocument();
-    expect(screen.getByText('Đã kích hoạt:')).toBeInTheDocument();
-    expect(sellerReportsApi.summary).toHaveBeenCalled();
   });
 
   it('shows the empty state when there is no usage data', async () => {

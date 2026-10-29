@@ -1,5 +1,5 @@
-# Analytics — UC15
+# Analytics — UC14
 
-Chứa dashboard, filter và các trạng thái loading/empty/error cho số liệu được backend cung cấp.
+Dashboard hiển thị số liệu vận hành toàn hệ thống do backend cung cấp. Chỉ role `ADMIN` được truy cập UI và `/api/v1/admin/analytics/**`; `SUPER_ADMIN` bị từ chối ở backend.
 
-Không tính hoặc suy diễn số liệu theo cách khác với hợp đồng đã thống nhất. Filter/pagination/time range (nếu có trong Use Case) phải được truyền và thể hiện nhất quán.
+Không còn Seller-scoped analytics hoặc Seller reports. UI phải phản ánh loading/empty/error states từ API thật.

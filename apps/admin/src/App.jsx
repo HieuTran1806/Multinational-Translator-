@@ -5,10 +5,8 @@ import LoginPage from './pages/LoginPage.jsx';
 import PoiListPage from './pages/PoiListPage.jsx';
 import PoiEditPage from './pages/PoiEditPage.jsx';
 import AccessQrPage from './pages/AccessQrPage.jsx';
-import SellersPage from './pages/SellersPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
 import AuditLogPage from './pages/AuditLogPage.jsx';
-import SellerReportsPage from './pages/SellerReportsPage.jsx';
 import AdminAccountsPage from './pages/AdminAccountsPage.jsx';
 
 function RequireAuth({ children }) {
@@ -33,12 +31,12 @@ const ADMIN_ONLY = {
   roles: ['ADMIN'],
   title: 'Không đủ quyền truy cập',
   message:
-    'Chỉ tài khoản Admin mới được quản lý nội dung và Seller. Backend cũng từ chối mọi vai trò khác (403).',
+    'Chỉ tài khoản Admin mới được quản lý nội dung. Backend cũng từ chối mọi vai trò khác (403).',
 };
-const ADMIN_OR_SUPER = {
-  roles: ['ADMIN', 'SUPER_ADMIN'],
+const ADMIN_ANALYTICS_ONLY = {
+  roles: ['ADMIN'],
   title: 'Không đủ quyền truy cập',
-  message: 'Analytics chỉ dành cho Admin và Super Admin.',
+  message: 'Analytics chỉ dành cho Admin.',
 };
 const SUPER_ONLY = {
   roles: ['SUPER_ADMIN'],
@@ -50,15 +48,9 @@ const ACCOUNTS_SUPER_ONLY = {
   title: 'Không đủ quyền truy cập',
   message: 'Quản lý tài khoản Admin chỉ dành cho Super Admin (UC10). Backend cũng trả 403 cho vai trò khác.',
 };
-const SELLER_ONLY = {
-  roles: ['SELLER'],
-  title: 'Không đủ quyền truy cập',
-  message: 'Báo cáo chỉ dành cho tài khoản Seller (UC13). Backend cũng từ chối vai trò khác (403).',
-};
 
 function HomeRedirect() {
   const { account } = useAuth();
-  if (account?.role === 'SELLER') return <Navigate to="/reports" replace />;
   if (account?.role === 'SUPER_ADMIN') return <Navigate to="/accounts" replace />;
   return <Navigate to="/pois" replace />;
 }
@@ -108,20 +100,11 @@ export default function App() {
             </RequireRole>
           }
         />
-        {/* UC09: seller management — ADMIN only (Super Admin must not manage Sellers). */}
-        <Route
-          path="/sellers"
-          element={
-            <RequireRole {...ADMIN_ONLY}>
-              <SellersPage />
-            </RequireRole>
-          }
-        />
-        {/* UC14: analytics — ADMIN + SUPER_ADMIN. */}
+        {/* UC14: analytics — ADMIN only. */}
         <Route
           path="/analytics"
           element={
-            <RequireRole {...ADMIN_OR_SUPER}>
+            <RequireRole {...ADMIN_ANALYTICS_ONLY}>
               <AnalyticsPage />
             </RequireRole>
           }
@@ -141,15 +124,6 @@ export default function App() {
           element={
             <RequireRole {...ACCOUNTS_SUPER_ONLY}>
               <AdminAccountsPage />
-            </RequireRole>
-          }
-        />
-        {/* UC13: the seller's own reports — SELLER only, like the backend. */}
-        <Route
-          path="/reports"
-          element={
-            <RequireRole {...SELLER_ONLY}>
-              <SellerReportsPage />
             </RequireRole>
           }
         />

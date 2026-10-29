@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { analyticsApi } from '../api/endpoints.js';
 import UsageSummary, { RangePicker } from '../components/UsageSummary.jsx';
 
-/** UC14 — system-wide analytics for Admin and Super Admin (the backend enforces both roles). */
+/** UC14 — system-wide analytics for Admin only. */
 const fetchSummary = (range) => analyticsApi.summary(range);
 
 export default function AnalyticsPage() {

@@ -1,5 +1,5 @@
-# User Management — UC12
+# User Management
 
-Chứa chức năng quản lý tài khoản người dùng: danh sách, chi tiết, thao tác được đặc tả và trạng thái xác nhận. Không trộn với quản lý Admin (UC13).
+Web User không quản lý tài khoản quản trị hoặc Seller. User sử dụng luồng kích hoạt QR hiện có; grant, publish state và media version được kiểm tra ở backend.
 
-Backend là nơi xác thực quyền và validate dữ liệu. Tránh hiển thị dữ liệu nhạy cảm không cần thiết.
+Quản lý tài khoản Admin thuộc UC10 và chỉ Super Admin được truy cập qua `/accounts`. Không thêm profile/self-service password change ngoài yêu cầu.

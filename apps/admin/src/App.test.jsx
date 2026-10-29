@@ -69,10 +69,11 @@ describe('route guards', () => {
     expect(screen.queryByRole('link', { name: 'Quản lý POI' })).not.toBeInTheDocument();
   });
 
-  it('ADMIN cannot open the seller reports page', async () => {
-    renderAt('/reports');
+  it('SUPER_ADMIN cannot open Analytics', async () => {
+    state.role = 'SUPER_ADMIN';
+    renderAt('/analytics');
     expect(await screen.findByText('Không đủ quyền truy cập')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Báo cáo của tôi' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Analytics' })).not.toBeInTheDocument();
   });
 
   it('SUPER_ADMIN lands on UC10 after login instead of the ADMIN-only POI list', async () => {

@@ -5,40 +5,16 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import Pagination from '../components/Pagination.jsx';
 import { Alert, Button, Card, Field, Spinner, inputClass } from '../components/ui.jsx';
 
-/**
- * UC10 — Super Admin manages Admin/Super Admin accounts.
- * The backend is the source of truth: it rejects every role except SUPER_ADMIN and refuses self-disable,
- * self role change and any operation that would leave no active Super Admin (E2).
- */
+/** UC10 — Super Admin manages Admin accounts only; role is fixed to ADMIN. */
 
 const PAGE_SIZE = 20;
-const ADMIN_ROLES = [
-  { value: 'ADMIN', label: 'Admin' },
-  { value: 'SUPER_ADMIN', label: 'Super Admin' },
-];
-const ROLE_LABEL = { ADMIN: 'Admin', SUPER_ADMIN: 'Super Admin' };
-
 const fmt = (iso) => (iso ? new Date(iso).toLocaleString('vi-VN') : '—');
-
-function RoleBadge({ role }) {
-  const superAdmin = role === 'SUPER_ADMIN';
-  return (
-    <span
-      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-        superAdmin ? 'bg-terracotta/15 text-earth' : 'bg-sand text-charcoal'
-      }`}
-    >
-      {ROLE_LABEL[role] ?? role}
-    </span>
-  );
-}
 
 function CreateAccountForm({ onCreated }) {
   const usernameId = useId();
   const passwordId = useId();
   const displayNameId = useId();
-  const roleId = useId();
-  const [form, setForm] = useState({ username: '', password: '', displayName: '', role: 'ADMIN' });
+  const [form, setForm] = useState({ username: '', password: '', displayName: '' });
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -52,9 +28,8 @@ function CreateAccountForm({ onCreated }) {
         username: form.username.trim(),
         password: form.password,
         displayName: form.displayName.trim() || null,
-        role: form.role,
       });
-      setForm({ username: '', password: '', displayName: '', role: 'ADMIN' });
+      setForm({ username: '', password: '', displayName: '' });
       onCreated();
     } catch (err) {
       setError(err);
@@ -101,20 +76,6 @@ function CreateAccountForm({ onCreated }) {
           onChange={(e) => setForm({ ...form, displayName: e.target.value })}
         />
       </Field>
-      <Field label="Vai trò" htmlFor={roleId} error={error?.fieldMap()?.role}>
-        <select
-          id={roleId}
-          className={inputClass}
-          value={form.role}
-          onChange={(e) => setForm({ ...form, role: e.target.value })}
-        >
-          {ADMIN_ROLES.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-      </Field>
       {error && !error.fieldErrors?.length && (
         <div className="sm:col-span-2 lg:col-span-4">
           <Alert>{error.message}</Alert>
@@ -134,27 +95,29 @@ export default function AdminAccountsPage() {
   const [params, setParams] = useSearchParams();
   const page = Math.max(0, Number(params.get('page') || 0));
   const q = params.get('q') || '';
-  const role = params.get('role') || '';
   const [reloadToken, setReloadToken] = useState(0);
-  const key = `${page}|${q}|${role}|${reloadToken}`;
+  const key = `${page}|${q}|${reloadToken}`;
   const [result, setResult] = useState({ key: null, data: null, error: null });
   const [actionError, setActionError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [resetTarget, setResetTarget] = useState(null);
+  const [detailTarget, setDetailTarget] = useState(null);
+  const [detailData, setDetailData] = useState(null);
+  const [detailError, setDetailError] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [qDraft, setQDraft] = useState(q);
 
   useEffect(() => {
     let cancelled = false;
     adminAccountsApi
-      .list({ page, size: PAGE_SIZE, q: q || undefined, role: role || undefined })
+      .list({ page, size: PAGE_SIZE, q: q || undefined })
       .then((data) => !cancelled && setResult({ key, data, error: null }))
       .catch((error) => !cancelled && setResult({ key, data: null, error }));
     return () => {
       cancelled = true;
     };
-  }, [key, page, q, role]);
+  }, [key, page, q]);
 
   const loading = result.key !== key;
   const reload = () => setReloadToken((n) => n + 1);
@@ -193,19 +156,16 @@ export default function AdminAccountsPage() {
     );
   };
 
-  const changeRole = (a, nextRole) => {
-    if (nextRole === a.role) return undefined;
-    if (
-      !window.confirm(
-        `Đổi vai trò của "${a.username}" từ ${ROLE_LABEL[a.role]} sang ${ROLE_LABEL[nextRole]}? ` +
-          'Quyền truy cập của tài khoản này thay đổi ngay sau khi lưu.',
-      )
-    ) {
-      return undefined;
-    }
-    return act(a.id, () => adminAccountsApi.update(a.id, { role: nextRole }), `Đã đổi vai trò "${a.username}".`);
+  const removeAccount = (a) => {
+    if (!window.confirm(`Xóa mềm tài khoản Admin "${a.username}"? Tài khoản sẽ không đăng nhập được; lịch sử được giữ.`)) return undefined;
+    return act(a.id, () => adminAccountsApi.remove(a.id), `Đã xóa mềm tài khoản "${a.username}".`);
   };
 
+  const showDetails = async (a) => {
+    if (detailTarget === a.id) { setDetailTarget(null); setDetailData(null); setDetailError(null); return; }
+    setDetailTarget(a.id); setDetailData(null); setDetailError(null);
+    try { setDetailData(await adminAccountsApi.get(a.id)); } catch (error) { setDetailError(error); }
+  };
   const resetPassword = (a) =>
     act(
       a.id,
@@ -224,8 +184,8 @@ export default function AdminAccountsPage() {
       <header>
         <h1 className="text-[26px] font-bold text-forest">Tài khoản Admin</h1>
         <p className="text-sm text-stone">
-          Super Admin tạo và quản lý tài khoản Admin/Super Admin: đổi tên hiển thị, vai trò, trạng thái hoạt động và
-          đặt lại mật khẩu. Tài khoản Seller được quản lý riêng ở mục “Tài khoản Seller”.
+          Super Admin tạo và quản lý tài khoản Admin: sửa tên hiển thị, khóa/mở khóa và
+          đặt lại mật khẩu cho tài khoản Admin.
         </p>
       </header>
 
@@ -250,19 +210,6 @@ export default function AdminAccountsPage() {
               value={qDraft}
               onChange={(e) => setQDraft(e.target.value)}
             />
-            <select
-              className={`${inputClass} !w-auto !py-1.5`}
-              aria-label="Lọc theo vai trò"
-              value={role}
-              onChange={(e) => updateParams({ role: e.target.value, page: 0 })}
-            >
-              <option value="">Tất cả vai trò</option>
-              {ADMIN_ROLES.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
             <Button variant="secondary" className="!py-1.5" type="submit">
               Tìm
             </Button>
@@ -285,7 +232,7 @@ export default function AdminAccountsPage() {
           </Alert>
         ) : accounts.length === 0 ? (
           <p className="py-6 text-center text-sm text-stone">
-            {q || role
+            {q
               ? 'Không có tài khoản quản trị nào khớp bộ lọc.'
               : 'Chưa có tài khoản quản trị nào. Tạo tài khoản đầu tiên ở trên.'}
           </p>
@@ -314,7 +261,7 @@ export default function AdminAccountsPage() {
                         </td>
                         <td className="py-2.5 pr-4">{a.displayName || '—'}</td>
                         <td className="py-2.5 pr-4">
-                          <RoleBadge role={a.role} />
+                          <span className="rounded-full bg-sand px-2.5 py-0.5 text-xs font-semibold text-charcoal">Admin</span>
                         </td>
                         <td className="py-2.5 pr-4">
                           {a.enabled ? (
@@ -330,19 +277,6 @@ export default function AdminAccountsPage() {
                         <td className="py-2.5 pr-4 text-stone">{fmt(a.createdAt)}</td>
                         <td className="py-2.5">
                           <div className="flex flex-wrap items-center gap-2">
-                            <select
-                              className={`${inputClass} !w-auto !px-2 !py-1 text-xs`}
-                              aria-label={`Vai trò của ${a.username}`}
-                              value={a.role}
-                              disabled={isSelf || busyId === a.id}
-                              onChange={(e) => changeRole(a, e.target.value)}
-                            >
-                              {ADMIN_ROLES.map((r) => (
-                                <option key={r.value} value={r.value}>
-                                  {r.label}
-                                </option>
-                              ))}
-                            </select>
                             <Button
                               variant="secondary"
                               className="!px-3 !py-1 text-xs"
@@ -355,6 +289,20 @@ export default function AdminAccountsPage() {
                             <Button
                               variant="secondary"
                               className="!px-3 !py-1 text-xs"
+                              onClick={() => showDetails(a)}
+                            >
+                              {detailTarget === a.id ? 'Ẩn chi tiết' : 'Chi tiết'}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              className="!px-3 !py-1 text-xs"
+                              disabled={busyId === a.id}
+                              onClick={() => removeAccount(a)}
+                            >
+                              Xóa mềm
+                            </Button>                            <Button
+                              variant="secondary"
+                              className="!px-3 !py-1 text-xs"
                               onClick={() => {
                                 setNewPassword('');
                                 setResetTarget(resetTarget === a.id ? null : a.id);
@@ -363,7 +311,31 @@ export default function AdminAccountsPage() {
                               Đặt lại mật khẩu
                             </Button>
                           </div>
-                          {resetTarget === a.id && (
+                          {detailTarget === a.id && (
+                            <div className="mt-2 max-w-sm rounded-lg border border-shell-border bg-white p-3 text-xs">
+                              {detailError ? <Alert>{detailError.message}</Alert> : !detailData ? <Spinner label="Đang tải chi tiết…" /> : (
+                                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                                  <dt className="text-muted">ID</dt><dd>{detailData.id}</dd>
+                                  <dt className="text-muted">Tên đăng nhập</dt><dd>{detailData.username}</dd>
+                                  <dt className="text-muted">Tên hiển thị</dt><dd>{detailData.displayName || '—'}</dd>
+                                  <dt className="text-muted">Trạng thái</dt><dd>{detailData.enabled ? 'Đang hoạt động' : 'Đã vô hiệu hóa'}</dd>
+                                  <dt className="text-muted">Tạo lúc</dt><dd>{fmt(detailData.createdAt)}</dd>
+                                </dl>
+                              )}
+                            </div>
+                          )}                          {detailTarget === a.id && (
+                            <div className="mt-2 max-w-sm rounded-lg border border-shell-border bg-white p-3 text-xs">
+                              {detailError ? <Alert>{detailError.message}</Alert> : !detailData ? <Spinner label="Đang tải chi tiết…" /> : (
+                                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                                  <dt className="text-muted">ID</dt><dd>{detailData.id}</dd>
+                                  <dt className="text-muted">Tên đăng nhập</dt><dd>{detailData.username}</dd>
+                                  <dt className="text-muted">Tên hiển thị</dt><dd>{detailData.displayName || '—'}</dd>
+                                  <dt className="text-muted">Trạng thái</dt><dd>{detailData.enabled ? 'Đang hoạt động' : 'Đã vô hiệu hóa'}</dd>
+                                  <dt className="text-muted">Tạo lúc</dt><dd>{fmt(detailData.createdAt)}</dd>
+                                </dl>
+                              )}
+                            </div>
+                          )}                          {resetTarget === a.id && (
                             <form
                               className="mt-2 flex max-w-sm gap-2"
                               onSubmit={(e) => {

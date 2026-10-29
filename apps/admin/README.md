@@ -1,4 +1,6 @@
-﻿# Web Admin — React + Vite
+# Web Admin — React + Vite
+
+> **Ma trận quyền hiện hành:** Admin có POI/bản dịch/media/QR/Analytics; Super Admin có quản lý tài khoản Admin và Audit Log. Không còn Seller UI/API; UC09/UC13 đã loại bỏ, UC12 chỉ quản lý QR. Xem [ma trận quyền chuẩn](../../docs/planning/role-matrix-seller-removal-plan.md).
 
 Web Admin được chạy **local-only**. Cách chạy chính thức là giao diện local → backend Spring Boot local (`local-neon`) → Neon PostgreSQL. Không deploy Admin lên Internet.
 

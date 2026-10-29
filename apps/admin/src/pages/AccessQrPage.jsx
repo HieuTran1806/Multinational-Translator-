@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import QRCode from 'qrcode';
-import { accessQrApi, sellersApi } from '../api/endpoints.js';
+import { accessQrApi } from '../api/endpoints.js';
 import Pagination from '../components/Pagination.jsx';
 import { Alert, Button, Card, Field, Spinner, inputClass } from '../components/ui.jsx';
 
@@ -108,7 +108,7 @@ function IssuedQr({ qr, onClose }) {
 
 /**
  * UC02 support for Admin: issue single-use access QR codes for visitors, see whether they were used, and
- * revoke them. Seller issuing after payment (UC12) is outside the MVP, so Admin covers it for now.
+ * revoke them. Admin issues and manages visitor QR codes.
  */
 export default function AccessQrPage() {
   const noteId = useId();
@@ -119,24 +119,10 @@ export default function AccessQrPage() {
   const key = `${page}|${status}|${reloadToken}`;
   const [result, setResult] = useState({ key: null, data: null, error: null });
   const [note, setNote] = useState('');
-  const [sellers, setSellers] = useState([]);
-  const [sellerUsername, setSellerUsername] = useState('');
   const [issuing, setIssuing] = useState(false);
   const [issued, setIssued] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [revoking, setRevoking] = useState(null);
-
-  // UC09/UC13: Admin issues the QR on a Seller's behalf so the seller's reports include it.
-  useEffect(() => {
-    let cancelled = false;
-    sellersApi
-      .list({ size: 100 })
-      .then((data) => !cancelled && setSellers(data.items ?? []))
-      .catch(() => !cancelled && setSellers([]));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -163,9 +149,8 @@ export default function AccessQrPage() {
     setIssuing(true);
     setActionError(null);
     try {
-      setIssued(await accessQrApi.issue({ note: note.trim() || undefined, sellerUsername: sellerUsername || undefined }));
+      setIssued(await accessQrApi.issue({ note: note.trim() || undefined }));
       setNote('');
-      setSellerUsername('');
       reload();
     } catch (error) {
       setActionError(error);
@@ -214,23 +199,6 @@ export default function AccessQrPage() {
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Khách đoàn A"
                 />
-              </Field>
-            </div>
-            <div className="sm:w-64">
-              <Field label="Gắn với Seller (không bắt buộc)" htmlFor={`${noteId}-seller`}>
-                <select
-                  id={`${noteId}-seller`}
-                  className={inputClass}
-                  value={sellerUsername}
-                  onChange={(e) => setSellerUsername(e.target.value)}
-                >
-                  <option value="">— Không gắn —</option>
-                  {sellers.map((s) => (
-                    <option key={s.id} value={s.username}>
-                      {s.displayName || s.username}
-                    </option>
-                  ))}
-                </select>
               </Field>
             </div>
             <Button type="submit" loading={issuing} className="sm:mb-5">

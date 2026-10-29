@@ -9,7 +9,7 @@ import AdminAccountsPage from './AdminAccountsPage.jsx';
 const ME = vi.hoisted(() => ({ account: { id: 1, username: 'super_root', displayName: 'Super Root', role: 'SUPER_ADMIN' } }));
 
 vi.mock('../api/endpoints.js', () => ({
-  adminAccountsApi: { list: vi.fn(), create: vi.fn(), update: vi.fn(), resetPassword: vi.fn() },
+  adminAccountsApi: { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), resetPassword: vi.fn(), remove: vi.fn() },
 }));
 
 vi.mock('../auth/AuthContext.jsx', () => ({
@@ -38,20 +38,22 @@ function renderPage(entry = '/accounts') {
 describe('AdminAccountsPage (UC10 – Super Admin quản lý tài khoản Admin)', () => {
   beforeEach(() => {
     adminAccountsApi.list.mockReset().mockResolvedValue(page());
+    adminAccountsApi.get.mockReset().mockResolvedValue(ACCOUNT());
     adminAccountsApi.create.mockReset();
     adminAccountsApi.update.mockReset().mockResolvedValue(ACCOUNT());
     adminAccountsApi.resetPassword.mockReset().mockResolvedValue(undefined);
+    adminAccountsApi.remove.mockReset().mockResolvedValue(undefined);
   });
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
   });
 
-  it('lists accounts with role and status badges', async () => {
+  it('lists Admin accounts with status badges', async () => {
     adminAccountsApi.list.mockResolvedValue(
       page([
         ACCOUNT(),
-        ACCOUNT({ id: 3, username: 'super_02', displayName: 'Super Hai', role: 'SUPER_ADMIN', enabled: false }),
+        ACCOUNT({ id: 3, username: 'super_02', displayName: 'Super Hai', enabled: false }),
       ]),
     );
     renderPage();
@@ -60,7 +62,7 @@ describe('AdminAccountsPage (UC10 – Super Admin quản lý tài khoản Admin)
     expect(within(table).getByText('Super Hai')).toBeInTheDocument();
     expect(within(table).getByText('Đang hoạt động')).toBeInTheDocument();
     expect(within(table).getByText('Đã vô hiệu hóa')).toBeInTheDocument();
-    expect(within(table).getAllByText('Super Admin').length).toBeGreaterThan(0);
+    expect(within(table).getAllByText('Admin').length).toBeGreaterThan(0);
   });
 
   it('shows the empty state', async () => {
@@ -75,12 +77,11 @@ describe('AdminAccountsPage (UC10 – Super Admin quản lý tài khoản Admin)
     expect(screen.getByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
   });
 
-  it('creates an account with the chosen role and reloads', async () => {
+  it('creates an Admin account and reloads', async () => {
     adminAccountsApi.create.mockResolvedValue(ACCOUNT());
     renderPage();
     await userEvent.type(await screen.findByLabelText('Tên đăng nhập'), 'admin_09');
     await userEvent.type(screen.getByLabelText('Mật khẩu'), 'secret-123');
-    await userEvent.selectOptions(screen.getByLabelText('Vai trò'), 'SUPER_ADMIN');
     await userEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
 
     await waitFor(() =>
@@ -88,7 +89,6 @@ describe('AdminAccountsPage (UC10 – Super Admin quản lý tài khoản Admin)
         username: 'admin_09',
         password: 'secret-123',
         displayName: null,
-        role: 'SUPER_ADMIN',
       }),
     );
     await waitFor(() => expect(adminAccountsApi.list).toHaveBeenCalledTimes(2));
@@ -141,21 +141,7 @@ describe('AdminAccountsPage (UC10 – Super Admin quản lý tài khoản Admin)
     expect(adminAccountsApi.update).not.toHaveBeenCalled();
   });
 
-  it('changes the role of another account after confirmation', async () => {
-    adminAccountsApi.list.mockResolvedValue(page([ACCOUNT()]));
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    renderPage();
-    await userEvent.selectOptions(await screen.findByLabelText('Vai trò của admin_02'), 'SUPER_ADMIN');
-    await waitFor(() => expect(adminAccountsApi.update).toHaveBeenCalledWith(2, { role: 'SUPER_ADMIN' }));
-  });
 
-  it('blocks self-disable and self role change in the UI', async () => {
-    adminAccountsApi.list.mockResolvedValue(page([ACCOUNT({ id: 1, username: 'super_root', role: 'SUPER_ADMIN' })]));
-    renderPage();
-    expect(await screen.findByText('(bạn)')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Vô hiệu hóa' })).toBeDisabled();
-    expect(screen.getByLabelText('Vai trò của super_root')).toBeDisabled();
-  });
 
   it('resets a password', async () => {
     adminAccountsApi.list.mockResolvedValue(page([ACCOUNT()]));
@@ -167,26 +153,11 @@ describe('AdminAccountsPage (UC10 – Super Admin quản lý tài khoản Admin)
     expect(await screen.findByText('Đã đặt lại mật khẩu cho "admin_02".')).toBeInTheDocument();
   });
 
-  it('shows the backend denial message when an action is rejected', async () => {
-    adminAccountsApi.list.mockResolvedValue(page([ACCOUNT()]));
-    adminAccountsApi.update.mockRejectedValue(
-      Object.assign(new Error('Phải còn ít nhất một Super Admin đang hoạt động'), { code: 'FORBIDDEN', status: 403 }),
-    );
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    renderPage();
-    await userEvent.click(await screen.findByRole('button', { name: 'Vô hiệu hóa' }));
-    expect(await screen.findByText('Phải còn ít nhất một Super Admin đang hoạt động')).toBeInTheDocument();
-  });
 
-  it('sends the search and role filters to the API', async () => {
+  it('sends the search filter to the API', async () => {
     renderPage();
     await userEvent.type(await screen.findByLabelText('Tìm tài khoản quản trị'), 'adm');
     await userEvent.click(screen.getByRole('button', { name: 'Tìm' }));
-    await waitFor(() => expect(adminAccountsApi.list).toHaveBeenCalledWith({ page: 0, size: 20, q: 'adm', role: undefined }));
-
-    await userEvent.selectOptions(screen.getByLabelText('Lọc theo vai trò'), 'SUPER_ADMIN');
-    await waitFor(() =>
-      expect(adminAccountsApi.list).toHaveBeenCalledWith({ page: 0, size: 20, q: 'adm', role: 'SUPER_ADMIN' }),
-    );
+    await waitFor(() => expect(adminAccountsApi.list).toHaveBeenCalledWith({ page: 0, size: 20, q: 'adm' }));
   });
 });
