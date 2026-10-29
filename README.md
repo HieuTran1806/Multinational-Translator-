@@ -1,199 +1,113 @@
 # Multitional Translator
 
-Nền tảng thuyết minh đa ngôn ngữ cho các điểm tham quan (POI). Repository hiện có backend REST API bằng Spring Boot, giao diện quản trị web và giao diện người dùng (khám phá bản đồ, chi tiết POI, thuyết minh audio) bằng React/Vite, tài liệu hợp đồng và cấu hình Docker phục vụ phát triển cục bộ.
+Nền tảng thuyết minh đa ngôn ngữ gồm Web User, Web Admin và REST API Spring Boot.
 
-> **Trạng thái hiện tại:** Admin web, web User (UC03–UC05) và backend được triển khai trên nhánh này. Ứng dụng mobile chưa có trong nhánh này. Seller/QR, thanh toán và một số màn hình/luồng nâng cao không được xem là đã triển khai chỉ vì có trong tài liệu thiết kế. CI kiểm tra mã nguồn; **CD/production deployment chưa được kích hoạt**.
+## Hai cách chạy được hỗ trợ
 
-## Thành phần chính
+### 1. Web User — production trên Internet
 
-| Đường dẫn | Vai trò |
+```text
+Trình duyệt khách tham quan
+  -> https://multitional-translator-web.pages.dev (Cloudflare Pages)
+  -> https://multitional-translator-api.onrender.com (Render)
+  -> Neon PostgreSQL
+```
+
+- Web User production: <https://multitional-translator-web.pages.dev/welcome>
+- Backend API production: <https://multitional-translator-api.onrender.com>
+- Cấu hình build trên hosting: `VITE_API_BASE_URL=https://multitional-translator-api.onrender.com`, `VITE_USE_MOCK=false`.
+- Web User gọi API; không kết nối trực tiếp tới Neon. Chỉ backend giữ thông tin xác thực database.
+
+### 2. Web Admin — chạy local, dùng chung Neon
+
+```text
+http://localhost:5173 (apps/admin)
+  -> http://localhost:18081 (Spring Boot local, profile local-neon)
+  -> Neon PostgreSQL
+```
+
+Yêu cầu: Windows/PowerShell, Git, Node.js 22.11+, npm, Java 21 và Internet. Không cần Docker Desktop.
+
+**Cảnh báo:** backend local ghi trực tiếp vào Neon branch được khai báo trong file `.env.local` tại thư mục gốc. Xác nhận đúng project/branch trước khi sửa dữ liệu. Không chạy integration test hoặc thao tác phá huỷ trên database production.
+
+1. Tạo/kiểm tra file `.env.local` ở thư mục gốc, có `DATABASE_URL` ở dạng `postgresql://...` cho Neon branch mong muốn. Không commit hoặc chia sẻ giá trị này.
+2. Mở terminal thứ nhất tại thư mục gốc và chạy:
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts/run-local-neon.ps1
+   ```
+
+   Script chuyển URI sang JDBC, giữ SSL, loại bỏ `channel_binding` không được pgJDBC hỗ trợ, không in thông tin xác thực và chạy profile `local-neon` trên cổng `18081`. Profile chỉ dùng Flyway migrations, không nạp dữ liệu demo và không fallback sang database local.
+3. Đợi backend sẵn sàng tại <http://localhost:18081/actuator/health>.
+4. Mở terminal thứ hai:
+
+   ```powershell
+   Set-Location "D:\Documents\Cong_nghe_phan_mem\Multitional-Translator-\apps\admin"
+   npm ci
+   npm run dev
+   ```
+
+5. Mở <http://localhost:5173>. Đảm bảo `apps/admin/.env`/`.env.local` (nếu tồn tại) đặt `VITE_API_BASE_URL=http://localhost:18081` và `VITE_USE_MOCK=false`. Khởi động lại Vite sau khi sửa biến môi trường.
+
+Kiểm tra Admin dùng đúng backend trong DevTools → Network: request API phải tới `localhost:18081`. Health `200` không tự chứng minh backend đang nối đúng Neon branch; xác nhận branch qua cấu hình kết nối đã thiết lập.
+
+## Cấu hình quan trọng
+
+| Thành phần | Cấu hình |
 |---|---|
-| `apps/admin/` | React 19 + Vite: đăng nhập, quản lý POI, bản dịch, hình ảnh/audio và các thao tác TTS được hỗ trợ bởi backend |
-| `apps/web/` | React 19 + Vite: web User UC03–UC05 — bản đồ POI (Leaflet), tìm kiếm địa điểm, chi tiết POI theo ngôn ngữ và trình phát thuyết minh audio |
-| `services/backend/` | Java 21, Spring Boot, Maven Wrapper, REST API, Spring Security, JPA, Flyway |
-| `infra/` | Docker Compose cho PostgreSQL và backend |
-| `design-system/tokens.json` | Design tokens dùng chung |
-| `docs/requirements/` | Yêu cầu nghiệp vụ và Use Case |
-| `docs/architecture/` | Kiến trúc, cấu trúc và hợp đồng API |
-| `docs/development/` | Quy ước phát triển và kiểm thử |
-| `docs/operations/` | Hướng dẫn vận hành, CI/CD và kế hoạch triển khai |
-| `.github/workflows/ci.yml` | Tự động kiểm tra tài liệu, unit test backend và chất lượng Admin/Web |
+| Web User production | `VITE_API_BASE_URL=https://multitional-translator-api.onrender.com` |
+| Web User mock | `VITE_USE_MOCK=false` trong build production |
+| Web Admin local | `VITE_API_BASE_URL=http://localhost:18081` |
+| Web Admin mock | `VITE_USE_MOCK=false` khi dùng hệ thống thật |
+| Backend local Admin | `SPRING_PROFILES_ACTIVE=local-neon`, cổng mặc định `18081` |
+| Database | Neon PostgreSQL; chỉ backend kết nối |
 
-Tài liệu nên đọc:
-- [Use Case](docs/requirements/Use_Case_Specification_Final_15_UC.md)
-- [Kiến trúc](docs/architecture/architecture.md)
-- [API contract](docs/architecture/api.md)
-- [Kiến trúc backend](services/backend/ARCHITECTURE.md)
-- [Báo cáo kiểm chứng Admin](docs/reports/admin-module-verification.md)
-- [CI/CD](docs/operations/ci-cd.md)
-- [Chuẩn bị triển khai — chưa phải deployment đang hoạt động](docs/operations/deployment.md)
+Không đặt `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DATABASE_URL`, token hoặc credentials trong biến `VITE_*`, frontend bundle, source code hay tài liệu. Không bật mock để xác minh tích hợp backend/database thật.
 
-## Yêu cầu môi trường
+## Kiểm tra chất lượng
 
-- Git
-- Docker Desktop có Docker Compose v2
-- Node.js **22.11 trở lên** (khuyến nghị Node 22 LTS) và npm
-- Java **21** nếu chạy backend trực tiếp ngoài Docker
-- Kết nối Internet lần đầu để tải image/dependencies
-
-Kiểm tra phiên bản:
+Các lệnh dưới đây là kiểm tra chất lượng, không phải phương án chạy ứng dụng thay thế.
 
 ```powershell
-git --version
-node --version
-npm --version
-docker --version
-docker compose version
-java -version
-```
-
-## Chạy toàn bộ backend + PostgreSQL và Admin trên Windows
-
-Các lệnh dưới đây chạy trong **PowerShell tại thư mục gốc repository**.
-
-### 1. Cấu hình môi trường cục bộ
-
-```powershell
-if (-not (Test-Path infra/.env)) { Copy-Item infra/.env.example infra/.env }
-notepad infra/.env
-```
-
-Đổi `POSTGRES_PASSWORD` thành mật khẩu riêng cho máy local. Không commit `infra/.env`. Nếu cần tạo tài khoản Admin đầu tiên cho môi trường phát triển, cấu hình `APP_BOOTSTRAP_ADMIN_ENABLED=true`, `APP_BOOTSTRAP_ADMIN_USERNAME` và `APP_BOOTSTRAP_ADMIN_PASSWORD` trong tệp này trước khi khởi động. Chỉ dùng mật khẩu local, không dùng lại mật khẩu thật.
-
-### 2. Khởi động PostgreSQL và backend
-
-```powershell
-docker compose --env-file infra/.env -f infra/docker-compose.yml config
-docker compose --env-file infra/.env -f infra/docker-compose.yml up --build -d
-docker compose --env-file infra/.env -f infra/docker-compose.yml ps
-docker compose --env-file infra/.env -f infra/docker-compose.yml logs -f backend
-```
-
-Đợi backend khởi động xong rồi mở endpoint kiểm tra sức khỏe:
-
-- Backend: http://localhost:8080
-- Health: http://localhost:8080/actuator/health
-- Readiness: http://localhost:8080/actuator/health/readiness
-- OpenAPI UI (dev): http://localhost:8080/swagger-ui.html
-
-Profile `dev` chạy Flyway migration và nạp dữ liệu demo. Sau khi tài khoản Admin đầu tiên đã được tạo, hãy tắt lại `APP_BOOTSTRAP_ADMIN_ENABLED=false` rồi khởi động lại backend. Không bật bootstrap admin trên production một cách thường trực.
-
-### 3. Khởi động Admin web
-
-Mở **một cửa sổ PowerShell khác** ở thư mục gốc:
-
-```powershell
-Set-Location apps/admin
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-npm ci
-npm run dev
-```
-
-Mở URL Vite được in ra trong terminal, thông thường là http://localhost:5173. `apps/admin/.env` mặc định trỏ API tới `http://localhost:8080`.
-
-Nếu backend chạy ở địa chỉ khác, sửa `VITE_API_BASE_URL` trong `apps/admin/.env` rồi khởi động lại Vite. Biến có tiền tố `VITE_` được đóng gói vào frontend và **không được chứa bí mật**.
-
-### Chạy riêng giao diện bằng mock API
-
-Để xem UI mà không cần backend hoặc PostgreSQL, đặt `VITE_USE_MOCK=true` trong `apps/admin/.env`, sau đó chạy `npm run dev`. Chế độ này dùng dữ liệu giả lập, không kiểm chứng API thật; đặt lại `false` khi kiểm thử tích hợp.
-
-### 4. Khởi động web User (UC03–UC05)
-
-Mở **một cửa sổ PowerShell khác** ở thư mục gốc:
-
-```powershell
-Set-Location apps/web
-npm ci
-npm run dev
-```
-
-Mở http://localhost:5174. Dev server tự proxy `/api` sang `http://localhost:8080` nên không cần cấu hình CORS khi chạy local theo hướng dẫn ở trên.
-
-Xem không cần backend: `$env:VITE_USE_MOCK = "true"; npm run dev` (dữ liệu demo gồm cả audio dựng sẵn). Chi tiết trong [apps/web/README.md](apps/web/README.md).
-
-## Chạy backend trực tiếp (không chạy backend trong Compose)
-
-Nếu chỉ muốn dùng Docker cho PostgreSQL, khởi động riêng database:
-
-```powershell
-docker compose --env-file infra/.env -f infra/docker-compose.yml up -d postgres
-```
-
-Trong PowerShell, đặt biến môi trường cho tiến trình backend:
-
-```powershell
-$env:SPRING_PROFILES_ACTIVE = "dev"
-$env:DB_URL = "jdbc:postgresql://localhost:5432/thuyetminh"
-$env:DB_USERNAME = "thuyetminh"
-$env:DB_PASSWORD = "<mật-khẩu-POSTGRES_PASSWORD-trong-infra/.env>"
-Set-Location services/backend
-.\mvnw.cmd spring-boot:run
-```
-
-Thay giá trị mật khẩu bằng mật khẩu local đã cấu hình; không đưa mật khẩu vào source code. Không chạy đồng thời backend local và backend Compose trên cùng cổng 8080.
-
-## Lệnh kiểm tra
-
-### Admin
-
-```powershell
-Set-Location apps/admin
+# Admin
+Set-Location "D:\Documents\Cong_nghe_phan_mem\Multitional-Translator-\apps\admin"
 npm ci
 npm run lint
 npm test
 npm run build
-```
 
-Tùy chọn: `npm run verify:e2e` chạy kiểm tra end-to-end qua backend và database **đang hoạt động**. Cần cấu hình `E2E_BASE_URL`, `E2E_ADMIN_USERNAME`, `E2E_ADMIN_PASSWORD`; xem phần đầu của `apps/admin/scripts/verify-e2e.mjs`. Không chạy E2E trên môi trường production.
-
-### Web User
-
-```powershell
-Set-Location apps/web
+# Web User
+Set-Location "D:\Documents\Cong_nghe_phan_mem\Multitional-Translator-\apps\web"
 npm ci
 npm run lint
 npm test
 npm run build
-```
 
-### Backend
-
-```powershell
-Set-Location services/backend
+# Backend unit tests (không cần database)
+Set-Location "D:\Documents\Cong_nghe_phan_mem\Multitional-Translator-\services\backend"
 .\mvnw.cmd clean test
 ```
 
-Unit test không cần PostgreSQL. Integration test được đặt tên `*IT.java`, cần một PostgreSQL **riêng cho kiểm thử** và profile `test`; không trỏ integration test vào database phát triển hoặc production.
+Integration tests (`mvnw verify`) cần database kiểm thử riêng qua `TEST_DB_URL`, `TEST_DB_USERNAME`, `TEST_DB_PASSWORD`. Không dùng Neon production, database phát triển hoặc dữ liệu dùng chung làm database test.
 
-Ví dụ sau khi đã khởi động một database kiểm thử riêng và thiết lập biến môi trường `TEST_DB_URL`, `TEST_DB_USERNAME`, `TEST_DB_PASSWORD`:
+## Triển khai và bí mật
 
-```powershell
-$env:TEST_DB_URL = "jdbc:postgresql://localhost:5432/thuyetminh_test"
-$env:TEST_DB_USERNAME = "thuyetminh"
-$env:TEST_DB_PASSWORD = "<mật-khẩu-test>"
-.\mvnw.cmd verify
-```
+- Web User được host trên Cloudflare Pages; backend được host trên Render; cả hai phải được cấu hình dùng cùng Neon database theo môi trường đã xác nhận.
+- Web Admin chỉ chạy local, không triển khai lên hosting công khai.
+- Quản lý biến môi trường và secrets trong dashboard hosting hoặc file môi trường local bị Git ignore. Không đưa secrets vào Git hay nhật ký.
+- `APP_CORS_ALLOWED_ORIGINS` trên Render chỉ cần origin Web User production; Admin mặc định gọi backend local, và profile `local-neon` cho phép origin Admin local.
+- Backend dùng Flyway quản lý schema. Không sửa migration đã áp dụng; tạo migration mới khi cần thay đổi schema.
 
-Profile test có thể chạy Flyway migration/clean trên database kiểm thử. **Chỉ dùng database test có thể xóa dữ liệu**, không dùng database local cần giữ hoặc database production.
+## Xử lý lỗi thường gặp
 
-## CI/CD
+| Triệu chứng | Kiểm tra |
+|---|---|
+| Cổng `5173` hoặc `18081` đã được dùng | Dừng tiến trình cũ trước khi chạy lại. |
+| Admin gọi sai backend | Kiểm tra `VITE_API_BASE_URL` trong `.env` và `.env.local`; `.env.local` có ưu tiên cao hơn. Restart Vite. |
+| Backend không khởi động | Kiểm tra `DATABASE_URL` trong file `.env.local` mà không in/ghi lại giá trị; kiểm tra kết nối mạng, SSL, profile và log đã che secrets. |
+| Lỗi Flyway/schema | Xác minh Neon project/branch và lịch sử migration trước khi sửa dữ liệu. |
+| API trả `401`/`403` | Đăng nhập lại và kiểm tra quyền tài khoản. |
+| Lỗi CORS | Kiểm tra origin chính xác và `APP_CORS_ALLOWED_ORIGINS` của backend đích. |
+| Admin đã lưu nhưng User chưa thấy dữ liệu | Kiểm tra POI đã publish chưa và xác minh hai backend trỏ cùng Neon database. Tải lại Web User. |
 
-GitHub Actions workflow tại `.github/workflows/ci.yml` tự chạy khi push hoặc mở/cập nhật Pull Request. Nó kiểm tra tài liệu nền tảng, whitespace, unit test backend và lint/test/build của Admin. Integration test phụ thuộc PostgreSQL và E2E chưa được đưa vào workflow hiện tại.
-
-**CI có; CD chưa bật.** Không có deployment production tự động. Xem [hướng dẫn CI/CD](docs/operations/ci-cd.md) và [ghi chú triển khai](docs/operations/deployment.md) trước khi cấu hình hosting, secrets, database production, HTTPS và lưu trữ media.
-
-## Dừng dịch vụ local
-
-```powershell
-docker compose --env-file infra/.env -f infra/docker-compose.yml down
-```
-
-Lệnh trên giữ lại named volumes. **Không thêm `-v`** trừ khi chủ động muốn xóa dữ liệu PostgreSQL và media local.
-
-## Bảo mật
-
-- Không commit `.env`, mật khẩu, token hoặc tệp Google service-account.
-- Không đặt bí mật trong biến frontend `VITE_*`.
-- Dùng PostgreSQL riêng cho integration test.
-- Chỉ bật bootstrap Admin khi khởi tạo môi trường local, sau đó tắt.
-- Không coi cấu hình Compose local là cấu hình production.
+Tài liệu liên quan: [Kiến trúc](docs/architecture/architecture.md) · [API contract](docs/architecture/api.md) · [Use Cases](docs/requirements/Use_Case_Specification_Final_15_UC.md) · [Web Admin](apps/admin/README.md) · [Web User](apps/web/README.md) · [Backend](services/backend/README.md) · [Triển khai](docs/operations/deployment.md) · [CI](docs/operations/ci-cd.md).

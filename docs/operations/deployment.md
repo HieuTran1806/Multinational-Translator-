@@ -1,77 +1,54 @@
-# Chuẩn bị triển khai (chưa triển khai thật)
+# Triển khai mặc định — Web User, Backend và Neon
 
-> Phương án miễn phí ưu tiên Botkeep + Cloudflare Pages được mô tả tại [deployment-free.md](deployment-free.md). Đây là kế hoạch; chưa tạo workload hoặc public website.
+## Kiến trúc được hỗ trợ
 
-Tài liệu này chỉ mô tả cấu hình. Chưa tạo tài nguyên trả phí và chưa thực hiện triển khai nào.
+```text
+Web User (Cloudflare Pages, Internet)
+    -> Backend Spring Boot (Render, HTTPS)
+        -> Neon PostgreSQL
 
-## 1. Ứng dụng web Admin trên Vercel
+Web Admin (local-only: localhost:5173)
+    -> Backend Spring Boot local (profile local-neon, localhost:18081)
+        -> Neon PostgreSQL
+```
 
-| Mục | Giá trị |
-|---|---|
-| Thư mục gốc | `apps/admin` |
-| Cấu hình framework | Vite |
-| Cài đặt / Biên dịch | `npm ci` / `npm run build` |
-| Thư mục đầu ra | `dist` |
-| Phiên bản Node.js | 22 |
-| Biến môi trường | `VITE_API_BASE_URL=https://api.<domain>` — **công khai**, được nhúng vào gói ứng dụng; không đặt bí mật nào với tiền tố `VITE_` |
-| Định tuyến SPA | `apps/admin/vercel.json` chuyển mọi đường dẫn về `/index.html` (F5 ở `/pois/12` không 404) |
-| Header bảo mật | `vercel.json` đặt `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` |
+Web Admin không được triển khai lên hosting công khai. Cấu hình chạy local chính thức nằm trong `scripts/run-local-neon.ps1` và `services/backend/src/main/resources/application-local-neon.yml`.
 
-## 2. Backend trên Render hoặc VPS (Docker)
+## Web User — Cloudflare Pages
 
-Image: `services/backend/Dockerfile` (nhiều giai đoạn, chạy bằng người dùng không phải root, mặc định `SPRING_PROFILES_ACTIVE=prod`).
+- Root directory: `apps/web`.
+- Build: `npm ci` rồi `npm run build:production`.
+- Output: `dist`.
+- Public build variables: `VITE_API_BASE_URL=https://multitional-translator-api.onrender.com`, `VITE_USE_MOCK=false`.
+- Sau khi đổi biến build, phải build/deploy lại frontend.
 
-| Mục | Giá trị |
-|---|---|
-| Cổng | Render cấp biến `PORT`; Spring đọc `server.port=${PORT:8080}` |
-| Đường dẫn kiểm tra tình trạng | `/actuator/health/readiness` (hoặc `/actuator/health`) |
-| Bắt buộc | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `APP_CORS_ALLOWED_ORIGINS=https://web.<domain>,https://admin.<domain>` (chỉ các origin cần thiết) |
-| Tùy chọn | `APP_AUTH_SESSION_TTL`, `APP_TTS_PROVIDER=google`, `GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/gcp-tts.json` (tệp bí mật của Render), `APP_API_DOCS_ENABLED=false` |
-| Admin đầu tiên | Bật `APP_BOOTSTRAP_ADMIN_*` một lần với mật khẩu mạnh trong kho bí mật, rồi tắt |
+## Backend — Render
 
-VPS: `docker run -d --restart=unless-stopped -p 127.0.0.1:8080:8080 --env-file /etc/thuyetminh/backend.env -v /srv/thuyetminh/media:/app/data/media <image>` phía sau reverse proxy (Caddy/Nginx) có HTTPS.
+- Root/build context: `services/backend`; image từ `services/backend/Dockerfile`.
+- Profile: `SPRING_PROFILES_ACTIVE=prod`.
+- Render cấp `PORT`; Spring mặc định `8080` nếu chạy ngoài Render.
+- Bắt buộc: `DB_URL` ở dạng JDBC trỏ tới đúng Neon database, `DB_USERNAME`, `DB_PASSWORD`, `APP_CORS_ALLOWED_ORIGINS`.
+- CORS chỉ cho phép origin Web User production. Admin mặc định gọi backend local; không cần mở CORS Render cho Admin trong kiến trúc mặc định. Không dùng wildcard `*`.
+- Health check: `/actuator/health/readiness`.
+- Secrets chỉ đặt trong Render Environment/Secret Files; không commit hoặc đưa vào frontend.
 
-Thông tin bí mật không bao giờ được đưa vào image, kho mã nguồn hoặc nhật ký. Backend không ghi mật khẩu, token hay nội dung tệp thông tin xác thực vào nhật ký.
+## Database — Neon
 
-## 3. PostgreSQL môi trường production và migration
+Cả backend Render và backend local cho Admin phải trỏ tới Neon database/branch đã được xác nhận. Frontend không kết nối trực tiếp tới database. Flyway chạy migrations khi backend khởi động; profile `prod` và `local-neon` không nạp demo seed. Kiểm tra backup/restore và migration trước mọi thay đổi schema.
 
-- Dùng PostgreSQL được quản lý bởi nhà cung cấp (Render Postgres, Neon, Supabase, Cloud SQL…) hoặc PostgreSQL trên VPS có backup.
-- Flyway chạy tự động khi backend khởi động (`classpath:db/migration`). Cấu hình `prod` **không** nạp `db/demo`.
-- Hibernate chạy `ddl-auto=validate`: nếu entity không khớp schema, app không khởi động (an toàn hơn tự sửa schema).
-- Không bao giờ sửa migration đã chạy; thêm `V3__...sql` mới.
-- Nên tạo user DB riêng cho app; quyền DDL có thể tách sang job migration riêng khi hệ thống lớn hơn.
+## Lưu trữ media
 
-## 4. Lưu trữ âm thanh/hình ảnh bền vững
+Backend production trên Render đã được cấu hình dùng Cloudflare R2 qua `APP_STORAGE_PROVIDER=r2`. Các media đang được Neon tham chiếu đã được upload và xác minh SHA-256; media mới được backend ghi vào R2. Không dựa vào filesystem container production để lưu media. Backup database và R2 cần được quản lý nhất quán để `storage_key` luôn trỏ tới object tồn tại.
 
-`LocalMediaStorage` ghi vào `APP_STORAGE_LOCAL_ROOT` (`/app/data/media` trong container).
+## Admin local-only
 
-- **Hệ thống tệp tạm của container sẽ mất khi triển khai lại.** Bắt buộc gắn đĩa bền vững (Render đĩa lưu trữ bền vững, volume Docker trên VPS) hoặc
-- triển khai `MediaStorage` cho lưu trữ đối tượng (S3/GCS/R2) — chỉ cần thêm một class implement interface và chọn bằng cấu hình; DB chỉ lưu `storage_key` nên không phải migrate dữ liệu.
-- Sao lưu: tạo snapshot volume/bucket định kỳ, cùng lịch với sao lưu cơ sở dữ liệu để giữ nhất quán `storage_key` ↔ file.
+1. Đặt `DATABASE_URL` trong file `.env.local` tại repository root.
+2. Chạy `powershell -ExecutionPolicy Bypass -File scripts/run-local-neon.ps1`.
+3. Chạy `npm ci` và `npm run dev` trong `apps/admin`.
+4. Mở `http://localhost:5173`; API phải gọi `http://localhost:18081`.
 
-## 5. HTTPS, tên miền, CORS và sao lưu
+Đây là backend local có quyền ghi vào Neon; kiểm tra branch trước khi thao tác. Không mở cổng backend/Admin ra mạng công cộng.
 
-- HTTPS bắt buộc cho backend và admin trong môi trường production (Render/Vercel cấp sẵn chứng chỉ; VPS dùng Caddy/Let's Encrypt).
-- Bản Android **phát hành** chặn HTTP (cleartext chỉ bật cho bản gỡ lỗi) → backend phải là HTTPS.
-- `APP_CORS_ALLOWED_ORIGINS` chỉ chứa các origin frontend chính xác cần truy cập API (Web và Admin nếu dùng hai site riêng; không `*`).
-- Ứng dụng di động không cần CORS.
-- Sao lưu cơ sở dữ liệu hằng ngày và kiểm tra khôi phục định kỳ.
+## Cơ chế deploy
 
-## 6. Ứng dụng di động
-
-Android/iOS **không** triển khai lên Vercel. Quy trình riêng:
-
-- Android: ký bản phát hành bằng keystore riêng (không commit), biên dịch `.aab` và phát hành qua Google Play Console (thử nghiệm nội bộ trước).
-- iOS: cần macOS/Xcode, tài khoản Apple Developer, TestFlight.
-- Cấu hình `API_BASE_URL=https://api.<domain>` và khóa API Maps đã giới hạn theo package/bundle trong `.env` khi biên dịch.
-
-## 7. Chỉ sử dụng một cơ chế kích hoạt triển khai
-
-Chọn **một** trong hai, tránh triển khai trùng lặp:
-
-| Phương án | Cách làm |
-|---|---|
-| A. Hosting tự triển khai khi đẩy mã lên `main` | Bật tự động triển khai trên Render/Vercel; **không** dùng workflow triển khai. Bật bảo vệ nhánh để `main` chỉ nhận commit đã vượt qua CI |
-| B. GitHub Actions kích hoạt triển khai (khuyến nghị) | Tắt tự động triển khai trên Render/Vercel; dùng mẫu trong `docs/operations/cd-templates/` (chạy sau khi workflow CI thành công trên `main`) |
-
-Mẫu CD **chưa được kích hoạt** (nằm ngoài `.github/workflows/`). CI hiện tại chỉ kiểm tra và biên dịch; CD chỉ hoạt động sau khi cấu hình dịch vụ lưu trữ và thông tin bí mật.
+Hosting hiện là nguồn cấu hình triển khai. GitHub Actions hiện chỉ là CI; không có workflow CD đang hoạt động trong `.github/workflows`. Không kích hoạt thêm workflow CD hoặc cấu hình auto-deploy thứ hai nếu chưa quyết định rõ cơ chế deploy và kiểm thử rollback.

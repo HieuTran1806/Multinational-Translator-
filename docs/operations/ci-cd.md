@@ -58,7 +58,7 @@ Tên check có thể thay đổi theo tên job trong workflow. Chạy workflow �
 
 ## CD / triển khai
 
-Chưa có deployment tự động. Xem [deployment.md](deployment.md) để tham khảo cấu hình Vercel cho Admin và Render/VPS/Docker cho backend. Chọn duy nhất một cơ chế triển khai (hosting tự deploy hoặc GitHub Actions) để tránh triển khai hai lần.
+Web User được triển khai trên Cloudflare Pages, backend trên Render; Web Admin chỉ chạy local. Xem [deployment.md](deployment.md) để biết cấu hình mặc định. CI chỉ kiểm tra chất lượng; không thêm workflow CD thứ hai nếu chưa quyết định và kiểm thử cơ chế deploy.
 
 Trước khi bật CD cần hoàn tất tối thiểu:
 
@@ -66,6 +66,6 @@ Trước khi bật CD cần hoàn tất tối thiểu:
 - Secrets nằm trong hosting/GitHub Environments, không nằm trong repository.
 - PostgreSQL production có backup và kế hoạch khôi phục.
 - Media lưu tại volume/bucket bền vững.
-- CORS chỉ cho phép origin Admin hợp lệ.
+- CORS chỉ cho phép origin Web User production và `http://localhost:5173` khi cần Admin local gọi backend Render.
 - Health/smoke test sau deploy và quy trình rollback.
 - Environment production có bảo vệ/phê duyệt; không deploy từ pull request.

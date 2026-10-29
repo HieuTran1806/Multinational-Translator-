@@ -5,7 +5,7 @@
 ## Thay thế
 
 - Ứng dụng User hiện tại là web app `apps/web` (React + Vite, chạy tại `http://127.0.0.1:5174`, proxy `/api` tới backend). Xem `README.md` ở gốc repo và `docs/README.md`.
-- Trên điện thoại, mở web app bằng trình duyệt; backend dev chỉ lắng nghe trên `127.0.0.1` (xem `infra/docker-compose.yml`), nên cần publish port ra LAN hoặc dùng tunnel nếu muốn truy cập từ thiết bị thật.
+- Trên điện thoại, mở web app bằng trình duyệt; backend production trên Render là endpoint được hỗ trợ; không mở backend Admin local ra LAN hoặc Internet.
 
 ## Lịch sử
 

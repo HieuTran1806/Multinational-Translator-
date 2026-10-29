@@ -1,4 +1,4 @@
-﻿# Kiến trúc
+# Kiến trúc
 
 > **Trạng thái tài liệu:** Mô tả kiến trúc/mã nguồn hiện có. Đặc tả nghiệp vụ đích đã chuyển sang ứng dụng User online-only với Seller/QR theo `docs/requirements/Use_Case_Specification_Final_15_UC.md`. Các mô tả mobile/offline bên dưới là hiện trạng legacy, không được hiểu là phạm vi nghiệp vụ đích; cần thiết kế và triển khai migration riêng.
 
@@ -147,7 +147,7 @@ Dữ liệu mẫu: `db/demo/V100__demo_pois.sql` chỉ được nạp với cấ
 
 **CSRF:** tắt CSRF là có chủ đích và an toàn trong mô hình này vì trình duyệt **không tự gửi** header `Authorization` (CSRF khai thác thông tin xác thực tự động như cookie). Nếu sau này chuyển sang cookie thì **phải** bật lại CSRF.
 
-**Lưu token phía Admin:** `sessionStorage` (theo tab, mất khi đóng tab) + bộ nhớ. Rủi ro: XSS trên origin admin có thể đọc token → admin không render HTML không tin cậy, token có hạn ngắn, header bảo mật trong `vercel.json`. Không lưu token trong URL hay `localStorage`.
+**Lưu token phía Admin:** `sessionStorage` (theo tab, mất khi đóng tab) + bộ nhớ. Rủi ro: XSS trên origin admin có thể đọc token → admin không render HTML không tin cậy, token có hạn ngắn, header bảo mật cần cấu hình trên origin Admin local/hosting nếu kiến trúc triển khai thay đổi. Không lưu token trong URL hay `localStorage`.
 
 **Phân quyền:** kiểm tra ở backend (`/api/v1/admin/**` yêu cầu `ROLE_ADMIN`/`ROLE_SUPER_ADMIN`). API công khai chỉ đọc và luôn lọc `status = PUBLISHED` (POI nháp trả 404 cả ở danh sách, chi tiết, manifest, audio, ảnh).
 

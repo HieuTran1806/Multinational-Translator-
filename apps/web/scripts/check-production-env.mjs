@@ -20,7 +20,7 @@ function parseEnvFile(path) {
   return values;
 }
 
-// Match Vite env-file precedence, then let the process environment take priority.
+// Production-specific files override generic local files, matching Vite precedence.
 const env = Object.assign(
   {},
   parseEnvFile(resolve('.env')),

@@ -14,7 +14,7 @@ APP_TTS_PROVIDER=google
 GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/gcp-tts.json   # Application Default Credentials
 ```
 
-Docker Compose: bỏ chú thích ở dòng mount trong `infra/docker-compose.yml` và đặt `GOOGLE_CREDENTIALS_FILE_ON_HOST` trong `infra/.env`. Render: dùng **Secret Files** và trỏ `GOOGLE_APPLICATION_CREDENTIALS` tới `/etc/secrets/<tên file>`. Trên GCP (Cloud Run/GCE) nên dùng service account gắn vào dịch vụ thay vì tệp khóa.
+Local Admin không chạy TTS production credential riêng. Trên Render, dùng **Secret Files** và trỏ `GOOGLE_APPLICATION_CREDENTIALS` tới `/etc/secrets/<tên file>`. Trên GCP (Cloud Run/GCE) nên dùng service account gắn vào dịch vụ thay vì tệp khóa. Không commit hoặc in nội dung credential.
 
 Khi khởi động, backend ghi log `Application Default Credentials found` hoặc cảnh báo "chưa cấu hình" (không in đường dẫn hay nội dung credential). Kiểm tra: `GET /api/v1/admin/tts/status`.
 

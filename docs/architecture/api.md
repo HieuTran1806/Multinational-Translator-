@@ -87,7 +87,20 @@ X-Device-Id: <mã thiết bị ngẫu nhiên do app tự sinh một lần, 16–
 - `SUPER_ADMIN`: quản lý tài khoản Admin, RBAC và Audit Log; không có quyền quản lý POI hoặc Seller.
 - Chỉ `SUPER_ADMIN` được xem Audit Log toàn hệ thống. Mọi quy tắc phải được thực thi tại backend, không chỉ ẩn giao diện.
 
-> **RBAC đích đã chốt, đã thực thi một phần:** `SecurityConfig` giới hạn toàn bộ `/api/v1/admin/**` cho vai trò `ADMIN`, nên Super Admin bị từ chối (403) khi quản lý POI/nội dung/audio; kiểm thử `SecurityIT.superAdminCannotManagePoiContent` và `apps/admin/scripts/verify-e2e.mjs` xác minh lại. Các endpoint dành riêng cho Super Admin (quản lý Admin/RBAC/Audit Log) chưa được triển khai, nên hiện chưa có đường dẫn nào chỉ Super Admin truy cập được; khi bổ sung phải khai báo matcher riêng trước `/api/v1/admin/**`.
+> **RBAC đích đã chốt và đã thực thi:** `SecurityConfig` khai báo các matcher riêng **trước** `/api/v1/admin/**` — `/api/v1/admin/accounts/**` và `/api/v1/admin/audit/**` chỉ `SUPER_ADMIN`, `/api/v1/admin/analytics/**` cho `ADMIN` + `SUPER_ADMIN`, phần còn lại của `/api/v1/admin/**` chỉ `ADMIN`. Nhờ vậy Super Admin bị 403 khi quản lý POI/nội dung/audio và `/api/v1/admin/sellers/**`, còn Admin/ Seller bị 403 ở UC10 và Audit Log. Kiểm thử: `SecurityIT`, `SellerFlowIT`, `AdminAccountFlowIT`. Khi thêm endpoint mới cho Super Admin phải khai báo matcher riêng trước `/api/v1/admin/**`.
+
+### Quản lý tài khoản Admin (UC10 — chỉ `SUPER_ADMIN`)
+
+| Phương thức | Đường dẫn | Mô tả |
+|---|---|---|
+| GET | `/admin/accounts?page&size&q&role` | Danh sách tài khoản `ADMIN`/`SUPER_ADMIN` đang hoạt động (không trả về hash mật khẩu), mới nhất trước |
+| POST | `/admin/accounts` | Tạo tài khoản `{username, password, displayName?, role?}` → 201; trùng username → 409; `role` chỉ nhận `ADMIN`/`SUPER_ADMIN` |
+| PUT | `/admin/accounts/{id}` | Cập nhật `{displayName?, enabled?, role?}`; 403 khi tự vô hiệu hóa/tự đổi role hoặc làm mất Super Admin đang hoạt động cuối cùng (E2) |
+| POST | `/admin/accounts/{id}/reset-password` | Đặt lại mật khẩu `{newPassword}`; chỉ lưu hash BCrypt, không ghi mật khẩu vào audit log |
+
+- Tài khoản Seller thuộc UC09 (`/admin/sellers`); UC10 từ chối id của Seller (404) để hai luồng không lẫn nhau.
+- Role vẫn là mô hình tĩnh `ADMIN`/`SUPER_ADMIN`; RBAC động (UC11) chưa triển khai.
+- Mọi thao tác ghi audit `ADMIN_CREATE`/`ADMIN_UPDATE`/`ADMIN_RESET_PASSWORD` và chỉ Super Admin đọc được các bản ghi này qua `GET /admin/audit`.
 
 ## API quản trị (Bearer token, vai trò ADMIN)
 

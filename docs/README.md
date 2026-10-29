@@ -1,6 +1,6 @@
 # Danh mục tài liệu
 
-Tài liệu được tổ chức theo yêu cầu, kiến trúc, phát triển, kế hoạch và vận hành của Multitional Translator. Nhánh hiện tại có frontend Admin tại `apps/admin/`, backend tại `services/backend/` và cấu hình local tại `infra/`. Ứng dụng mobile chưa có trong nhánh này.
+Tài liệu được tổ chức theo yêu cầu, kiến trúc, phát triển, kế hoạch và vận hành của Multitional Translator. Nhánh hiện tại có frontend Admin tại `apps/admin/`, backend tại `services/backend/` và script chạy backend Admin local tại `scripts/`. Ứng dụng mobile chưa có trong nhánh này.
 
 ## Yêu cầu
 - [BRD](requirements/BRD.md)
@@ -25,5 +25,5 @@ Tài liệu được tổ chức theo yêu cầu, kiến trúc, phát triển, k
 - [Báo cáo kiểm chứng](reports/verification-report.md)
 - [Báo cáo kiểm chứng Admin](reports/admin-module-verification.md)
 - [CI/CD](operations/ci-cd.md)
-- [Chuẩn bị triển khai](operations/deployment.md) — hướng dẫn cấu hình, chưa phải deployment đang hoạt động.
+- [Chuẩn bị triển khai](operations/deployment.md) — mô hình triển khai mặc định Web User/Render/Neon và Admin local.
 - [Tích hợp](integrations/) — tài liệu tham khảo nhà cung cấp và dịch vụ.
