@@ -7,6 +7,7 @@ import PoiDetailPage from './PoiDetailPage.jsx';
 
 vi.mock('../../api/endpoints.js', () => ({
   publicApi: { languages: vi.fn(), poi: vi.fn() },
+  usageApi: { record: vi.fn().mockResolvedValue(null) },
 }));
 import { publicApi } from '../../api/endpoints.js';
 

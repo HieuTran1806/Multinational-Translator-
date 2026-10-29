@@ -27,3 +27,13 @@ export const accessApi = {
     request('/api/v1/public/access/redeem', { method: 'POST', body: { qrToken, deviceId } }),
   me: ({ signal } = {}) => request('/api/v1/public/access/me', { signal }),
 };
+
+/** UC13/UC14 — report usage metrics from the User app (poi_view, audio_play, session_start). */
+export const usageApi = {
+  record: (eventType, { poiId = null, eventId = null, signal } = {}) =>
+    request('/api/v1/public/usage-events', {
+      method: 'POST',
+      body: { eventType, poiId, eventId },
+      signal,
+    }),
+};

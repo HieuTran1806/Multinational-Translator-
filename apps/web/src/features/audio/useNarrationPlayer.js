@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useT } from '../../i18n/LanguageContext.jsx';
+import { usageApi } from '../../api/endpoints.js';
 
 /**
  * UC05 audio narration player built on a single HTMLAudioElement per source.
@@ -41,6 +42,7 @@ export function useNarrationPlayer(audioUrl) {
   const audioRef = useRef(null);
   // Distinguishes a user "stop" (reset to idle) from the pause event it triggers on the element.
   const stoppingRef = useRef(false);
+  const playTrackedRef = useRef(false);
 
   useEffect(() => {
     // Only synchronizes React with the external audio element; all state updates happen in event
@@ -48,12 +50,19 @@ export function useNarrationPlayer(audioUrl) {
     // refetching), and retry() resets the state from its click handler before bumping `attempt`.
     if (!audioUrl) return undefined;
 
+    playTrackedRef.current = false;
     const el = new Audio();
     el.preload = 'metadata';
     el.src = audioUrl;
     audioRef.current = el;
 
-    const onPlay = () => setStatus('playing');
+    const onPlay = () => {
+      setStatus('playing');
+      if (!playTrackedRef.current) {
+        playTrackedRef.current = true;
+        usageApi.record('audio_play').catch(() => {});
+      }
+    };
     const onWaiting = () => setStatus((s) => (s === 'error' ? s : 'loading'));
     const onPause = () => {
       if (stoppingRef.current) return; // handled by stop()

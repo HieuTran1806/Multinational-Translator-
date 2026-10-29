@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../api/client.js', () => ({ request: vi.fn() }));
 import { request } from '../api/client.js';
-import { publicApi } from '../api/endpoints.js';
+import { publicApi, usageApi } from '../api/endpoints.js';
 
 const requestMock = vi.mocked(request);
 
@@ -29,5 +29,15 @@ describe('publicApi endpoints', () => {
     requestMock.mockResolvedValue({});
     publicApi.poi(7, 'en', { signal: 's2' });
     expect(requestMock).toHaveBeenCalledWith('/api/v1/public/pois/7?lang=en', { signal: 's2' });
+  });
+
+  it('usageApi.record calls /api/v1/public/usage-events with body', () => {
+    requestMock.mockResolvedValue(null);
+    usageApi.record('poi_view', { poiId: 10, eventId: 'evt-123' });
+    expect(requestMock).toHaveBeenCalledWith('/api/v1/public/usage-events', {
+      method: 'POST',
+      body: { eventType: 'poi_view', poiId: 10, eventId: 'evt-123' },
+      signal: undefined,
+    });
   });
 });

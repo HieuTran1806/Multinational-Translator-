@@ -24,10 +24,10 @@ function pivotDaily(daily) {
 }
 
 /** Shared UC13/UC14 dashboard body: KPIs, per-day series and top POIs, all served by the backend. */
-export default function UsageSummary({ title, subtitle, fetchSummary, rangeState }) {
+export default function UsageSummary({ title, subtitle, fetchSummary, rangeState, reloadToken: externalReloadToken = 0 }) {
   const [result, setResult] = useState({ key: null, data: null, error: null });
-  const [reloadToken, setReloadToken] = useState(0);
-  const key = `${JSON.stringify(rangeState)}|${reloadToken}`;
+  const [internalReloadToken, setInternalReloadToken] = useState(0);
+  const key = `${JSON.stringify(rangeState)}|${externalReloadToken}|${internalReloadToken}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -37,7 +37,7 @@ export default function UsageSummary({ title, subtitle, fetchSummary, rangeState
     return () => {
       cancelled = true;
     };
-  }, [key, fetchSummary, rangeState, reloadToken]);
+  }, [key, fetchSummary, rangeState]);
 
   const loading = result.key !== key;
   const summary = loading ? null : result.data;
@@ -60,7 +60,7 @@ export default function UsageSummary({ title, subtitle, fetchSummary, rangeState
         <Card>
           <Alert
             action={
-              <Button variant="secondary" onClick={() => setReloadToken((n) => n + 1)}>
+              <Button variant="secondary" onClick={() => setInternalReloadToken((n) => n + 1)}>
                 Thử lại
               </Button>
             }
@@ -151,11 +151,11 @@ export default function UsageSummary({ title, subtitle, fetchSummary, rangeState
   );
 }
 
-export function RangePicker({ rangeState, setRangeState }) {
+export function RangePicker({ rangeState, setRangeState, onReload, loading }) {
   const presets = [
-    ['7 ngày', () => ({ from: daysBack(7) })],
-    ['30 ngày', () => ({ from: daysBack(30) })],
-    ['90 ngày', () => ({ from: daysBack(90) })],
+    ['7 ngày', () => ({ from: daysBack(7), to: undefined })],
+    ['30 ngày', () => ({ from: daysBack(30), to: undefined })],
+    ['90 ngày', () => ({ from: daysBack(90), to: undefined })],
   ];
   return (
     <Card title="Khoảng thời gian">
@@ -172,10 +172,26 @@ export function RangePicker({ rangeState, setRangeState }) {
             className="ml-2 rounded border px-2 py-1"
             value={rangeState?.from ? rangeState.from.slice(0, 10) : ''}
             onChange={(e) =>
-              setRangeState({ from: e.target.value ? `${e.target.value}T00:00:00Z` : undefined })
+              setRangeState((prev) => ({ ...prev, from: e.target.value ? `${e.target.value}T00:00:00Z` : undefined }))
             }
           />
         </label>
+        <label className="text-xs text-muted">
+          Đến
+          <input
+            type="date"
+            className="ml-2 rounded border px-2 py-1"
+            value={rangeState?.to ? rangeState.to.slice(0, 10) : ''}
+            onChange={(e) =>
+              setRangeState((prev) => ({ ...prev, to: e.target.value ? `${e.target.value}T23:59:59Z` : undefined }))
+            }
+          />
+        </label>
+        {onReload && (
+          <Button variant="secondary" onClick={onReload} disabled={loading} title="Tải lại số liệu">
+            Làm mới
+          </Button>
+        )}
       </div>
     </Card>
   );

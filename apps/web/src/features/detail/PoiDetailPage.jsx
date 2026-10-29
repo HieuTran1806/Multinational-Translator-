@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useProtectedMedia } from '../../api/useProtectedMedia.js';
-import { publicApi } from '../../api/endpoints.js';
+import { publicApi, usageApi } from '../../api/endpoints.js';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { languageLabel } from '../../i18n/languages.js';
 import { intlLocale } from '../../i18n/messages.js';
@@ -32,6 +32,7 @@ export default function PoiDetailPage() {
   const key = `${id}|${lang}|${nonce}`;
   const [result, setResult] = useState({ key: null, data: null, error: null });
   const [showTranscript, setShowTranscript] = useState(false);
+  const recordedPoiId = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +42,10 @@ export default function PoiDetailPage() {
         if (cancelled) return;
         setResult({ key, data, error: null });
         setShowTranscript(false);
+        if (recordedPoiId.current !== data.id) {
+          recordedPoiId.current = data.id;
+          usageApi.record('poi_view', { poiId: data.id }).catch(() => {});
+        }
       })
       .catch((error) => !cancelled && setResult({ key, data: null, error }));
     return () => {

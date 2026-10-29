@@ -5,7 +5,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { AccessProvider, useAccess } from './AccessContext.jsx';
 import { loadGrant, resetGrantStoreForTests, saveGrant } from './grantStore.js';
 
-vi.mock('../api/endpoints.js', () => ({ accessApi: { me: vi.fn(), redeem: vi.fn() } }));
+vi.mock('../api/endpoints.js', () => ({
+  accessApi: { me: vi.fn(), redeem: vi.fn() },
+  usageApi: { record: vi.fn().mockResolvedValue(null) },
+}));
 import { accessApi } from '../api/endpoints.js';
 
 const meMock = vi.mocked(accessApi.me);

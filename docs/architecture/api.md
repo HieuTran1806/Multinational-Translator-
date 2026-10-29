@@ -80,6 +80,7 @@ X-Device-Id: <mã thiết bị ngẫu nhiên do app tự sinh một lần, 16–
 | GET | `/public/pois/{id}/offline-manifest` | Nội dung mọi ngôn ngữ + audio (`sha256`, `sizeBytes`, `contentVersion`) + `manifestVersion` |
 | GET | `/public/audio/{assetId}` | Stream âm thanh hiện hành của POI công khai (hỗ trợ Range) |
 | GET | `/public/pois/{id}/image` | Ảnh đại diện |
+| POST | `/public/usage-events` | Ghi nhận sự kiện sử dụng (`session_start`, `poi_view`, `audio_play`) kèm khử trùng lặp qua `eventId` |
 
 ## API quản trị (Bearer token)
 
@@ -121,6 +122,7 @@ X-Device-Id: <mã thiết bị ngẫu nhiên do app tự sinh một lần, 16–
 | POST | `/admin/pois/{id}/image` | tệp multipart `file` (JPEG/PNG/WEBP ≤ 5 MB) |
 | GET | `/admin/audio/{assetId}`, `/admin/pois/{id}/image` | Nghe thử / xem hình ảnh (mọi trạng thái) |
 | GET | `/admin/languages` | Ngôn ngữ |
+| GET | `/admin/analytics/summary?from&to` | Tổng hợp usage toàn hệ thống theo khoảng thời gian `[from, to)` (mặc định 30 ngày gần nhất) |
 
 ## Kiểm tra tình trạng dịch vụ
 

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { accessApi } from '../api/endpoints.js';
+import { accessApi, usageApi } from '../api/endpoints.js';
 import { setAccessLostHandler } from '../api/client.js';
 import { clearGrant, getDeviceId, loadGrant, saveGrant } from './grantStore.js';
 
@@ -89,6 +89,13 @@ export function AccessProvider({ children }) {
     const promise = accessApi.redeem(qrToken, getDeviceId()).then((grant) => {
       saveGrant(grant);
       setState({ status: 'active', grant: loadGrant(), reason: null });
+      try {
+        const sid = 'ss_' + (globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : Math.random().toString(36).slice(2));
+        sessionStorage.setItem('tm.session_id', sid);
+        usageApi.record('session_start', { eventId: sid }).catch(() => {});
+      } catch {
+        /* ignore storage / analytics error */
+      }
       return grant;
     });
     pendingRedeems.current.set(qrToken, promise);

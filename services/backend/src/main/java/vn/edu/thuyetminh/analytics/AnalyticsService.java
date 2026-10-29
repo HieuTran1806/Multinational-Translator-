@@ -52,9 +52,14 @@ public class AnalyticsService {
 
     private Range validatedRange(Instant from, Instant to) {
         if (from == null && to == null) {
-            from = clock.instant().minus(Duration.ofDays(30));
+            to = clock.instant();
+            from = to.minus(Duration.ofDays(30));
+        } else if (from == null) {
+            from = to.minus(Duration.ofDays(30));
+        } else if (to == null) {
+            to = clock.instant();
         }
-        if (from != null && to != null && !from.isBefore(to)) {
+        if (!from.isBefore(to)) {
             throw new ApiException(ErrorCode.BAD_REQUEST, "Khoảng thời gian không hợp lệ: 'from' phải trước 'to'");
         }
         return new Range(from, to);
