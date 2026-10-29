@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import vn.edu.thuyetminh.common.web.PageResponse;
 
 /**
- * UC15 — audit log lookup. Super Admin only (see SecurityConfig): Admin and Seller must not see the
+ * UC15 — audit log lookup. Super Admin only (see SecurityConfig): Admin must not see the
  * system-wide audit log. Records are append-only; this controller exposes read-only access.
  */
 @RestController

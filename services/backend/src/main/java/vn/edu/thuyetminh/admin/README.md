@@ -1,5 +1,5 @@
-# Admin Account Domain — UC13
+# Admin Account Domain — UC10
 
-Thư mục đích cho nghiệp vụ tài khoản Admin: tạo, sửa, xem và quản lý trạng thái theo UC13.
+`AdminAccountController`/`AdminAccountService` chỉ cho `SUPER_ADMIN` quản lý tài khoản role `ADMIN`: list/detail/create/update display name và enabled state/reset password/soft delete.
 
-Phân biệt với User Management và dùng RBAC UC14 để quản lý quyền. Mọi thao tác cần kiểm tra quyền server-side và audit phù hợp. Đây là thư mục định hướng; chưa di chuyển code hiện có.
+Role được cố định thành `ADMIN`; Super Admin accounts không được trả về hoặc sửa/xóa qua UC10. Password luôn hash; session invalidation và audit trail tuân theo lifecycle hiện có.

@@ -18,8 +18,7 @@ import vn.edu.thuyetminh.common.error.ErrorCode;
 import vn.edu.thuyetminh.common.web.PageResponse;
 
 /**
- * Issues and revokes access QR codes. UC12 (Seller payment + QR issuing) is outside the MVP, so for now
- * an Admin issues QR codes; the Seller flow can reuse this service once UC12 is built.
+ * Issues and revokes access QR codes. Admin issues QR codes for visitors (UC02/UC12 scope).
  */
 @Service
 public class AccessQrAdminService {
@@ -31,16 +30,14 @@ public class AccessQrAdminService {
     private final AppProperties props;
     private final Clock clock;
     private final AuditService audit;
-    private final vn.edu.thuyetminh.auth.AccountStore accounts;
 
     public AccessQrAdminService(AccessQrStore qrs, AccessGrantStore grants, AppProperties props, Clock clock,
-                                AuditService audit, vn.edu.thuyetminh.auth.AccountStore accounts) {
+                                AuditService audit) {
         this.qrs = qrs;
         this.grants = grants;
         this.props = props;
         this.clock = clock;
         this.audit = audit;
-        this.accounts = accounts;
     }
 
     @Transactional
@@ -51,12 +48,10 @@ public class AccessQrAdminService {
                 .orElseThrow(() -> new ApiException(ErrorCode.BAD_REQUEST,
                         "Gói '" + code + "' không tồn tại hoặc đã ngừng áp dụng"));
         String note = req == null || req.note() == null || req.note().isBlank() ? null : req.note().trim();
-        Long sellerId = resolveSellerId(req);
 
         String token = AccessTokens.newToken();
         AccessQr qr = qrs.save(new AccessQr(Hashing.sha256Hex(token), pkg, note, issuedByAccountId,
                 clock.instant().truncatedTo(ChronoUnit.SECONDS)));
-        qr.setSellerId(sellerId);
         log.info("Access QR id={} ({}) issued by account id={}", qr.getId(), pkg.getCode(), issuedByAccountId);
         audit.record(auditActor(issuedByAccountId), AuditService.QR_ISSUE, "ACCESS_QR", String.valueOf(qr.getId()),
                 AuditService.RESULT_SUCCESS, "package=" + pkg.getCode());
@@ -86,18 +81,6 @@ public class AccessQrAdminService {
 
     private AuditService.Actor auditActor(Long issuedByAccountId) {
         return new AuditService.Actor(issuedByAccountId, null);
-    }
-
-    private Long resolveSellerId(AccessDtos.IssueRequest req) {
-        String username = req == null ? null : req.sellerUsername();
-        if (username == null || username.isBlank()) {
-            return null;
-        }
-        return accounts.findLiveByUsername(username.trim())
-                .filter(a -> a.getRole() == vn.edu.thuyetminh.auth.AccountRole.SELLER)
-                .map(vn.edu.thuyetminh.auth.Account::getId)
-                .orElseThrow(() -> new ApiException(ErrorCode.BAD_REQUEST,
-                        "Seller '" + username.trim() + "' không tồn tại hoặc đã bị xóa"));
     }
 
     private String activationUrl(String token) {

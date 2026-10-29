@@ -1,7 +1,6 @@
 package vn.edu.thuyetminh.access;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -28,8 +27,4 @@ public interface AccessQrRepository extends JpaRepository<AccessQr, Long> {
     @Query("update AccessQr q set q.status = :redeemed, q.redeemedAt = :now "
             + "where q.tokenHash = :tokenHash and q.status = :issued")
     int markRedeemed(String tokenHash, Instant now, AccessQrStatus issued, AccessQrStatus redeemed);
-
-    /** UC13: QR counts per owning seller, grouped by status. */
-    @Query("select q.status, count(q) from AccessQr q where q.sellerId = :sellerId group by q.status")
-    List<Object[]> countBySellerGroupByStatus(@org.springframework.data.repository.query.Param("sellerId") Long sellerId);
 }

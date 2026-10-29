@@ -15,7 +15,7 @@ public final class AdminAccountDtos {
     private AdminAccountDtos() {
     }
 
-    /** UC10 §5.3: Super Admin creates an Admin (or another Super Admin) account. */
+    /** UC10: Super Admin creates an Admin account. */
     public record CreateRequest(
             @NotBlank(message = "Vui lòng nhập tên đăng nhập")
             @Size(min = 3, max = 64, message = "Tên đăng nhập 3..64 ký tự")
@@ -26,21 +26,19 @@ public final class AdminAccountDtos {
             @Size(min = 6, max = 200, message = "Mật khẩu tối thiểu 6 ký tự")
             String password,
             @Size(max = 120, message = "Tên hiển thị tối đa 120 ký tự")
-            String displayName,
-            AccountRole role) {
+            String displayName) {
 
         @Override
         public String toString() {
-            return "CreateRequest[username=" + username + ", password=***, role=" + role + "]";
+            return "CreateRequest[username=" + username + ", password=***]";
         }
     }
 
-    /** UC10 A1/A2 + §8: display name, activation state and role (role is a static ADMIN/SUPER_ADMIN switch). */
+    /** UC10: edit Admin display name and enabled state; role is fixed to ADMIN. */
     public record UpdateRequest(
             @Size(max = 120, message = "Tên hiển thị tối đa 120 ký tự")
             String displayName,
-            Boolean enabled,
-            AccountRole role) {
+            Boolean enabled) {
     }
 
     public record ResetPasswordRequest(

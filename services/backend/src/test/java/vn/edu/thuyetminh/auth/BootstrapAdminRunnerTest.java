@@ -108,22 +108,8 @@ class BootstrapAdminRunnerTest {
         }
 
         @Override
-        public vn.edu.thuyetminh.common.web.PageResponse<Account> searchSellers(String q, int page, int size) {
+        public vn.edu.thuyetminh.common.web.PageResponse<Account> searchAdmins(String q, int page, int size) {
             return new vn.edu.thuyetminh.common.web.PageResponse<>(List.of(), page, size, 0, 0);
-        }
-
-        @Override
-        public vn.edu.thuyetminh.common.web.PageResponse<Account> searchAdmins(String q, AccountRole role, int page,
-                                                                            int size) {
-            return new vn.edu.thuyetminh.common.web.PageResponse<>(List.of(), page, size, 0, 0);
-        }
-
-        @Override
-        public long countActiveSuperAdminsExcept(Long excludeId) {
-            return accounts.values().stream()
-                    .filter(a -> a.getRole() == AccountRole.SUPER_ADMIN && a.isEnabled() && !a.isDeleted())
-                    .filter(a -> !a.getId().equals(excludeId))
-                    .count();
         }
     }
 }

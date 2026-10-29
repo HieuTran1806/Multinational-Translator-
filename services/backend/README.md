@@ -1,4 +1,6 @@
-﻿# Backend — Spring Boot, Java 21, Maven Wrapper
+# Backend — Spring Boot, Java 21, Maven Wrapper
+
+> **Ma trận quyền hiện hành:** `/api/v1/admin/analytics/**` chỉ `ADMIN`; `/api/v1/admin/accounts/**` và `/api/v1/admin/audit/**` chỉ `SUPER_ADMIN`; các API nghiệp vụ `/api/v1/admin/**` chỉ `ADMIN`. Role `SELLER` và cột `access_qr.seller_id` đã bị loại bỏ bằng Flyway V6.
 
 Backend có hai vai trò vận hành trong kiến trúc mặc định: Render phục vụ Web User production; một tiến trình Spring Boot local dùng riêng cho Web Admin và kết nối Neon qua profile `local-neon`.
 

@@ -67,13 +67,4 @@ public class JpaAccessQrStore implements AccessQrStore {
     public boolean markRedeemed(String tokenHash, Instant now) {
         return qrs.markRedeemed(tokenHash, now, AccessQrStatus.ISSUED, AccessQrStatus.REDEEMED) == 1;
     }
-
-    @Override
-    public java.util.Map<AccessQrStatus, Long> countBySellerGroupByStatus(Long sellerId) {
-        java.util.Map<AccessQrStatus, Long> counts = new java.util.EnumMap<>(AccessQrStatus.class);
-        for (Object[] row : qrs.countBySellerGroupByStatus(sellerId)) {
-            counts.put((AccessQrStatus) row[0], (Long) row[1]);
-        }
-        return counts;
-    }
 }

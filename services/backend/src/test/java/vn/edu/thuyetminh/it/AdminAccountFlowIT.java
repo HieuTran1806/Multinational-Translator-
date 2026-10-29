@@ -35,11 +35,10 @@ class AdminAccountFlowIT extends AbstractIntegrationTest {
         return jdbc.queryForObject("select id from account where username = ?", Long.class, username);
     }
 
-    private long createAccount(String superToken, String username, String role) throws Exception {
+    private long createAccount(String superToken, String username) throws Exception {
         String body = mvc.perform(post("/api/v1/admin/accounts").header("Authorization", bearer(superToken))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"" + username + "\",\"password\":\"admin-pass-1\","
-                                + "\"displayName\":\"New " + username + "\",\"role\":\"" + role + "\"}"))
+                        .content("{\\\"username\\\":\\\"" + username + "\\\",\\\"password\\\":\\\"admin-pass-1\\\",\\\"displayName\\\":\\\"New " + username + "\\\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return ((Number) JsonPath.read(body, "$.id")).longValue();
@@ -48,11 +47,11 @@ class AdminAccountFlowIT extends AbstractIntegrationTest {
     @Test
     void superAdminCreatesAdminWhoCanLoginButCannotManageAccounts() throws Exception {
         String superToken = superAdminToken("it_super_a");
-        long id = createAccount(superToken, "it_admin_new", "ADMIN");
+        long id = createAccount(superToken, "it_admin_new");
 
         mvc.perform(get("/api/v1/admin/accounts").header("Authorization", bearer(superToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalItems").value(3))
+                .andExpect(jsonPath("$.totalItems").value(2))
                 .andExpect(jsonPath("$.items[0].passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.items[1].passwordHash").doesNotExist());
 
@@ -82,38 +81,17 @@ class AdminAccountFlowIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void sellerCannotReachAccountManagementAndSellerAccountsStayInUc09() throws Exception {
+    void removedSellerEndpointsHaveNoBusinessAccess() throws Exception {
         String superToken = superAdminToken("it_super_b");
-        String body = mvc.perform(post("/api/v1/admin/sellers").header("Authorization", bearer(login()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"it_seller_x\",\"password\":\"seller-pass-1\"}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        long sellerId = ((Number) JsonPath.read(body, "$.id")).longValue();
-
-        String sellerLogin = mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"it_seller_x\",\"password\":\"seller-pass-1\"}"))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        mvc.perform(get("/api/v1/admin/accounts")
-                        .header("Authorization", bearer(JsonPath.read(sellerLogin, "$.accessToken"))))
+        mvc.perform(get("/api/v1/seller/reports/summary").header("Authorization", bearer(superToken)))
                 .andExpect(status().isForbidden());
-
-        // a Seller id is not a manageable admin account
-        mvc.perform(put("/api/v1/admin/accounts/" + sellerId).header("Authorization", bearer(superToken))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":false}"))
-                .andExpect(status().isNotFound());
-        // and a Seller role cannot be created through UC10
-        mvc.perform(post("/api/v1/admin/accounts").header("Authorization", bearer(superToken))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"it_seller_y\",\"password\":\"seller-pass-1\",\"role\":\"SELLER\"}"))
-                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/admin/sellers").header("Authorization", bearer(login())))
+                .andExpect(status().isForbidden());
     }
-
     @Test
     void disabledAdminCannotLoginUntilReactivated() throws Exception {
         String superToken = superAdminToken("it_super_c");
-        long id = createAccount(superToken, "it_admin_toggle", "ADMIN");
+        long id = createAccount(superToken, "it_admin_toggle");
 
         mvc.perform(put("/api/v1/admin/accounts/" + id).header("Authorization", bearer(superToken))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -137,7 +115,7 @@ class AdminAccountFlowIT extends AbstractIntegrationTest {
     @Test
     void resetPasswordInvalidatesTheOldPassword() throws Exception {
         String superToken = superAdminToken("it_super_d");
-        long id = createAccount(superToken, "it_admin_pw", "ADMIN");
+        long id = createAccount(superToken, "it_admin_pw");
 
         mvc.perform(post("/api/v1/admin/accounts/" + id + "/reset-password")
                         .header("Authorization", bearer(superToken)).contentType(MediaType.APPLICATION_JSON)
@@ -152,56 +130,40 @@ class AdminAccountFlowIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void superAdminCannotDisableItselfOrChangeItsOwnRole() throws Exception {
+    void superAdminAccountsAreOutsideTheAdminManagementScope() throws Exception {
         String superToken = superAdminToken("it_super_e");
-        long selfId = accountId("it_super_e");
-
-        mvc.perform(put("/api/v1/admin/accounts/" + selfId).header("Authorization", bearer(superToken))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":false}"))
+        long superId = accountId("it_super_e");
+        mvc.perform(get("/api/v1/admin/pois").header("Authorization", bearer(superToken)))
                 .andExpect(status().isForbidden());
-        mvc.perform(put("/api/v1/admin/accounts/" + selfId).header("Authorization", bearer(superToken))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"ADMIN\"}"))
-                .andExpect(status().isForbidden());
-        // the account is untouched
-        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"it_super_e\",\"password\":\"it-super-password-123\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.account.role").value("SUPER_ADMIN"));
+        mvc.perform(get("/api/v1/admin/access-qrs").header("Authorization", bearer(superToken)))
+                .andExpect(status().isForbidden());        mvc.perform(get("/api/v1/admin/accounts").header("Authorization", bearer(superToken)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalItems").value(1));
+        mvc.perform(put("/api/v1/admin/accounts/" + superId).header("Authorization", bearer(superToken))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\\\"displayName\\\":\\\"not allowed\\\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/admin/accounts/" + superId + "/reset-password")
+                        .header("Authorization", bearer(superToken)).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\\\"newPassword\\\":\\\"secret-new-123\\\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/admin/accounts/" + superId)
+                        .header("Authorization", bearer(superToken)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void lastActiveSuperAdminCannotBeDisabledOrDemoted() throws Exception {
-        String firstToken = superAdminToken("it_super_f1");
-        long secondId = createAccount(firstToken, "it_super_f2", "SUPER_ADMIN");
-        String secondToken = mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"it_super_f2\",\"password\":\"admin-pass-1\"}"))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        // disable the first one so exactly one active Super Admin (it_super_f2) remains
-        long firstId = accountId("it_super_f1");
-        mvc.perform(put("/api/v1/admin/accounts/" + firstId)
-                        .header("Authorization", bearer(JsonPath.read(secondToken, "$.accessToken")))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":false}"))
-                .andExpect(status().isOk());
-
-        // the remaining active Super Admin cannot demote itself (self guard) …
-        String token2 = JsonPath.read(secondToken, "$.accessToken");
-        mvc.perform(put("/api/v1/admin/accounts/" + secondId).header("Authorization", bearer(token2))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"ADMIN\"}"))
-                .andExpect(status().isForbidden());
-        // … and nobody else can demote or disable it either, because it is the last active one
-        String freshToken = superAdminToken("it_super_f3");
-        mvc.perform(put("/api/v1/admin/accounts/" + secondId).header("Authorization", bearer(freshToken))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"ADMIN\"}"))
-                .andExpect(status().isOk()); // a third Super Admin now exists, so this is allowed
-        assertThat(jdbc.queryForObject("select role from account where id = ?", String.class, secondId))
-                .isEqualTo("ADMIN");
+    void createRequestCannotCreateASuperAdmin() throws Exception {
+        String superToken = superAdminToken("it_super_f1");
+        String body = mvc.perform(post("/api/v1/admin/accounts").header("Authorization", bearer(superToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\\\"username\\\":\\\"it_not_super\\\",\\\"password\\\":\\\"admin-pass-1\\\",\\\"role\\\":\\\"SUPER_ADMIN\\\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        assertThat(JsonPath.read(body, "$.role").toString()).isEqualTo("ADMIN");
     }
 
     @Test
     void createValidatesInputAndRejectsDuplicates() throws Exception {
         String superToken = superAdminToken("it_super_g");
-        createAccount(superToken, "it_admin_dup", "ADMIN");
+        createAccount(superToken, "it_admin_dup");
 
         mvc.perform(post("/api/v1/admin/accounts").header("Authorization", bearer(superToken))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -227,7 +189,7 @@ class AdminAccountFlowIT extends AbstractIntegrationTest {
     @Test
     void uc10WritesAuditEventsVisibleToSuperAdmin() throws Exception {
         String superToken = superAdminToken("it_super_h");
-        long id = createAccount(superToken, "it_admin_audit", "ADMIN");
+        long id = createAccount(superToken, "it_admin_audit");
         mvc.perform(put("/api/v1/admin/accounts/" + id).header("Authorization", bearer(superToken))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":false}"))
                 .andExpect(status().isOk());

@@ -14,81 +14,56 @@ import com.jayway.jsonpath.JsonPath;
 
 import vn.edu.thuyetminh.support.AbstractIntegrationTest;
 
-/** UC13 (seller report, own data only) + UC14 (system analytics) + usage-event ingestion. */
+/** UC14 system analytics and usage-event ingestion, using visitor grants independent of account roles. */
 class AnalyticsFlowIT extends AbstractIntegrationTest {
 
-    private String createSeller(String username) throws Exception {
-        String body = mvc.perform(post("/api/v1/admin/sellers").header("Authorization", bearer(login()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"" + username + "\",\"password\":\"seller-pass-1\"}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        return String.valueOf(((Number) JsonPath.read(body, "$.id")).longValue());
-    }
-
-    private String sellerToken(String username) throws Exception {
+    private String superAdminToken(String username) throws Exception {
+        jdbc.update("INSERT INTO account (username, password_hash, display_name, role) VALUES (?, ?, ?, 'SUPER_ADMIN')",
+                username, encoder.encode("it-super-password-123"), "IT " + username);
         String body = mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"" + username + "\",\"password\":\"seller-pass-1\"}"))
+                        .content("{\"username\":\"" + username + "\",\"password\":\"it-super-password-123\"}"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return JsonPath.read(body, "$.accessToken");
     }
-
-    /** Issues a QR assigned to the seller, redeems it on a device, returns grant headers + seller token. */
-    private record SellerGrant(String sellerToken, String grantToken, String deviceId) {
+    private record ActivatedGrant(String grantToken, String deviceId) {
     }
 
-    private SellerGrant activateSellerQr(String username) throws Exception {
-        createSeller(username);
-        String token = sellerToken(username);
+    private ActivatedGrant activateQr() throws Exception {
         String qrBody = mvc.perform(post("/api/v1/admin/access-qrs").header("Authorization", bearer(login()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"sellerUsername\":\"" + username + "\"}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         String qrToken = JsonPath.read(qrBody, "$.qrToken");
         String deviceId = "it-device-" + UUID.randomUUID().toString().replace("-", "").substring(0, 24);
-        String grant = redeem(qrToken, deviceId);
-        return new SellerGrant(token, grant, deviceId);
+        return new ActivatedGrant(redeem(qrToken, deviceId), deviceId);
     }
 
     @Test
-    void usageEventsAreCountedForSystemAndSellerScope() throws Exception {
-        SellerGrant g = activateSellerQr("seller_r1");
-
-        // two poi_view events, one duplicated by event_id -> dedup to one
-        mvc.perform(post("/api/v1/public/usage-events").header("Authorization", bearer(g.grantToken()))
-                        .header("X-Device-Id", g.deviceId()).contentType(MediaType.APPLICATION_JSON)
+    void usageEventsAreCountedInSystemAnalyticsAndSuperAdminIsDenied() throws Exception {
+        ActivatedGrant grant = activateQr();
+        mvc.perform(post("/api/v1/public/usage-events").header("Authorization", bearer(grant.grantToken()))
+                        .header("X-Device-Id", grant.deviceId()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"eventType\":\"poi_view\",\"eventId\":\"evt-1\"}"))
                 .andExpect(status().isNoContent());
-        mvc.perform(post("/api/v1/public/usage-events").header("Authorization", bearer(g.grantToken()))
-                        .header("X-Device-Id", g.deviceId()).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/public/usage-events").header("Authorization", bearer(grant.grantToken()))
+                        .header("X-Device-Id", grant.deviceId()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"eventType\":\"poi_view\",\"eventId\":\"evt-1\"}"))
                 .andExpect(status().isNoContent());
-        mvc.perform(post("/api/v1/public/usage-events").header("Authorization", bearer(g.grantToken()))
-                        .header("X-Device-Id", g.deviceId()).contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/public/usage-events").header("Authorization", bearer(grant.grantToken()))
+                        .header("X-Device-Id", grant.deviceId()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"eventType\":\"audio_play\"}"))
                 .andExpect(status().isNoContent());
 
-        // UC14: system totals (admin)
         mvc.perform(get("/api/v1/admin/analytics/summary").header("Authorization", bearer(login())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totals.poi_view").value(1))
                 .andExpect(jsonPath("$.totals.audio_play").value(1))
                 .andExpect(jsonPath("$.generatedAt").isNotEmpty());
 
-        // UC13: the seller sees the same usage, scoped to its own QRs
-        mvc.perform(get("/api/v1/seller/reports/summary").header("Authorization", bearer(g.sellerToken())))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totals.poi_view").value(1))
-                .andExpect(jsonPath("$.qrByStatus.REDEEMED").value(1));
-
-        // another seller must not see the first seller's data (E2); its own QR is redeemed but has no usage
-        SellerGrant other = activateSellerQr("seller_r2");
-        mvc.perform(get("/api/v1/seller/reports/summary").header("Authorization", bearer(other.sellerToken())))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totals").isEmpty())
-                .andExpect(jsonPath("$.qrByStatus.REDEEMED").value(1));
+        mvc.perform(get("/api/v1/admin/analytics/summary")
+                        .header("Authorization", bearer(superAdminToken("it_super_analytics"))))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -96,10 +71,9 @@ class AnalyticsFlowIT extends AbstractIntegrationTest {
         mvc.perform(post("/api/v1/public/usage-events").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"eventType\":\"poi_view\"}"))
                 .andExpect(status().isUnauthorized());
-        // invalid event type rejected even with a grant
-        SellerGrant g = activateSellerQr("seller_r3");
-        mvc.perform(post("/api/v1/public/usage-events").header("Authorization", bearer(g.grantToken()))
-                        .header("X-Device-Id", g.deviceId()).contentType(MediaType.APPLICATION_JSON)
+        ActivatedGrant grant = activateQr();
+        mvc.perform(post("/api/v1/public/usage-events").header("Authorization", bearer(grant.grantToken()))
+                        .header("X-Device-Id", grant.deviceId()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"eventType\":\"hack\"}"))
                 .andExpect(status().isBadRequest());
     }

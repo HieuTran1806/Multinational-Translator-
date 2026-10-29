@@ -1,5 +1,7 @@
-# RBAC Domain — UC14
+# Static Authorization Policy
 
-Thư mục đích cho role, permission, quan hệ role-permission và các quy tắc authorization dùng chung.
+Role policy cố định; không có dynamic RBAC, permission editor hoặc CRUD role-permission.
 
-UI Permission Matrix không phải nguồn thực thi quyền. Backend phải kiểm tra quyền ở endpoint/service và ngăn tự nâng quyền. Ghi audit cho thay đổi nhạy cảm theo đặc tả. README này không xác nhận RBAC đã hoàn thiện.
+- `ADMIN`: POI, translations, media/audio, QR và Analytics.
+- `SUPER_ADMIN`: tài khoản Admin và Audit Log.
+- Matcher cụ thể phải đứng trước `/api/v1/admin/**`; Super Admin không kế thừa Admin; default deny.

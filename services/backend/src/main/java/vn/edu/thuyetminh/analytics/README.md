@@ -1,5 +1,5 @@
-# Analytics Domain — UC15
+# Analytics Domain — UC14
 
-Thư mục đích cho truy vấn và tổng hợp số liệu phục vụ dashboard Analytics theo UC15.
+Analytics tổng hợp usage events trên toàn hệ thống; endpoint/service chỉ cho `ADMIN`. `SUPER_ADMIN` không có quyền Analytics và không còn seller-scope queries.
 
-Thống nhất định nghĩa metric, filter, time range và pagination với API contract; tránh để frontend tự tính ra số liệu khác với backend. Chỉ triển khai metric thuộc phạm vi đã duyệt.
+Metric, filter và time range phải thống nhất giữa API và UI; không coi Seller reports là nghiệp vụ hiện hành.

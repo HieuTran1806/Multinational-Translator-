@@ -43,14 +43,6 @@ public class JpaUsageEventStore implements UsageEventStore {
         return repository.countViewsByPoi(range(from), rangeTo(to));
     }
 
-    @Override public List<DailyCount> countDailyForSeller(Long sellerId, Instant from, Instant to) {
-        return repository.countDailyForSeller(sellerId, range(from), rangeTo(to));
-    }
-
-    @Override public List<Object[]> countTotalsForSeller(Long sellerId, Instant from, Instant to) {
-        return repository.countTotalsForSeller(sellerId, range(from), rangeTo(to));
-    }
-
     private static Instant range(Instant from) {
         return from == null ? EPOCH : from;
     }

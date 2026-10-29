@@ -44,10 +44,6 @@ public class AccessQr {
     @Column(name = "issued_by")
     private Long issuedBy;
 
-    /** Owning seller (UC09/UC13): the Seller the QR was issued for; Admin issues it on their behalf in the MVP. */
-    @Column(name = "seller_id")
-    private Long sellerId;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -96,14 +92,6 @@ public class AccessQr {
 
     public Long getIssuedBy() {
         return issuedBy;
-    }
-
-    public Long getSellerId() {
-        return sellerId;
-    }
-
-    public void setSellerId(Long sellerId) {
-        this.sellerId = sellerId;
     }
 
     public Instant getCreatedAt() {

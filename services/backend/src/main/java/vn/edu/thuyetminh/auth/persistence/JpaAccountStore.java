@@ -47,22 +47,9 @@ public class JpaAccountStore implements AccountStore {
         return repository.save(account);
     }
 
-    @Override public PageResponse<Account> searchSellers(String q, int page, int size) {
-        return toPage(repository.searchSellers(q == null ? "" : q, pageRequest(page, size)));
-    }
-
-    @Override public PageResponse<Account> searchAdmins(String q, AccountRole role, int page, int size) {
+    @Override public PageResponse<Account> searchAdmins(String q, int page, int size) {
         String query = q == null ? "" : q;
-        PageRequest request = pageRequest(page, size);
-        Page<Account> result = role == null
-                ? repository.searchAdmins(query, request)
-                : repository.searchAdminsByRole(query, role, request);
-        return toPage(result);
-    }
-
-    @Override public long countActiveSuperAdminsExcept(Long excludeId) {
-        return excludeId == null ? repository.countByRoleAndDeletedAtIsNull(AccountRole.SUPER_ADMIN)
-                : repository.countActiveSuperAdminsExcept(excludeId);
+        return toPage(repository.searchAdmins(query, pageRequest(page, size)));
     }
 
     private static PageRequest pageRequest(int page, int size) {

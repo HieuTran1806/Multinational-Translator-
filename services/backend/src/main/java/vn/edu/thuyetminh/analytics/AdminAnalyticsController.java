@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
- * UC14 — system-wide analytics for Admin and Super Admin (hasAnyRole in SecurityConfig).
+ * UC14 — system-wide analytics for Admin only (hasRole in SecurityConfig).
  * Aggregated data only; no export, no drill-down into raw events.
  */
 @RestController

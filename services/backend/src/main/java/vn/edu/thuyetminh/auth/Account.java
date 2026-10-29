@@ -37,7 +37,7 @@ public class Account {
     @Column(nullable = false)
     private boolean enabled = true;
 
-    /** UC09 E2: soft delete keeps transactions/reports/audit history while blocking login and new business. */
+    /** UC10: soft delete keeps audit history while blocking login and new business. */
     @Column(name = "deleted_at")
     private Instant deletedAt;
 

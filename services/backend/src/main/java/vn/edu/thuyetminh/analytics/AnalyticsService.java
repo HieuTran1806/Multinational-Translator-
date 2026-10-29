@@ -10,14 +10,12 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import vn.edu.thuyetminh.access.AccessQrStatus;
-import vn.edu.thuyetminh.access.AccessQrStore;
 import vn.edu.thuyetminh.common.error.ApiException;
 import vn.edu.thuyetminh.common.error.ErrorCode;
 
 /**
- * UC13 (seller scope) and UC14 (system scope) summaries. All aggregation happens in the database; a
- * UTC day is the reporting unit and timestamps are stored/returned in UTC (UI renders Asia/Ho_Chi_Minh).
+ * UC14 system-scope summary. All aggregation happens in the database; a UTC day is the reporting unit
+ * and timestamps are stored/returned in UTC (UI renders Asia/Ho_Chi_Minh).
  */
 @Service
 public class AnalyticsService {
@@ -25,17 +23,15 @@ public class AnalyticsService {
     private static final int TOP_POI_LIMIT = 10;
 
     private final UsageEventStore usageEvents;
-    private final AccessQrStore qrs;
     private final Clock clock;
 
-    public AnalyticsService(UsageEventStore usageEvents, AccessQrStore qrs, Clock clock) {
+    public AnalyticsService(UsageEventStore usageEvents, Clock clock) {
         this.usageEvents = usageEvents;
-        this.qrs = qrs;
         this.clock = clock;
     }
 
     public record Summary(Map<String, Long> totals, List<DailyCount> daily,
-                          List<PoiViews> topPois, Map<String, Long> qrByStatus, Instant generatedAt) {
+                          List<PoiViews> topPois, Instant generatedAt) {
     }
 
     public record PoiViews(Long poiId, long views) {
@@ -48,20 +44,7 @@ public class AnalyticsService {
         List<PoiViews> top = usageEvents.countViewsByPoi(range.from(), range.to()).stream()
                 .limit(TOP_POI_LIMIT)
                 .map(row -> new PoiViews((Long) row[0], (Long) row[1])).toList();
-        return new Summary(totals, usageEvents.countDaily(range.from(), range.to()), top, Map.of(),
-                clock.instant());
-    }
-
-    /** UC13: seller-scoped summary. The seller id always comes from the authenticated principal server-side. */
-    @Transactional(readOnly = true)
-    public Summary sellerSummary(Long sellerId, Instant from, Instant to) {
-        Range range = validatedRange(from, to);
-        Map<String, Long> totals = toTotals(usageEvents.countTotalsForSeller(sellerId, range.from(), range.to()));
-        Map<AccessQrStatus, Long> byStatus = qrs.countBySellerGroupByStatus(sellerId);
-        Map<String, Long> qrStatus = new HashMap<>();
-        byStatus.forEach((status, count) -> qrStatus.put(status.name(), count));
-        return new Summary(totals, usageEvents.countDailyForSeller(sellerId, range.from(), range.to()), List.of(),
-                qrStatus, clock.instant());
+        return new Summary(totals, usageEvents.countDaily(range.from(), range.to()), top, clock.instant());
     }
 
     private record Range(Instant from, Instant to) {

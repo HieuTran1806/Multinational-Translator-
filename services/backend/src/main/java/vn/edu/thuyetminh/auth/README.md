@@ -1,5 +1,5 @@
 # Backend Auth
 
-Chứa xác thực, đăng nhập/đăng xuất, đăng ký và các thành phần hỗ trợ session/identity theo thiết kế backend. Liên quan UC01–UC03 và auth dùng chung.
+Chứa login, logout, bearer token/session và account identity. Account roles hiện hành chỉ gồm `ADMIN` và `SUPER_ADMIN`; User access được cấp qua QR grant, không phải account role.
 
-Bảo vệ credential, không log password/token, trả lỗi nhất quán và kiểm tra quyền ở các endpoint được bảo vệ. Tài khoản User và Admin cần tuân theo quy tắc UC12–UC14.
+Không còn đăng nhập/session Seller. Không log password/token; soft-deleted hoặc disabled account không được đăng nhập hoặc dùng session đã bị vô hiệu hóa.
