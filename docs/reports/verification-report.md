@@ -22,6 +22,6 @@
 ## Not run / limitations
 
 - Backend integration tests were not run because no verified dedicated test database was available in this execution; they were not pointed at production.
-- Web User: 73 tests passed; lint passed with 3 existing Fast Refresh warnings and 0 errors; build passed. Browser role-by-role smoke checks were not run because no browser session/server was started; production has no Super Admin account for privileged live flows.
+- Web User: 73 tests passed; lint passed with 3 Fast Refresh warnings and 0 errors; build passed. Browser smoke on the existing local Admin dev server confirmed direct unauthenticated navigation to `/sellers`, `/reports`, `/analytics`, `/accounts`, and `/audit` redirects to `/login`. Authenticated role-by-role browser checks were not run: the local backend/test DB was not started and production has no Super Admin account.
 - No Super Admin account exists in production and no bootstrap credentials were configured in the local environment. Provisioning a privileged account requires an approved credential/bootstrap action; it was not guessed or generated.
 - No push, deployment or release was performed.
