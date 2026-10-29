@@ -66,6 +66,7 @@ app:
     password: ${APP_BOOTSTRAP_ADMIN_PASSWORD:}
     role: ${APP_BOOTSTRAP_ADMIN_ROLE:SUPER_ADMIN}
   storage:
+    provider: ${APP_STORAGE_PROVIDER:local}
     local-root: ${APP_STORAGE_LOCAL_ROOT:./data/media}
   upload:
     max-audio-bytes: ${APP_UPLOAD_MAX_AUDIO_BYTES:20971520}
