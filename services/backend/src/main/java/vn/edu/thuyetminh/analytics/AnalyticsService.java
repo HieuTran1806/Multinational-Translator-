@@ -70,6 +70,7 @@ public class AnalyticsService {
         for (Object[] row : rows) {
             totals.put((String) row[0], (Long) row[1]);
         }
+        // totals.replaceAll((eventType, count) -> count * 2);
         return totals;
     }
 }
