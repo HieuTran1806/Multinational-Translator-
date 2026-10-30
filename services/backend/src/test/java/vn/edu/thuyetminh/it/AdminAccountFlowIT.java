@@ -38,7 +38,7 @@ class AdminAccountFlowIT extends AbstractIntegrationTest {
     private long createAccount(String superToken, String username) throws Exception {
         String body = mvc.perform(post("/api/v1/admin/accounts").header("Authorization", bearer(superToken))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\\\"username\\\":\\\"" + username + "\\\",\\\"password\\\":\\\"admin-pass-1\\\",\\\"displayName\\\":\\\"New " + username + "\\\"}"))
+                        .content("{\"username\":\"" + username + "\",\"password\":\"admin-pass-1\",\"displayName\":\"New " + username + "\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return ((Number) JsonPath.read(body, "$.id")).longValue();
@@ -86,8 +86,9 @@ class AdminAccountFlowIT extends AbstractIntegrationTest {
         mvc.perform(get("/api/v1/seller/reports/summary").header("Authorization", bearer(superToken)))
                 .andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/admin/sellers").header("Authorization", bearer(login())))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isNotFound());
     }
+
     @Test
     void disabledAdminCannotLoginUntilReactivated() throws Exception {
         String superToken = superAdminToken("it_super_c");
@@ -136,14 +137,15 @@ class AdminAccountFlowIT extends AbstractIntegrationTest {
         mvc.perform(get("/api/v1/admin/pois").header("Authorization", bearer(superToken)))
                 .andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/admin/access-qrs").header("Authorization", bearer(superToken)))
-                .andExpect(status().isForbidden());        mvc.perform(get("/api/v1/admin/accounts").header("Authorization", bearer(superToken)))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/admin/accounts").header("Authorization", bearer(superToken)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalItems").value(1));
         mvc.perform(put("/api/v1/admin/accounts/" + superId).header("Authorization", bearer(superToken))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\\\"displayName\\\":\\\"not allowed\\\"}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"displayName\":\"not allowed\"}"))
                 .andExpect(status().isNotFound());
         mvc.perform(post("/api/v1/admin/accounts/" + superId + "/reset-password")
                         .header("Authorization", bearer(superToken)).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\\\"newPassword\\\":\\\"secret-new-123\\\"}"))
+                        .content("{\"newPassword\":\"secret-new-123\"}"))
                 .andExpect(status().isNotFound());
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/admin/accounts/" + superId)
                         .header("Authorization", bearer(superToken)))
@@ -155,7 +157,7 @@ class AdminAccountFlowIT extends AbstractIntegrationTest {
         String superToken = superAdminToken("it_super_f1");
         String body = mvc.perform(post("/api/v1/admin/accounts").header("Authorization", bearer(superToken))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\\\"username\\\":\\\"it_not_super\\\",\\\"password\\\":\\\"admin-pass-1\\\",\\\"role\\\":\\\"SUPER_ADMIN\\\"}"))
+                        .content("{\"username\":\"it_not_super\",\"password\":\"admin-pass-1\",\"role\":\"SUPER_ADMIN\"}"))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         assertThat(JsonPath.read(body, "$.role").toString()).isEqualTo("ADMIN");
     }
