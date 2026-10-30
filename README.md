@@ -1,121 +1,107 @@
 # Multitional Translator
 
-Nền tảng thuyết minh đa ngôn ngữ gồm Web User, Web Admin và REST API Spring Boot.
+Nền tảng thuyết minh đa ngôn ngữ trên Web. Hệ thống gồm Web User dành cho khách tham quan, Web Admin dành cho vận hành nội dung và một REST API Spring Boot.
 
-## Ma trận quyền hiện hành (2026-10-29)
+## Phạm vi đang triển khai
 
-- **User:** kích hoạt QR hợp lệ, xem bản đồ/POI công khai và nghe audio theo grant.
-- **Admin:** quản lý POI, bản dịch, media/audio, QR và Analytics toàn hệ thống.
-- **Super Admin:** quản lý tài khoản Admin và đọc Audit Log; không có quyền Admin/Analytics.
-- **Seller, payment/order Seller, Seller report và dynamic RBAC:** đã loại bỏ. UC09/UC13 đã nghỉ; UC12 chỉ quản lý QR hiện có.
-- **Production:** Flyway V6 đã áp dụng. Hậu kiểm cho thấy 1 Admin active và 0 Super Admin; bootstrap tài khoản Super Admin cần quy trình được ủy quyền.
+- User: chọn ngôn ngữ, kích hoạt quyền bằng QR dùng một lần, khám phá POI đã công khai, xem chi tiết và nghe audio.
+- Admin: đăng nhập; quản lý POI, bản dịch, hình ảnh, audio, tác vụ Google TTS, QR truy cập và Analytics.
+- Super Admin: quản lý tài khoản Admin và tra cứu Audit Log.
+- Không có Seller Management, Payment/Order hoặc Dynamic RBAC.
+- User không có account trong bảng account; quyền truy cập User là grant phát sinh từ QR và gắn với thiết bị.
 
-## Hai cách chạy được hỗ trợ
+## Công nghệ
 
-### 1. Web User — production trên Internet
-
-```text
-Trình duyệt khách tham quan
-  -> https://multitional-translator-web.pages.dev (Cloudflare Pages)
-  -> https://multitional-translator-api.onrender.com (Render)
-  -> Neon PostgreSQL
-```
-
-- Web User production: <https://multitional-translator-web.pages.dev/welcome>
-- Backend API production: <https://multitional-translator-api.onrender.com>
-- Cấu hình build trên hosting: `VITE_API_BASE_URL=https://multitional-translator-api.onrender.com`, `VITE_USE_MOCK=false`.
-- Web User gọi API; không kết nối trực tiếp tới Neon. Chỉ backend giữ thông tin xác thực database.
-
-### 2. Web Admin — chạy local, dùng chung Neon
-
-```text
-http://localhost:5173 (apps/admin)
-  -> http://localhost:18081 (Spring Boot local, profile local-neon)
-  -> Neon PostgreSQL
-```
-
-Yêu cầu: Windows/PowerShell, Git, Node.js 22.11+, npm, Java 21 và Internet. Không cần Docker Desktop.
-
-**Cảnh báo:** backend local ghi trực tiếp vào Neon branch được khai báo trong file `.env.local` tại thư mục gốc. Xác nhận đúng project/branch trước khi sửa dữ liệu. Không chạy integration test hoặc thao tác phá huỷ trên database production.
-
-1. Tạo/kiểm tra file `.env.local` ở thư mục gốc, có `DATABASE_URL` ở dạng `postgresql://...` cho Neon branch mong muốn. Không commit hoặc chia sẻ giá trị này.
-2. Mở terminal thứ nhất tại thư mục gốc và chạy:
-
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File scripts/run-local-neon.ps1
-   ```
-
-   Script chuyển URI sang JDBC, giữ SSL, loại bỏ `channel_binding` không được pgJDBC hỗ trợ, không in thông tin xác thực và chạy profile `local-neon` trên cổng `18081`. Profile chỉ dùng Flyway migrations, không nạp dữ liệu demo và không fallback sang database local.
-3. Đợi backend sẵn sàng tại <http://localhost:18081/actuator/health>.
-4. Mở terminal thứ hai:
-
-   ```powershell
-   Set-Location "D:\Documents\Cong_nghe_phan_mem\Multitional-Translator-\apps\admin"
-   npm ci
-   npm run dev
-   ```
-
-5. Mở <http://localhost:5173>. Đảm bảo `apps/admin/.env`/`.env.local` (nếu tồn tại) đặt `VITE_API_BASE_URL=http://localhost:18081` và `VITE_USE_MOCK=false`. Khởi động lại Vite sau khi sửa biến môi trường.
-
-Kiểm tra Admin dùng đúng backend trong DevTools → Network: request API phải tới `localhost:18081`. Health `200` không tự chứng minh backend đang nối đúng Neon branch; xác nhận branch qua cấu hình kết nối đã thiết lập.
-
-## Cấu hình quan trọng
-
-| Thành phần | Cấu hình |
+| Thành phần | Công nghệ |
 |---|---|
-| Web User production | `VITE_API_BASE_URL=https://multitional-translator-api.onrender.com` |
-| Web User mock | `VITE_USE_MOCK=false` trong build production |
-| Web Admin local | `VITE_API_BASE_URL=http://localhost:18081` |
-| Web Admin mock | `VITE_USE_MOCK=false` khi dùng hệ thống thật |
-| Backend local Admin | `SPRING_PROFILES_ACTIVE=local-neon`, cổng mặc định `18081` |
-| Database | Neon PostgreSQL; chỉ backend kết nối |
+| Web User | React 19, React Router 7, Vite 8, Leaflet, OpenStreetMap |
+| Web Admin | React 19, React Router 7, Vite 8 |
+| Backend | Java 21, Spring Boot 4.1.1, Spring Security, Spring Data JPA |
+| Database | PostgreSQL, Flyway |
+| Media | MediaStorage adapter; hỗ trợ local storage và Cloudflare R2 |
+| TTS | Google Cloud Text-to-Speech adapter; mặc định provider none nếu chưa cấu hình |
+| Tests | Vitest, React Testing Library, JUnit, Spring test, Maven Surefire/Failsafe |
+| CI | GitHub Actions |
 
-Không đặt `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DATABASE_URL`, token hoặc credentials trong biến `VITE_*`, frontend bundle, source code hay tài liệu. Không bật mock để xác minh tích hợp backend/database thật.
+## Kiến trúc tổng quan
+
+- Web User production: Cloudflare Pages → Backend trên Render → Neon PostgreSQL.
+- Web Admin: chỉ chạy local; gọi backend local dùng profile local-neon → Neon PostgreSQL.
+- Frontend chỉ gọi REST API. Chỉ backend giữ database credentials và truy cập database.
+- Web User dùng Leaflet + OpenStreetMap; không có ứng dụng mobile trong repository hiện tại.
+
+## Cấu trúc repository
+
+- apps/web: Web User, API client, access grant, bản đồ, POI, audio và frontend tests.
+- apps/admin: Web Admin, authentication, POI editor, QR, Analytics, Audit Log, tài khoản Admin và frontend tests.
+- services/backend: REST API, domain services, persistence adapters, security, scheduled jobs và Flyway migrations.
+- docs: tài liệu chuẩn của dự án.
+- scripts: script chạy backend local, bootstrap tài khoản và vận hành media.
+- infra, design-system: tài nguyên hạ tầng và thiết kế hiện có.
+- .agents, .github: agent skills và GitHub workflows; không phải tài liệu nghiệp vụ thay thế.
+
+## Yêu cầu môi trường
+
+- Windows/PowerShell hoặc môi trường tương đương.
+- Node.js >= 22.11 và npm.
+- Java 21.
+- Git.
+- Kết nối Internet khi gọi backend/Neon và dịch vụ ngoài.
+- Không bắt buộc Docker cho luồng chạy Web Admin local-neon.
+
+## Chạy Web Admin local
+
+Cảnh báo: backend local dùng profile local-neon và có quyền ghi vào Neon branch được cấu hình. Xác minh đúng project/branch trước khi chạy thao tác ghi. Không dùng production làm database kiểm thử.
+
+1. Tạo file .env.local ở repository root với DATABASE_URL là PostgreSQL URI của branch được phép dùng và các biến R2_ENDPOINT, R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY (R2_REGION mặc định auto) cho media storage. Script import các biến trong file này vào backend process. Không commit hoặc chia sẻ các giá trị.
+2. Tại repository root, chạy script scripts/run-local-neon.ps1 bằng PowerShell. Script chuyển DATABASE_URL sang cấu hình JDBC và chạy backend ở cổng 18081.
+3. Chờ health endpoint tại http://localhost:18081/actuator/health trả trạng thái sẵn sàng.
+4. Mở terminal khác, vào apps/admin, chạy npm ci rồi npm run dev.
+5. Mở http://localhost:5173. Kiểm tra request API đi tới http://localhost:18081 và VITE_USE_MOCK=false.
+
+## Chạy Web User local
+
+1. Vào apps/web.
+2. Chạy npm ci và npm run dev.
+3. Cấu hình VITE_API_BASE_URL trỏ tới backend cần dùng; backend phải cho phép origin frontend qua APP_CORS_ALLOWED_ORIGINS.
+4. Chỉ bật VITE_USE_MOCK=true khi muốn chạy mock cục bộ. Không dùng mock để xác minh tích hợp backend/database thật.
 
 ## Kiểm tra chất lượng
 
-Các lệnh dưới đây là kiểm tra chất lượng, không phải phương án chạy ứng dụng thay thế.
+Chạy trong từng thư mục apps/web và apps/admin:
 
-```powershell
-# Admin
-Set-Location "D:\Documents\Cong_nghe_phan_mem\Multitional-Translator-\apps\admin"
-npm ci
-npm run lint
-npm test
-npm run build
+- npm ci
+- npm run lint
+- npm test
+- npm run build
 
-# Web User
-Set-Location "D:\Documents\Cong_nghe_phan_mem\Multitional-Translator-\apps\web"
-npm ci
-npm run lint
-npm test
-npm run build
+Chạy trong services/backend:
 
-# Backend unit tests (không cần database)
-Set-Location "D:\Documents\Cong_nghe_phan_mem\Multitional-Translator-\services\backend"
-.\mvnw.cmd clean test
-```
+- .\mvnw.cmd clean test — unit tests, không cần database.
+- .\mvnw.cmd verify — chạy thêm integration tests; cần PostgreSQL test riêng qua TEST_DB_URL, TEST_DB_USERNAME và TEST_DB_PASSWORD.
 
-Integration tests (`mvnw verify`) cần database kiểm thử riêng qua `TEST_DB_URL`, `TEST_DB_USERNAME`, `TEST_DB_PASSWORD`. Không dùng Neon production, database phát triển hoặc dữ liệu dùng chung làm database test.
+Không chạy integration tests trên Neon production, database dùng chung hoặc dữ liệu phát triển.
 
-## Triển khai và bí mật
+## Triển khai
 
-- Web User được host trên Cloudflare Pages; backend được host trên Render; cả hai phải được cấu hình dùng cùng Neon database theo môi trường đã xác nhận.
-- Web Admin chỉ chạy local, không triển khai lên hosting công khai.
-- Quản lý biến môi trường và secrets trong dashboard hosting hoặc file môi trường local bị Git ignore. Không đưa secrets vào Git hay nhật ký.
-- `APP_CORS_ALLOWED_ORIGINS` trên Render chỉ cần origin Web User production; Admin mặc định gọi backend local, và profile `local-neon` cho phép origin Admin local.
-- Backend dùng Flyway quản lý schema. Không sửa migration đã áp dụng; tạo migration mới khi cần thay đổi schema.
+- Web User: Cloudflare Pages; build root apps/web, output dist, dùng VITE_API_BASE_URL và VITE_USE_MOCK=false.
+- Backend: Render; profile prod, DB_URL/DB_USERNAME/DB_PASSWORD và APP_CORS_ALLOWED_ORIGINS lấy từ cấu hình secrets của hosting.
+- Web Admin: local-only; không triển khai lên hosting công khai.
+- Media production có adapter Cloudflare R2. Cần giữ database backup và media backup nhất quán theo storage_key.
 
-## Xử lý lỗi thường gặp
+## Bảo mật và bảo trì
 
-| Triệu chứng | Kiểm tra |
-|---|---|
-| Cổng `5173` hoặc `18081` đã được dùng | Dừng tiến trình cũ trước khi chạy lại. |
-| Admin gọi sai backend | Kiểm tra `VITE_API_BASE_URL` trong `.env` và `.env.local`; `.env.local` có ưu tiên cao hơn. Restart Vite. |
-| Backend không khởi động | Kiểm tra `DATABASE_URL` trong file `.env.local` mà không in/ghi lại giá trị; kiểm tra kết nối mạng, SSL, profile và log đã che secrets. |
-| Lỗi Flyway/schema | Xác minh Neon project/branch và lịch sử migration trước khi sửa dữ liệu. |
-| API trả `401`/`403` | Đăng nhập lại và kiểm tra quyền tài khoản. |
-| Lỗi CORS | Kiểm tra origin chính xác và `APP_CORS_ALLOWED_ORIGINS` của backend đích. |
-| Admin đã lưu nhưng User chưa thấy dữ liệu | Kiểm tra POI đã publish chưa và xác minh hai backend trỏ cùng Neon database. Tải lại Web User. |
+- Không đưa secrets, DATABASE_URL, DB_PASSWORD, token, service-account key hoặc credentials vào Git, frontend VITE_* hoặc tài liệu.
+- Không sửa migration Flyway đã phát hành; thêm migration mới.
+- Không thay đổi source code chỉ để khớp tài liệu.
+- Backend là nơi thực thi authentication/authorization; ẩn route hoặc nút trên UI không thay thế kiểm tra quyền.
+- Không push Git nếu chưa có yêu cầu riêng.
 
-Tài liệu liên quan: [Kế hoạch chuẩn hóa quyền và loại bỏ Seller](docs/planning/role-matrix-seller-removal-plan.md) · [Kiến trúc](docs/architecture/architecture.md) · [API contract](docs/architecture/api.md) · [Use Cases](docs/requirements/Use_Case_Specification_Final_15_UC.md) · [Web Admin](apps/admin/README.md) · [Web User](apps/web/README.md) · [Backend](services/backend/README.md) · [Triển khai](docs/operations/deployment.md) · [CI](docs/operations/ci-cd.md).
+## Tài liệu chuẩn
+
+- [Use Cases](docs/USE_CASES.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Database](docs/DATABASE.md)
+- [Development](docs/DEVELOPMENT.md)
+- [Code control cheatsheet](docs/CODE_CONTROL_MAINTENANCE_CHEATSHEET.md)
+- [Neon database cheatsheet](docs/NEON_DATABASE_CHEATSHEET.md)

@@ -11,8 +11,6 @@ Các tài khoản dưới đây chỉ được tạo khi backend chạy với pr
 | Username | Vai trò | Mật khẩu dùng chung |
 | --- | --- | --- |
 | `admin01` | `ADMIN` | `123456` |
-| `admin02` | `ADMIN` | `123456` |
-| `admin03` | `ADMIN` | `123456` |
 
 Đăng nhập qua `POST /api/v1/auth/login` với JSON `{"username":"admin01","password":"123456"}` (thay username để thử tài khoản khác). Đây là mật khẩu yếu, chỉ dùng cho local/demo; không dùng ở môi trường công khai. Đổi hoặc xoá các tài khoản demo trước khi triển khai.
 

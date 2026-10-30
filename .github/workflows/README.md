@@ -1,5 +1,12 @@
-# Quy trình tự động GitHub Actions
+# GitHub Actions
 
-Nhánh này giữ quy trình kiểm tra tài liệu/hợp đồng tại `.github/workflows/ci.yml`. Quy trình kiểm tra tài liệu nền tảng, lỗi khoảng trắng, chạy unit test backend bằng Maven Wrapper/Java 21 và kiểm tra chất lượng (lint/test/build) của hai ứng dụng web `apps/admin` và `apps/web` bằng Node.js 22. Integration test cần PostgreSQL vẫn chạy riêng qua `mvnw verify`; workflow không triển khai ứng dụng.
+Repository hiện có workflow CI tại .github/workflows/ci.yml.
 
-Áp dụng quyền tối thiểu, trigger đáng tin cậy, giới hạn thời gian, kiểm soát chạy đồng thời và quản lý bí mật an toàn. Cập nhật `docs/operations/ci-cd.md` mỗi khi workflow thay đổi. Các mẫu triển khai trong `docs/operations/cd-templates/` chỉ để tham khảo, hiện không hoạt động.
+Workflow chạy:
+- Kiểm tra các tài liệu chuẩn README.md và docs/USE_CASES.md, docs/ARCHITECTURE.md, docs/DATABASE.md, docs/DEVELOPMENT.md.
+- Kiểm tra whitespace của patch.
+- Backend unit tests bằng Maven Wrapper và Java 21.
+- Web Admin lint, Vitest và production build bằng Node.js 22.
+- Web User lint, Vitest và production build bằng Node.js 22.
+
+Workflow không chạy backend integration tests vì cần PostgreSQL test riêng; không deploy ứng dụng. Không có workflow CD hoạt động trong .github/workflows tại thời điểm audit. Mẫu CD trong docs cũ không được coi là quy trình triển khai hiện hành. Cập nhật tài liệu Development khi workflow thay đổi.
