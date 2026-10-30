@@ -4,7 +4,7 @@ import { LANGUAGES, MOCK_POIS, audioView } from './fixtures.js';
 /**
  * Fake backend for UI work without the real services. Enabled by VITE_USE_MOCK=true (see
  * src/config.js). Stateless apart from the UC02 grant the app itself keeps in localStorage, returning
- * the same JSON shapes and error codes as the real User API (docs/architecture/api.md).
+ * the same JSON shapes and error codes as the real User API (docs/USE_CASES.md).
  */
 
 const DEFAULT_LANGUAGE = 'vi';

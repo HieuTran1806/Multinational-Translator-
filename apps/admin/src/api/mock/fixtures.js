@@ -1,6 +1,6 @@
 /**
  * Seed data for the mock API. Shapes follow the backend entities (not the DTOs);
- * handlers.js turns them into the exact response shapes from docs/architecture/api.md.
+ * handlers.js turns them into the exact response shapes from docs/USE_CASES.md.
  * Edit freely to get the UI states you need (empty content, failed TTS, many pages...).
  */
 

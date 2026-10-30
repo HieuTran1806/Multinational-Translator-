@@ -1,7 +1,7 @@
 import { request } from './client.js';
 
 /**
- * User API (docs/architecture/api.md). Only languages and the QR redeem are open; everything else needs
+ * User API (docs/USE_CASES.md). Only languages and the QR redeem are open; everything else needs
  * the UC02 grant, which client.js attaches automatically. Only PUBLISHED POIs are visible.
  * The list endpoint has no server-side search and caps size at 100, so the UI walks its pages once
  * (see features/explore/usePublicPois.js) and filters client-side (features/explore/search.js).

@@ -35,7 +35,7 @@ export function setAccessLostHandler(handler) {
   onAccessLost = handler;
 }
 
-/** Headers every User request carries once a QR was redeemed (see docs/architecture/api.md). */
+/** Headers every User request carries once a QR was redeemed (see docs/USE_CASES.md). */
 export function accessHeaders() {
   const grant = loadGrant();
   return grant ? { Authorization: `Bearer ${grant.accessToken}`, 'X-Device-Id': getDeviceId() } : {};

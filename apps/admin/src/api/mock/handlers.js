@@ -4,7 +4,7 @@ import { LANGUAGES, TTS_STATUS } from './fixtures.js';
 
 /**
  * Fake backend for UI work without a database. Enabled by VITE_USE_MOCK=true (see src/config.js).
- * Every route returns the same shape and error codes as the real API (docs/architecture/api.md),
+ * Every route returns the same shape and error codes as the real API (docs/USE_CASES.md),
  * so switching back to the backend needs no UI change.
  *
  * Built-in test switches:

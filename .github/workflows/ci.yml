@@ -25,14 +25,10 @@ jobs:
         run: |
           set -euo pipefail
           test -f README.md
-          test -f docs/README.md
-          test -f docs/requirements/BRD.md
-          test -f docs/requirements/Use_Case_Specification_Final_15_UC.md
-          test -f docs/architecture/api.md
-          test -f docs/architecture/phase-1-contract-baseline.md
-          test -f docs/reports/current-state-inventory.md
-          test -f docs/operations/ci-cd.md
-          test -f services/backend/ARCHITECTURE.md
+          test -f docs/USE_CASES.md
+          test -f docs/ARCHITECTURE.md
+          test -f docs/DATABASE.md
+          test -f docs/DEVELOPMENT.md
           test -f apps/admin/package.json
           test -f apps/admin/package-lock.json
           test -f apps/web/package.json
