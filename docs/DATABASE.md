@@ -1,5 +1,7 @@
 # Database — Multitional Translator
 
+Snapshot khôi phục độc lập và bộ dữ liệu demo đã chuẩn hóa nằm tại [`database/`](../database/README.md): [`schema.sql`](../database/schema.sql) và [`demo-data.sql`](../database/demo-data.sql). Snapshot phản ánh schema sau Flyway V6; xem README để baseline Flyway đúng version khi restore.
+
 ## 1. Nguồn sự thật
 
 Schema được quản lý bởi Flyway tại services/backend/src/main/resources/db/migration. Cấu hình JPA đặt ddl-auto=validate; Hibernate không tự tạo hoặc cập nhật schema.
