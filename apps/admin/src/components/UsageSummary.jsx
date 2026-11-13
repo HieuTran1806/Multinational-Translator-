@@ -96,8 +96,9 @@ export default function UsageSummary({
                   {label}
                 </p>
                 <p className="mt-1 text-3xl font-bold text-forest">
-                  {Number(summary.totals?.[type] ?? 0) *
-                    (type === "poi_view" ? 2 : 1)}
+                  {Number(summary.totals?.[type] ?? 0)}
+                  {/* *
+                    (type === "poi_view" ? 2 : 1) */}
                 </p>
                 <p className="mt-1 text-xs text-muted">
                   trong khoảng thời gian đang chọn
