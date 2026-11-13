@@ -133,7 +133,6 @@ export default function PoiListPage() {
                         </Link>
                         <div className="text-xs text-stone">
                           {p.code}
-                          {p.demo && <span className="ml-2 rounded bg-terracotta/15 px-1 text-terracotta">DEMO</span>}
                         </div>
                       </td>
                       <td className="py-3 pr-3 tabular-nums text-stone">

@@ -243,7 +243,6 @@ export default function PoiEditPage() {
           {!isNew && (
             <div className="mt-1 flex items-center gap-2 text-sm text-stone">
               <PoiStatusBadge status={poi.status} /> <span>{poi.code}</span>
-              {poi.demo && <span className="rounded bg-terracotta/15 px-1 text-terracotta">Dữ liệu DEMO</span>}
             </div>
           )}
         </div>

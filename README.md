@@ -57,14 +57,14 @@ Cảnh báo: backend local dùng profile local-neon và có quyền ghi vào Neo
 2. Tại repository root, chạy script scripts/run-local-neon.ps1 bằng PowerShell. Script chuyển DATABASE_URL sang cấu hình JDBC và chạy backend ở cổng 18081.
 3. Chờ health endpoint tại http://localhost:18081/actuator/health trả trạng thái sẵn sàng.
 4. Mở terminal khác, vào apps/admin, chạy npm ci rồi npm run dev.
-5. Mở http://localhost:5173. Kiểm tra request API đi tới http://localhost:18081 và VITE_USE_MOCK=false.
+5. Mở http://localhost:5173. Kiểm tra request API đi tới http://localhost:18081.
 
 ## Chạy Web User local
 
 1. Vào apps/web.
 2. Chạy npm ci và npm run dev.
 3. Cấu hình VITE_API_BASE_URL trỏ tới backend cần dùng; backend phải cho phép origin frontend qua APP_CORS_ALLOWED_ORIGINS.
-4. Chỉ bật VITE_USE_MOCK=true khi muốn chạy mock cục bộ. Không dùng mock để xác minh tích hợp backend/database thật.
+4. Frontend luôn gọi backend thật; không có chế độ mock API.
 
 ## Kiểm tra chất lượng
 
@@ -84,7 +84,7 @@ Không chạy integration tests trên Neon production, database dùng chung ho�
 
 ## Triển khai
 
-- Web User: Cloudflare Pages; build root apps/web, output dist, dùng VITE_API_BASE_URL và VITE_USE_MOCK=false.
+- Web User: Cloudflare Pages; build root apps/web, output dist, dùng VITE_API_BASE_URL.
 - Backend: Render; profile prod, DB_URL/DB_USERNAME/DB_PASSWORD và APP_CORS_ALLOWED_ORIGINS lấy từ cấu hình secrets của hosting.
 - Web Admin: local-only; không triển khai lên hosting công khai.
 - Media production có adapter Cloudflare R2. Cần giữ database backup và media backup nhất quán theo storage_key.

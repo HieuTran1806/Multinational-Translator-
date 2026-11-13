@@ -51,20 +51,6 @@ export async function parseError(response) {
  * and signals 401 so the UI can return to the login screen.
  */
 export async function request(path, { method = 'GET', body, formData, signal, raw = false } = {}) {
-  // Same check as USE_MOCK in config.js, inlined so Vite can drop the mock chunk from production builds
-  if (import.meta.env.VITE_USE_MOCK === 'true') {
-    let mock;
-    try {
-      mock = await import('./mock/handlers.js');
-    } catch {
-      throw new ApiError({
-        code: 'NETWORK_ERROR',
-        message: 'Không tải được mock API. Kiểm tra lệnh "npm run dev" còn đang chạy, rồi tải lại trang (F5).',
-        status: 0,
-      });
-    }
-    return mock.mockRequest(path, { method, body, formData, signal, raw });
-  }
   const headers = { Accept: raw ? '*/*' : 'application/json' };
   const token = loadSession()?.accessToken ?? null;
   if (token) headers.Authorization = `Bearer ${token}`;

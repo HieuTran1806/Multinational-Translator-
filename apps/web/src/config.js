@@ -5,6 +5,3 @@
  * lives on another origin (the backend must then allow this origin via APP_CORS_ALLOWED_ORIGINS).
  */
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
-
-/** Dev only: serve every API call from the in-browser mock (src/api/mock) instead of the backend. */
-export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';

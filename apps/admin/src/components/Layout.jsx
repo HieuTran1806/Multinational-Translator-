@@ -1,6 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router';
 import { useAuth } from '../auth/AuthContext.jsx';
-import { USE_MOCK } from '../config.js';
 import { Button } from './ui.jsx';
 
 /** Sidebar + topbar shell following the Figma page "MT - Admin Portal" (MT / Admin / Desktop / Dashboard & POI). */
@@ -162,11 +161,6 @@ export default function Layout() {
             </NavLink>
           )}
         </nav>
-        {USE_MOCK && (
-          <p className="mx-4 mt-2 inline-block rounded bg-terracotta px-2 py-0.5 text-[11px] font-bold text-paper">
-            DỮ LIỆU GIẢ (MOCK)
-          </p>
-        )}
         <div className="mt-auto flex items-center gap-3 border-t border-shell-border px-4 py-4">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-nav-active text-xs font-bold text-olive">
             {initials(account?.displayName || account?.username)}

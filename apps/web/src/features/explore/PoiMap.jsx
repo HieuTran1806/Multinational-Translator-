@@ -6,7 +6,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useT } from '../../i18n/LanguageContext.jsx';
 
-/** Centered on the demo area; re-fit to the actual markers as soon as they load. */
+/** Centered on the Cu Chi POI area; re-fit to the actual markers as soon as they load. */
 const INITIAL_VIEW = { center: [11.13, 106.48], zoom: 12 };
 const ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors';
@@ -129,7 +129,7 @@ export default function PoiMap({ pois, onOpen }) {
     }
   }, [pois]);
 
-  /** Back to the demo/POI area after panning away or locating yourself somewhere else. */
+  /** Back to the POI area after panning away or locating yourself somewhere else. */
   const fitToPois = () => {
     if (lastBoundsRef.current && mapRef.current) mapRef.current.fitBounds(lastBoundsRef.current);
   };

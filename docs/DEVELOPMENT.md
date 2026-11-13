@@ -25,7 +25,6 @@ Backend dùng Maven Wrapper tại services/backend/mvnw.cmd. Không cài thêm M
 ### Frontend
 
 - VITE_API_BASE_URL: API origin; không có trailing slash.
-- VITE_USE_MOCK: true chỉ để phát triển/test bằng mock; false để gọi backend thật.
 - Không đặt DB_URL, DATABASE_URL, DB_USERNAME, DB_PASSWORD hoặc service credentials trong VITE_* vì các giá trị VITE_* được nhúng vào frontend bundle.
 
 Web User mặc định đọc API base URL rỗng; Vite dev server có thể proxy API theo vite.config.js. Web Admin có .env.example với backend local tại localhost:18081.
@@ -88,7 +87,7 @@ Trong terminal khác:
 3. npm run dev
 4. Mở http://localhost:5173.
 
-Xác minh DevTools Network: API phải gọi localhost:18081 và VITE_USE_MOCK=false.
+Xác minh DevTools Network: API phải gọi localhost:18081.
 
 ### 4.3 Web User
 
@@ -172,7 +171,7 @@ Build output nằm trong dist/ hoặc services/backend/target; không commit bui
 
 ### Deployment
 
-- Web User: Cloudflare Pages; root apps/web; output dist; VITE_USE_MOCK=false.
+- Web User: Cloudflare Pages; root apps/web; output dist.
 - Backend: Render; profile prod; DB credentials và CORS lấy từ environment/secret settings.
 - Web Admin: local-only, không triển khai công khai.
 - Database: Neon PostgreSQL.
@@ -234,4 +233,4 @@ Không log token, password, database URL hoặc credential provider.
 | Backend integration tests | NOT RUN — chưa chạy verify/database test trong lượt này |
 | Admin E2E | NOT RUN — script ghi dữ liệu test; không chạy trên database production/dùng chung |
 
-Web User test output có cảnh báo React act(...) và HTMLMediaElement.pause() của môi trường test; suite vẫn PASS. Admin mock tests có log request/fixture. Kết quả trên chỉ là test đã chạy trong lượt audit, không xác nhận provider Google TTS thật hoặc database production.
+Web User test output có cảnh báo React act(...) và HTMLMediaElement.pause() của môi trường test; suite vẫn PASS. Kết quả trên chỉ là test đã chạy trong lượt audit, không xác nhận provider Google TTS thật hoặc database production.

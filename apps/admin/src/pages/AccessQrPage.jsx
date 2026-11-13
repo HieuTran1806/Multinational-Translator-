@@ -70,7 +70,7 @@ function IssuedQr({ qr, onClose }) {
       <div className="flex flex-col gap-5 sm:flex-row">
         <QrImage value={qr.activationUrl} />
         <div className="min-w-0 flex-1 space-y-3 text-sm">
-          <p className="text-base font-semibold text-forest">QR #{qr.id} — gói {qr.packageCode}</p>
+          <p className="text-base font-semibold text-forest">QR #{qr.id} — gói {qr.durationMinutes / 60} giờ</p>
           <p className="text-stone">
             Quyền dùng {qr.durationMinutes / 60} giờ kể từ lúc khách quét thành công. QR không tự hết hạn trước khi
             kích hoạt và chỉ dùng được một lần.
@@ -268,7 +268,7 @@ export default function AccessQrPage() {
                     <tr key={qr.id} className="border-b border-stone/10 align-top">
                       <td className="py-3 pr-3">
                         <span className="font-semibold text-forest">#{qr.id}</span>
-                        <div className="text-xs text-stone">{qr.packageCode}</div>
+                        <div className="text-xs text-stone">Gói {qr.durationMinutes / 60} giờ</div>
                       </td>
                       <td className="py-3 pr-3">
                         <QrStatusBadge status={qr.status} />

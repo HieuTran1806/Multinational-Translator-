@@ -12,6 +12,5 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.js'],
     css: false,
-    env: { VITE_USE_MOCK: 'false' }, // tests exercise the real client even if .env.local enables the mock
   },
 });
