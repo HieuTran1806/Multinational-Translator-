@@ -49,12 +49,31 @@ public record AppProperties(
     }
 
     public record Tts(
-            /** none | google */
+            /** none | google | azure */
             @DefaultValue("none") String provider,
             @DefaultValue("4500") int maxInputBytes,
             @DefaultValue("30s") Duration requestTimeout,
             @DefaultValue("3") int maxAttempts,
             @DefaultValue("true") boolean workerEnabled,
-            @DefaultValue("10m") Duration staleRunningAfter) {
+            @DefaultValue("10m") Duration staleRunningAfter,
+            @DefaultValue Azure azure) {
+    }
+
+    /**
+     * Azure AI Speech (provider=azure). {@code key} is a secret supplied only via APP_TTS_AZURE_KEY.
+     * {@code endpoint} is optional; when blank it is derived from {@code region}.
+     */
+    public record Azure(
+            @DefaultValue("") String key,
+            @DefaultValue("") String region,
+            @DefaultValue("") String endpoint,
+            @DefaultValue("audio-24khz-48kbitrate-mono-mp3") String outputFormat) {
+
+        @Override
+        public String toString() {
+            // Never expose the subscription key through logs/actuator.
+            return "Azure[region=" + region + ", endpoint=" + endpoint + ", outputFormat=" + outputFormat
+                    + ", key=" + (key == null || key.isBlank() ? "<empty>" : "<set>") + "]";
+        }
     }
 }

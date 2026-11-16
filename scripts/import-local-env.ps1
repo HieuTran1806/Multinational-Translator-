@@ -8,7 +8,8 @@ $allowed = @(
     "DATABASE_URL", "DATABASE_URL_UNPOOLED", "NEON_BRANCH",
     "R2_ACCOUNT_ID", "R2_BUCKET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY",
     "R2_ENDPOINT", "R2_REGION", "APP_STORAGE_PROVIDER", "APP_STORAGE_LOCAL_ROOT",
-    "APP_CORS_ALLOWED_ORIGINS"
+    "APP_CORS_ALLOWED_ORIGINS",
+    "APP_TTS_PROVIDER", "APP_TTS_AZURE_KEY", "APP_TTS_AZURE_REGION", "APP_TTS_AZURE_ENDPOINT"
 )
 foreach ($line in Get-Content $envFile) {
     if ($line -match '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$') {

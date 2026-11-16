@@ -74,7 +74,7 @@ public class TtsJobService {
     public TtsJobView requestGeneration(Long poiId, String languageCode, Long requestedBy) {
         if (!provider.isConfigured()) {
             throw new ApiException(ErrorCode.TTS_NOT_CONFIGURED,
-                    "Dịch vụ Google Cloud TTS chưa được cấu hình trên máy chủ. Hãy tải file audio lên thay thế.");
+                    "Dịch vụ TTS (" + provider.name() + ") chưa được cấu hình trên máy chủ. Hãy tải file audio lên thay thế.");
         }
         PoiTranslation t = translations.findByPoiAndLanguage(poiId, languageCode)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,

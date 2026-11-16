@@ -71,8 +71,11 @@ public class GoogleCloudTtsProvider implements TtsProvider {
         if (!configured) {
             throw new TtsException("TTS_NOT_CONFIGURED", "Google Cloud TTS chưa được cấu hình", false);
         }
-        VoiceSelectionParams.Builder voice = VoiceSelectionParams.newBuilder().setLanguageCode(req.languageCode());
-        if (req.voiceName() != null && !req.voiceName().isBlank()) {
+        // Google names Mandarin "cmn-CN"; the language table may store the more common "zh-CN".
+        String langCode = "zh-CN".equalsIgnoreCase(req.languageCode()) ? "cmn-CN" : req.languageCode();
+        VoiceSelectionParams.Builder voice = VoiceSelectionParams.newBuilder().setLanguageCode(langCode);
+        // Ignore Azure-style voice names ("...Neural") so one language table works for both providers.
+        if (req.voiceName() != null && !req.voiceName().isBlank() && !req.voiceName().endsWith("Neural")) {
             voice.setName(req.voiceName());
         }
         SynthesizeSpeechRequest request = SynthesizeSpeechRequest.newBuilder()

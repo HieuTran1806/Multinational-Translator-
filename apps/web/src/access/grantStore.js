@@ -11,7 +11,8 @@ const DEVICE_KEY = 'tm.deviceId';
 const GRANT_KEY = 'tm.grant';
 
 let memoryDeviceId = null;
-let memoryGrant = null;
+let memoryGrant = null; // at the scratch -> memoryGrant = null, after scanned -> 
+// memoryGrant = {accessToken : ; expiresAt: ; packageCode: ;}
 
 function randomId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -40,11 +41,11 @@ export function getDeviceId() {
   return memoryDeviceId;
 }
 
-export function loadGrant() {
+export function loadGrant() { // read permissions were saved in device -> return null
   if (memoryGrant) return memoryGrant;
   try {
     const raw = localStorage.getItem(GRANT_KEY);
-    const parsed = raw ? JSON.parse(raw) : null;
+    const parsed = raw ? JSON.parse(raw) : null; // has string -> parse to JSON object || null
     memoryGrant = parsed?.accessToken && parsed?.expiresAt ? parsed : null;
   } catch {
     memoryGrant = null;
@@ -61,7 +62,7 @@ export function saveGrant(grant) {
   }
 }
 
-export function clearGrant() {
+export function clearGrant() { // xóa quyền truy cập khi hết hạn hoặc bị thu hồi
   memoryGrant = null;
   try {
     localStorage.removeItem(GRANT_KEY);

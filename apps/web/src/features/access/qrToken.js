@@ -1,3 +1,4 @@
+// Aa -> Zz - 6 -> 200(length) => prevent trashed inputs before send
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{6,200}$/;
 
 /**

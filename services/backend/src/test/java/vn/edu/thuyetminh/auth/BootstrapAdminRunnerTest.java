@@ -73,7 +73,8 @@ class BootstrapAdminRunnerTest {
                 new AppProperties.Bootstrap(enabled, username, password, role),
                 new AppProperties.Storage("./data/media"),
                 new AppProperties.Upload(20 * 1024 * 1024L, 5 * 1024 * 1024L),
-                new AppProperties.Tts("none", 4500, Duration.ofSeconds(30), 3, true, Duration.ofMinutes(10)),
+                new AppProperties.Tts("none", 4500, Duration.ofSeconds(30), 3, true, Duration.ofMinutes(10),
+                        new AppProperties.Azure("", "", "", "audio-24khz-48kbitrate-mono-mp3")),
                 new AppProperties.Access("DEMO_24H", "http://localhost:5174/activate"));
         return new BootstrapAdminRunner(props, store, encoder);
     }

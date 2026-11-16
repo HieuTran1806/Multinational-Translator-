@@ -17,6 +17,11 @@ public class TtsConfig {
         String p = props.tts().provider() == null ? "none" : props.tts().provider().trim().toLowerCase();
         return switch (p) {
             case "google" -> new GoogleCloudTtsProvider(props.tts().requestTimeout());
+            case "azure" -> {
+                var az = props.tts().azure();
+                yield new AzureTtsProvider(az.key(), az.region(), az.endpoint(), az.outputFormat(),
+                        props.tts().requestTimeout());
+            }
             case "none", "" -> {
                 log.info("TTS provider disabled (APP_TTS_PROVIDER=none). Upload audio manually.");
                 yield new DisabledTtsProvider("Chưa cấu hình dịch vụ TTS (APP_TTS_PROVIDER=none)");

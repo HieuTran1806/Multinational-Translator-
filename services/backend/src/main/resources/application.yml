@@ -78,6 +78,11 @@ app:
     max-attempts: ${APP_TTS_MAX_ATTEMPTS:3}
     worker-enabled: ${APP_TTS_WORKER_ENABLED:true}
     stale-running-after: 10m
+    azure:
+      key: ${APP_TTS_AZURE_KEY:}
+      region: ${APP_TTS_AZURE_REGION:}
+      endpoint: ${APP_TTS_AZURE_ENDPOINT:}
+      output-format: ${APP_TTS_AZURE_OUTPUT_FORMAT:audio-24khz-48kbitrate-mono-mp3}
 
 logging:
   level:

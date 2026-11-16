@@ -59,3 +59,7 @@ services/backend/data/
 infra/postgres/data/
 .neon
 node_modules/
+
+README_GITHUB.md
+graphify-out/
+CLAUDE.md

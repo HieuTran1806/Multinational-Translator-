@@ -83,6 +83,7 @@ export function AccessProvider({ children }) {
     return () => setAccessLostHandler(() => {});
   }, [endSession]);
 
+  // activate(qrToken)
   const activate = useCallback((qrToken) => {
     const pending = pendingRedeems.current.get(qrToken);
     if (pending) return pending;
