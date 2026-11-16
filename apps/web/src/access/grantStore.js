@@ -11,7 +11,7 @@ const DEVICE_KEY = 'tm.deviceId';
 const GRANT_KEY = 'tm.grant';
 
 let memoryDeviceId = null;
-let memoryGrant = null; // at the scratch -> memoryGrant = null, after scanned -> 
+let memoryGrant = null; // at the scratch -> memoryGrant = null, after scanned ->
 // memoryGrant = {accessToken : ; expiresAt: ; packageCode: ;}
 
 function randomId() {
