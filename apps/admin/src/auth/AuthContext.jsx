@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { setUnauthorizedHandler } from '../api/client.js';
 import { authApi } from '../api/endpoints.js';
 import { clearSession, loadSession, saveSession } from './session.js';
+import { getPasswordDeadline, isPasswordChangeOverdue } from './passwordDeadline.js';
 
 const AuthContext = createContext(null);
 
@@ -26,6 +27,10 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (username, password) => {
     const res = await authApi.login(username, password);
+    if (isPasswordChangeOverdue(res.account)) {
+      throw new Error('Đã quá 24 giờ kể từ khi bắt đầu sử dụng giao diện. Vui lòng liên hệ Super Admin để đổi mật khẩu.');
+    }
+    getPasswordDeadline(res.account);
     const s = { accessToken: res.accessToken, expiresAt: res.expiresAt, account: res.account };
     saveSession(s);
     setSession(s);

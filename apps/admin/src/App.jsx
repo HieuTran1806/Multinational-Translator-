@@ -8,11 +8,21 @@ import AccessQrPage from './pages/AccessQrPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
 import AuditLogPage from './pages/AuditLogPage.jsx';
 import AdminAccountsPage from './pages/AdminAccountsPage.jsx';
+import PasswordExpiredPage from './pages/PasswordExpiredPage.jsx';
+import { isPasswordChangeOverdue } from './auth/passwordDeadline.js';
+import { useEffect, useState } from 'react';
 
 function RequireAuth({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, account } = useAuth();
   const location = useLocation();
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTick((tick) => tick + 1), 30_000);
+    return () => clearInterval(timer);
+  }, []);
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  // Re-check on every render and periodically, including sessions restored after refresh.
+  if (isPasswordChangeOverdue(account)) return <PasswordExpiredPage />;
   return children;
 }
 

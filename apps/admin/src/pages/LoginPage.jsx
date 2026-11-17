@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { Alert, Button, Field, inputClass } from '../components/ui.jsx';
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, account } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [username, setUsername] = useState('');
@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (isAuthenticated) return <Navigate to="/pois" replace />;
+  if (isAuthenticated) return <Navigate to={account?.role === 'SUPER_ADMIN' ? '/accounts' : '/pois'} replace />;
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -43,6 +43,7 @@ export default function LoginPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-earth">Củ Chi Guide · Quản trị</p>
           <h1 className="mt-1 text-2xl font-bold text-forest">Đăng nhập</h1>
         </div>
+        <p className="text-xs text-stone">Tài khoản Admin cần đổi mật khẩu trong vòng 24 giờ kể từ lần đăng nhập đầu trên trình duyệt này.</p>
         {error && <Alert>{error}</Alert>}
         <Field label="Tên đăng nhập" htmlFor="username">
           <input
