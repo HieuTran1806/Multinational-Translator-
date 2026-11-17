@@ -1,5 +1,6 @@
 package vn.edu.thuyetminh.access.persistence;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
@@ -24,7 +25,7 @@ public class JpaAccessGrantStore implements AccessGrantStore {
     }
 
     @Override
-    public Optional<AccessGrant> findByQrId(Long qrId) {
+    public List<AccessGrant> findByQrId(Long qrId) {
         return grants.findByQrId(qrId);
     }
 

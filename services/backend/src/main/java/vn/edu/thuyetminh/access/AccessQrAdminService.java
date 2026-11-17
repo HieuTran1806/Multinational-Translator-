@@ -71,7 +71,7 @@ public class AccessQrAdminService {
         if (!qr.isRevoked()) {
             Instant now = clock.instant().truncatedTo(ChronoUnit.SECONDS);
             qr.revoke(now);
-            grants.findByQrId(id).ifPresent(g -> g.revoke(now));
+            grants.findByQrId(id).forEach((g -> g.revoke(now)));
             log.info("Access QR id={} revoked", id);
             audit.record(AuditService.Actor.from(admin), AuditService.QR_REVOKE, "ACCESS_QR", String.valueOf(id),
                     AuditService.RESULT_SUCCESS, null);
