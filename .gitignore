@@ -59,3 +59,5 @@ services/backend/data/
 infra/postgres/data/
 .neon
 node_modules/
+*.doc
+*.docx
