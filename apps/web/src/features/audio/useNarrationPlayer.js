@@ -43,6 +43,7 @@ export function useNarrationPlayer(audioUrl) {
   // Distinguishes a user "stop" (reset to idle) from the pause event it triggers on the element.
   const stoppingRef = useRef(false);
   const playTrackedRef = useRef(false);
+  const autoPauseTimerRef = useRef(null);
 
   useEffect(() => {
     // Only synchronizes React with the external audio element; all state updates happen in event
@@ -62,13 +63,28 @@ export function useNarrationPlayer(audioUrl) {
         playTrackedRef.current = true;
         usageApi.record('audio_play').catch(() => {});
       }
+      // Tu dong tam dung sau 5 giay phat (phuc vu demo)
+      if (autoPauseTimerRef.current) clearTimeout(autoPauseTimerRef.current);
+      autoPauseTimerRef.current = setTimeout(() => {
+        el.pause();
+      }, 5000);
     };
     const onWaiting = () => setStatus((s) => (s === 'error' ? s : 'loading'));
     const onPause = () => {
+      if (autoPauseTimerRef.current) {
+        clearTimeout(autoPauseTimerRef.current);
+        autoPauseTimerRef.current = null;
+      }
       if (stoppingRef.current) return; // handled by stop()
       setStatus((s) => (s === 'ended' ? s : 'paused'));
     };
-    const onEnded = () => setStatus('ended');
+    const onEnded = () => {
+      if (autoPauseTimerRef.current) {
+        clearTimeout(autoPauseTimerRef.current);
+        autoPauseTimerRef.current = null;
+      }
+      setStatus('ended');
+    };
     const onTime = () => setPosition(el.currentTime);
     const onMeta = () => setDuration(Number.isFinite(el.duration) ? el.duration : 0);
     const onError = () => {
@@ -100,6 +116,10 @@ export function useNarrationPlayer(audioUrl) {
       el.removeEventListener('loadedmetadata', onMeta);
       el.removeEventListener('error', onError);
       window.removeEventListener('offline', onOffline);
+      if (autoPauseTimerRef.current) {
+        clearTimeout(autoPauseTimerRef.current);
+        autoPauseTimerRef.current = null;
+      }
       el.pause();
       el.removeAttribute('src');
       audioRef.current = null;
@@ -136,6 +156,10 @@ export function useNarrationPlayer(audioUrl) {
   const stop = useCallback(() => {
     const el = audioRef.current;
     if (!el) return;
+    if (autoPauseTimerRef.current) {
+      clearTimeout(autoPauseTimerRef.current);
+      autoPauseTimerRef.current = null;
+    }
     stoppingRef.current = true;
     el.pause();
     try {
