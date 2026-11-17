@@ -24,7 +24,7 @@ public class AccessGrant {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "qr_id", nullable = false)
     private AccessQr qr;
-    
+
     @Column(name = "token_hash", nullable = false, unique = true, length = 64)
     private String tokenHash;
 
