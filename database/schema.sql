@@ -189,7 +189,7 @@ CREATE TABLE access_grant (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     expires_at TIMESTAMPTZ NOT NULL,
     revoked_at TIMESTAMPTZ,
-    CONSTRAINT uq_access_grant_qr UNIQUE(qr_id),
+    -- CONSTRAINT uq_access_grant_qr UNIQUE(qr_id),
     CONSTRAINT uq_access_grant_token UNIQUE(token_hash)
 );
 CREATE INDEX ix_access_grant_expires ON access_grant(expires_at);

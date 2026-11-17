@@ -25,6 +25,7 @@ public interface AccessQrRepository extends JpaRepository<AccessQr, Long> {
      */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("update AccessQr q set q.status = :redeemed, q.redeemedAt = :now "
-            + "where q.tokenHash = :tokenHash and q.status = :issued")
-    int markRedeemed(String tokenHash, Instant now, AccessQrStatus issued, AccessQrStatus redeemed);
+            + "where q.tokenHash = :tokenHash and q.status <> :revoked")
+            // where q.tokenHash = :tokenHash and q.status = :issued
+    int markRedeemed(String tokenHash, Instant now, AccessQrStatus revoked, AccessQrStatus redeemed);
 }

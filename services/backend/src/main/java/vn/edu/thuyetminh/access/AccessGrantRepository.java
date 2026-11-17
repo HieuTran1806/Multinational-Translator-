@@ -1,5 +1,6 @@
 package vn.edu.thuyetminh.access;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,5 +11,5 @@ public interface AccessGrantRepository extends JpaRepository<AccessGrant, Long> 
     @EntityGraph(attributePaths = {"qr", "qr.accessPackage"})
     Optional<AccessGrant> findByTokenHash(String tokenHash);
 
-    Optional<AccessGrant> findByQrId(Long qrId);
+    List<AccessGrant> findByQrId(Long qrId);
 }

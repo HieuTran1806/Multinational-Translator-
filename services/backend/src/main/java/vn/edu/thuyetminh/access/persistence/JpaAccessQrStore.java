@@ -65,6 +65,8 @@ public class JpaAccessQrStore implements AccessQrStore {
 
     @Override
     public boolean markRedeemed(String tokenHash, Instant now) {
-        return qrs.markRedeemed(tokenHash, now, AccessQrStatus.ISSUED, AccessQrStatus.REDEEMED) == 1;
+        // return qrs.markRedeemed(tokenHash, now, AccessQrStatus.ISSUED, AccessQrStatus.REDEEMED) == 1;
+        return qrs.markRedeemed(tokenHash, now, AccessQrStatus.REVOKED, AccessQrStatus.REDEEMED) == 1;
+
     }
 }
